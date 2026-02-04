@@ -233,13 +233,12 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
 
     setIsSubmitting(true);
     try {
-      const payRangeStr = formData.pay_type === 'Hourly' 
-        ? `$${formData.pay_min}-${formData.pay_max}/hr` 
+      const payRangeStr = formData.pay_type === 'Hourly'
+        ? `$${formData.pay_min}-${formData.pay_max}/hr`
         : `$${formData.pay_min}-${formData.pay_max}/yr`;
 
-      // Create job locally without API
-      const job = {
-        id: `job_${Date.now()}`,
+      // Prepare job data for Supabase
+      const jobData = {
         title: formData.title,
         company_name: formData.company_name,
         company_industry: formData.industry === "Other" ? formData.custom_industry : formData.industry,
@@ -256,14 +255,22 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
         contact_phone: formData.contact_phone,
         is_anonymous: true,
         status: 'active',
-        applicant_count: 0,
-        posted_at: new Date().toISOString(),
-        start_date: formData.start_date,
-        video_url: formData.video_url,
-        image_url: formData.image_url
+        applicant_count: 0
       };
 
-      setPostedJob(job);
+      // Insert job into Supabase
+      const { data, error: insertError } = await supabase
+        .from('jobs')
+        .insert([jobData])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Supabase insert error:", insertError);
+        throw new Error(insertError.message || "Failed to save job to database");
+      }
+
+      setPostedJob(data);
       setStep('confirmation');
       toast.success("Listing published successfully!");
     } catch (err: any) {
@@ -275,33 +282,33 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
   };
 
   const renderSelection = () => (
-    <div className="max-w-4xl mx-auto px-6 py-12 space-y-12">
-      <div className="text-center space-y-4">
-        <h1 className="text-5xl font-black tracking-tight">Post a Job</h1>
-        <p className="text-xl text-gray-500 font-medium tracking-tight">Hire with speed and privacy</p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8 sm:space-y-12">
+      <div className="text-center space-y-3 sm:space-y-4">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">Post a Job</h1>
+        <p className="text-base sm:text-lg md:text-xl text-gray-500 font-medium tracking-tight">Hire with speed and privacy</p>
       </div>
-      <div className="grid md:grid-cols-2 gap-8">
-        <button onClick={handleManualEntry} className="p-10 rounded-[3rem] border-4 border-gray-50 bg-white hover:border-[#0077BE]/20 hover:shadow-2xl transition-all text-left space-y-6 group">
-          <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#0077BE]/5 group-hover:text-[#0077BE]">
-            <Pencil size={32} />
+      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+        <button onClick={handleManualEntry} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-gray-50 bg-white hover:border-[#0077BE]/20 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 group">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#0077BE]/5 group-hover:text-[#0077BE]">
+            <Pencil size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
           </div>
-          <div className="space-y-2">
-            <h3 className="text-3xl font-black tracking-tight">Manual Entry</h3>
-            <p className="text-gray-500 font-medium">Build your listing from scratch</p>
+          <div className="space-y-1 sm:space-y-2">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">Manual Entry</h3>
+            <p className="text-sm sm:text-base text-gray-500 font-medium">Build your listing from scratch</p>
           </div>
-          <div className="pt-4 text-gray-400 group-hover:text-[#0077BE] font-black text-xs uppercase tracking-widest flex items-center gap-2">
-            Start Now <ArrowRight size={16} />
+          <div className="pt-2 sm:pt-4 text-gray-400 group-hover:text-[#0077BE] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
+            Start Now <ArrowRight size={14} className="sm:w-4 sm:h-4" />
           </div>
         </button>
-        <button onClick={() => setStep('ai-input')} className="p-10 rounded-[3rem] border-4 border-[#0077BE]/10 bg-white hover:border-[#0077BE]/30 hover:shadow-2xl transition-all text-left space-y-6 relative group">
-          <div className="absolute top-8 right-8"><span className="px-4 py-1.5 bg-[#2ECC71]/10 text-[#2ECC71] rounded-full text-[10px] font-black uppercase tracking-widest">Recommended</span></div>
-          <div className="w-16 h-16 rounded-2xl bg-[#0077BE]/5 flex items-center justify-center text-[#0077BE]"><Sparkles size={32} /></div>
-          <div className="space-y-2">
-            <h3 className="text-3xl font-black tracking-tight">AI Assisted</h3>
-            <p className="text-gray-500 font-medium">Just describe what you need</p>
+        <button onClick={() => setStep('ai-input')} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-[#0077BE]/10 bg-white hover:border-[#0077BE]/30 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 relative group">
+          <div className="absolute top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8"><span className="px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-[#2ECC71]/10 text-[#2ECC71] rounded-full text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-widest">Recommended</span></div>
+          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#0077BE]/5 flex items-center justify-center text-[#0077BE]"><Sparkles size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /></div>
+          <div className="space-y-1 sm:space-y-2">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">AI Assisted</h3>
+            <p className="text-sm sm:text-base text-gray-500 font-medium">Just describe what you need</p>
           </div>
-          <div className="pt-4 text-[#0077BE] font-black text-xs uppercase tracking-widest flex items-center gap-2">
-            Try AI <ArrowRight size={16} />
+          <div className="pt-2 sm:pt-4 text-[#0077BE] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
+            Try AI <ArrowRight size={14} className="sm:w-4 sm:h-4" />
           </div>
         </button>
       </div>
@@ -357,7 +364,7 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
                 )}
              </div>
           </div>
-          <Button className="w-full h-16 rounded-2xl bg-[#0077BE]/10 text-[#0077BE] border-0 text-sm">Unlock — $3.00</Button>
+          <Button className="w-full h-16 rounded-2xl bg-[#0077BE]/10 text-[#0077BE] border-0 text-sm">Unlock — $2.00</Button>
         </div>
       </div>
     );
@@ -472,24 +479,26 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
     );
 
     return (
-      <div className="max-w-[1400px] mx-auto px-6 py-12 grid lg:grid-cols-[1fr_450px] gap-16 items-start">
-        <div className="space-y-12">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setStep('selection')} className="p-4 hover:bg-gray-100 rounded-2xl transition-colors"><ArrowLeft size={24} /></button>
-            <div className="space-y-1">
-              <h2 className="text-3xl font-black tracking-tight">Review Job Listing</h2>
-              <p className="text-gray-500 font-medium">Mandatory anonymity — identity is private until unlocked.</p>
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-12 flex flex-col lg:grid lg:grid-cols-[1fr_450px] gap-8 lg:gap-16 items-start">
+        <div className="w-full space-y-8 sm:space-y-12 order-2 lg:order-1">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button onClick={() => setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
+              <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
+            </button>
+            <div className="space-y-0.5 sm:space-y-1">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">Review Job Listing</h2>
+              <p className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">Mandatory anonymity — identity is private until unlocked.</p>
             </div>
           </div>
 
           <div className="space-y-10">
-            <section className="space-y-8">
-               <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] border-b border-gray-100 pb-4">Public Marketplace Data</h3>
-               <div className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Job Title *</label>
-                      <input type="text" className="w-full p-5 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-[#0077BE]/20 outline-none font-black text-xl text-gray-900" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+            <section className="space-y-6 sm:space-y-8">
+               <h3 className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] border-b border-gray-100 pb-3 sm:pb-4">Public Marketplace Data</h3>
+               <div className="space-y-4 sm:space-y-6">
+                  <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <label className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Job Title *</label>
+                      <input type="text" className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-gray-50 border-2 border-transparent focus:border-[#0077BE]/20 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Industry *</label>
@@ -665,19 +674,19 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
             </section>
           </div>
 
-          <div className="pt-8 flex items-center justify-between">
-            <button onClick={() => setStep('selection')} className="text-gray-400 font-black text-xs uppercase tracking-widest hover:text-gray-600">← Back</button>
-            <Button disabled={isSubmitting} className="px-16 h-20 rounded-2xl shadow-2xl shadow-[#0077BE]/20 text-xl" onClick={handlePostJob}>
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <>Publish Listing <ArrowRight size={24} className="ml-2" /></>}
+          <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <button onClick={() => setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left">← Back</button>
+            <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#0077BE]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto" onClick={handlePostJob}>
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <>Publish Listing <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
             </Button>
           </div>
         </div>
 
-        <aside className="sticky top-8 space-y-8">
-           <div className="space-y-6">
-              <div className="flex bg-gray-100 p-1 rounded-2xl">
-                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${previewMode === 'public' ? 'bg-white text-[#0077BE] shadow-sm' : 'text-gray-400'}`}>Locked</button>
-                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${previewMode === 'private' ? 'bg-white text-[#2ECC71] shadow-sm' : 'text-gray-400'}`}>Unlocked</button>
+        <aside className="w-full lg:sticky lg:top-8 space-y-6 sm:space-y-8 order-1 lg:order-2">
+           <div className="space-y-4 sm:space-y-6">
+              <div className="flex bg-gray-100 p-1 rounded-xl sm:rounded-2xl">
+                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'public' ? 'bg-white text-[#0077BE] shadow-sm' : 'text-gray-400'}`}>Locked</button>
+                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'private' ? 'bg-white text-[#2ECC71] shadow-sm' : 'text-gray-400'}`}>Unlocked</button>
               </div>
               <AnimatePresence mode="wait">
                  <motion.div key={previewMode} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
@@ -694,40 +703,48 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
   };
 
   const renderAIInput = () => (
-    <div className="max-w-2xl mx-auto px-6 py-12 space-y-8">
-      <div className="flex items-center gap-4">
-        <button onClick={() => setStep('selection')} className="p-4 hover:bg-gray-100 rounded-2xl transition-colors"><ArrowLeft size={24} /></button>
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black tracking-tight">AI Assistant</h2>
-          <p className="text-gray-500 font-medium">Describe your role and we'll format the listing</p>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <button onClick={() => setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
+          <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
+        </button>
+        <div className="space-y-0.5 sm:space-y-1">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">AI Assistant</h2>
+          <p className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">Describe your role and we'll format the listing</p>
         </div>
       </div>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="relative">
-          <textarea rows={8} className="w-full p-8 rounded-[2.5rem] bg-gray-50 outline-none font-medium text-xl resize-none text-gray-900" placeholder="e.g. Experienced line cook for Waikiki resort. $22/hr, must work weekends." value={prompt} onChange={(e) => setPrompt(e.target.value.slice(0, 500))} />
-          <div className="absolute bottom-6 right-8 flex items-center gap-4"><Mic size={20} className="text-gray-300" /></div>
+          <textarea rows={6} className="w-full p-4 sm:p-6 md:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-gray-50 outline-none font-medium text-base sm:text-lg md:text-xl resize-none text-gray-900" placeholder="e.g. Experienced line cook for Waikiki resort. $22/hr, must work weekends." value={prompt} onChange={(e) => setPrompt(e.target.value.slice(0, 500))} />
+          <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 flex items-center gap-4"><Mic size={18} className="sm:w-5 sm:h-5 text-gray-300" /></div>
         </div>
-        <div className="space-y-3">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Quick Templates</p>
+        <div className="space-y-2 sm:space-y-3">
+          <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Quick Templates</p>
           <div className="flex flex-wrap gap-2">
             {["Line cook, Waikiki, $22/hr, weekends", "Bartender, Lahaina, $18/hr + tips", "Electrician, Kona, 5+ years, $40/hr"].map(chip => (
-              <button key={chip} onClick={() => setPrompt(chip)} className="px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-full text-xs font-black text-gray-600 transition-colors">{chip}</button>
+              <button key={chip} onClick={() => setPrompt(chip)} className="px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 bg-gray-100 hover:bg-gray-200 rounded-full text-[10px] sm:text-xs font-black text-gray-600 transition-colors">{chip}</button>
             ))}
           </div>
         </div>
-        <Button disabled={!prompt} className="w-full h-20 rounded-[1.5rem] text-xl" onClick={handleGenerate}>Generate Listing <Sparkles size={24} className="ml-2" /></Button>
+        <Button disabled={!prompt} className="w-full h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-[1.5rem] text-base sm:text-lg md:text-xl" onClick={handleGenerate}>
+          Generate Listing <Sparkles size={20} className="ml-2 sm:w-6 sm:h-6" />
+        </Button>
       </div>
     </div>
   );
 
   const renderConfirmation = () => (
-    <div className="max-w-2xl mx-auto px-6 py-20 text-center space-y-12">
-      <div className="w-32 h-32 bg-[#2ECC71]/10 rounded-full flex items-center justify-center text-[#2ECC71] mx-auto"><CheckCircle2 size={64} /></div>
-      <div className="space-y-4">
-        <h2 className="text-5xl font-black tracking-tight">Job is Live!</h2>
-        <p className="text-xl text-gray-500 font-medium tracking-tight">Your listing is establishing matches in the marketplace.</p>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20 text-center space-y-8 sm:space-y-10 md:space-y-12">
+      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-[#2ECC71]/10 rounded-full flex items-center justify-center text-[#2ECC71] mx-auto">
+        <CheckCircle2 size={40} className="sm:w-12 sm:h-12 md:w-16 md:h-16" />
       </div>
-      <Button className="w-full h-20 rounded-2xl text-xl" onClick={() => onComplete(postedJob)}>Go to Dashboard</Button>
+      <div className="space-y-3 sm:space-y-4">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">Job is Live!</h2>
+        <p className="text-base sm:text-lg md:text-xl text-gray-500 font-medium tracking-tight px-4">Your listing is establishing matches in the marketplace.</p>
+      </div>
+      <Button className="w-full h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl" onClick={() => onComplete(postedJob)}>
+        Go to Dashboard
+      </Button>
     </div>
   );
 
@@ -736,9 +753,9 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
       {step === 'selection' && renderSelection()}
       {step === 'ai-input' && renderAIInput()}
       {step === 'loading' && (
-        <div className="h-[70vh] flex flex-col items-center justify-center space-y-8">
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="w-32 h-32 rounded-full border-4 border-dashed border-[#0077BE]/20" />
-          <h3 className="text-2xl font-black">Building your listing...</h3>
+        <div className="h-[70vh] flex flex-col items-center justify-center space-y-6 sm:space-y-8 px-4">
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-3 sm:border-4 border-dashed border-[#0077BE]/20" />
+          <h3 className="text-lg sm:text-xl md:text-2xl font-black text-center">Building your listing...</h3>
         </div>
       )}
       {step === 'review' && renderReview()}

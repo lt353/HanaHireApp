@@ -1,4 +1,4 @@
-export const INTERACTION_FEE = 3.00;
+export const INTERACTION_FEE = 2.00;
 
 export const JOB_CATEGORIES = {
   industries: [
