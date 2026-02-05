@@ -214,9 +214,11 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
           {currentCandidate ? (
             <motion.div
               drag="x"
+              dragListener={true}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.18}
               onDragEnd={handleDragEnd}
+              data-swipe-card="true"
               style={{ x, rotate, opacity: cardOpacity, touchAction: 'none' }}
               className="relative p-8 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden select-none"
               onClick={() => onSelectCandidate(currentCandidate)}
