@@ -6,11 +6,11 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types"],
 
     /* Path mappings for version-specific imports */
     "paths": {
       "motion": ["node_modules/motion"],
-      "motion/react": ["node_modules/motion"],
       "sonner@2.0.3": ["node_modules/sonner"],
       "lucide-react@0.487.0": ["node_modules/lucide-react"],
       "next-themes@0.4.6": ["node_modules/next-themes"],
