@@ -381,15 +381,88 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
           )}
         </div>
       ) : (
-        // Desktop grid view - keep your existing desktop layout
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {candidates.map((candidate) => (
+        /* DESKTOP: Normal list */
+        <div className="grid gap-6">
+          {candidates.map((c) => (
             <div
-              key={candidate.id}
-              onClick={() => onSelectCandidate(candidate)}
-              className="p-6 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+              key={c.id}
+              onClick={() => onSelectCandidate(c)}
+              className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col lg:flex-row items-center gap-6 lg:gap-8 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
             >
-              {/* Your existing desktop card content */}
+              {/* Video Thumbnail Preview */}
+              <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-gray-50 group-hover:scale-[1.02] transition-transform duration-500">
+                <ImageWithFallback 
+                  src={c.thumbnail || c.video_thumbnail_url}
+                  className={`w-full h-full object-cover transition-all duration-1000 ${isUnlocked(c.id) ? 'blur-0 scale-100' : 'blur-[7px] scale-105 opacity-85'}`}
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border-2 border-white/40 shadow-2xl group-hover:scale-110 transition-transform">
+                    {isUnlocked(c.id) ? <Play size={24} className="text-white fill-white ml-1" /> : <Lock size={24} className="text-white" />}
+                  </div>
+                </div>
+                {!isUnlocked(c.id) && (
+                  <div className="absolute bottom-4 left-4 right-4 text-center">
+                    <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">
+                      Locked Preview
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 space-y-4 text-center lg:text-left min-w-0 w-full lg:w-auto">
+                <div className="space-y-1">
+                  <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#0077BE] transition-colors truncate">
+                    {c.display_title || c.name || "Verified Talent"}
+                  </h3>
+                  <div className="flex flex-wrap justify-center lg:justify-start gap-4 lg:gap-6 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
+                    <span className="flex items-center gap-2">
+                      <MapPin size={18} /> {c.location}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Briefcase size={18} /> {c.years_experience} YRS EXP
+                    </span>
+                    <span className="flex items-center gap-2 text-[#2ECC71]">
+                      {c.availability}
+                    </span>
+                  </div>
+                </div>
+
+                {Array.isArray(c.skills) && (
+                  <div className="flex flex-wrap justify-center lg:justify-start gap-2 pt-2">
+                    {c.skills.slice(0, 6).map((s: string, i: number) => (
+                      <span
+                        key={`${s}-${i}`}
+                        className="px-3 lg:px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 lg:gap-4 shrink-0 w-full lg:w-auto justify-center" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => onAddToQueue(c)}
+                  className={`p-5 lg:p-6 rounded-2xl border transition-all ${
+                    isInQueue(c.id)
+                      ? "bg-[#0077BE] text-white border-[#0077BE]"
+                      : "bg-gray-50 border-gray-100 text-gray-600 hover:text-[#0077BE] hover:border-[#0077BE]"
+                  }`}
+                  aria-label="Add to queue"
+                >
+                  <ShoppingCart size={22} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onShowPayment({ type: "employer", items: [c] })}
+                  className="px-8 py-4 lg:px-10 lg:py-5 rounded-2xl bg-[#2ECC71] text-white font-black uppercase tracking-widest text-xs hover:bg-[#27AE60] transition-all shadow-xl shadow-[#2ECC71]/20"
+                >
+                  {isUnlocked(c.id) ? "View Full Profile" : `Unlock $${interactionFee.toFixed(2)}`}
+                </button>
+              </div>
             </div>
           ))}
         </div>

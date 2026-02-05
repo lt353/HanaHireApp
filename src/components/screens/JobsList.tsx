@@ -327,15 +327,64 @@ export const JobsList: React.FC<JobsListProps> = ({
           )}
         </div>
       ) : (
-        // Desktop grid view - keep your existing desktop layout
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        // Desktop list view
+        <div className="grid gap-6">
           {jobs.map((job) => (
             <div
               key={job.id}
               onClick={() => onSelectJob(job)}
-              className="p-6 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+              className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col gap-6 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
             >
-              {/* Your existing desktop card content */}
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#0077BE] transition-colors">
+                    {job.title}
+                  </h3>
+                  <div className="flex flex-wrap gap-4 lg:gap-6 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
+                    <span className="flex items-center gap-2">
+                      <MapPin size={18} /> {job.location}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <DollarSign size={18} /> {job.pay_range}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Briefcase size={18} /> {job.job_type}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Lock size={18} /> {isUnlocked(job.id) ? "Unlocked" : "Locked"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 lg:gap-4 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => onAddToQueue(job)}
+                    className={`p-5 lg:p-6 rounded-2xl border transition-all ${
+                      isInQueue(job.id)
+                        ? "bg-[#0077BE] text-white border-[#0077BE]"
+                        : "bg-gray-50 border-gray-100 text-gray-600 hover:text-[#0077BE] hover:border-[#0077BE]"
+                    }`}
+                    aria-label="Add to queue"
+                  >
+                    <ShoppingCart size={22} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onShowPayment({ type: "seeker", items: [job] })}
+                    className="px-8 py-4 lg:px-10 lg:py-5 rounded-2xl bg-[#0077BE] text-white font-black uppercase tracking-widest text-xs hover:bg-[#005A8C] transition-all shadow-xl shadow-[#0077BE]/20"
+                  >
+                    {isUnlocked(job.id) ? "View Details" : `Apply $${interactionFee.toFixed(2)}`}
+                  </button>
+                </div>
+              </div>
+
+              {job.description && (
+                <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                  {job.description}
+                </p>
+              )}
             </div>
           ))}
         </div>
