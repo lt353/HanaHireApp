@@ -7,6 +7,8 @@ import {
   Lock,
   Play,
   Eye,
+  ShoppingCart,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 
@@ -16,6 +18,7 @@ interface CandidatesListProps {
   filteredCandidates: any;
   unlockedCandidateIds: any;
   employerQueue: any;
+  onAddToQueue: (candidate: any) => void;
   onShowPayment: (target: any) => void;
   onShowFilters: () => void;
   onSelectCandidate: (candidate: any) => void;
@@ -59,6 +62,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   filteredCandidates,
   unlockedCandidateIds,
   employerQueue,
+  onAddToQueue,
   onShowPayment,
   onShowFilters,
   onSelectCandidate,
@@ -272,39 +276,109 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 <div className="absolute inset-0 flex items-center justify-center bg-black/5">
                   <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/40">
                     {isUnlocked(currentCandidate.id) ? (
-                      <Play size={20} className="text-white" />
+                      <Play size={20} className="text-white fill-white ml-1" />
                     ) : (
                       <Lock size={20} className="text-white" />
                     )}
                   </div>
                 </div>
+                {!isUnlocked(currentCandidate.id) && (
+                  <div className="absolute bottom-3 left-3 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-[9px] font-black text-white uppercase tracking-widest">
+                    Pay to Reveal
+                  </div>
+                )}
               </div>
 
-              {/* Candidate details - add your existing content here */}
+              {/* Candidate summary */}
+              <div className="space-y-3">
+                <h3 className="text-4xl font-black tracking-tight leading-none">
+                  {currentCandidate.display_title || currentCandidate.name || "Verified Talent"}
+                </h3>
+
+                <div className="flex flex-wrap gap-4 text-xs font-black uppercase tracking-widest text-gray-400">
+                  <span className="flex items-center gap-2">
+                    <MapPin size={16} /> {currentCandidate.location}
+                  </span>
+
+                  <span className="flex items-center gap-2">
+                    <Briefcase size={16} /> {currentCandidate.years_experience} YRS
+                  </span>
+
+                  <span className="flex items-center gap-2 text-[#2ECC71]">
+                    {currentCandidate.availability || 'Immediate'}
+                  </span>
+
+                  <span className="flex items-center gap-2">
+                    <Lock size={16} />{" "}
+                    {isUnlocked(currentCandidate.id) ? "Unlocked" : "Locked"}
+                  </span>
+                </div>
+
+                {/* Skills chips */}
+                {Array.isArray(currentCandidate.skills) && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {currentCandidate.skills.slice(0, 4).map((s: string, i: number) => (
+                      <span
+                        key={`${s}-${i}`}
+                        className="px-3 py-2 bg-gray-50 text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-100"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToQueue(currentCandidate);
+                    // Auto-advance to next card with animation on mobile
+                    swipeOutAndAdvance();
+                  }}
+                  className={`p-4 rounded-lg border transition-all ${
+                    isInQueue(currentCandidate.id)
+                      ? "bg-[#0077BE] text-white border-[#0077BE]"
+                      : "bg-gray-50 border-gray-100 text-gray-600 hover:text-[#0077BE] hover:border-[#0077BE]"
+                  }`}
+                  aria-label="Add to queue"
+                >
+                  <ShoppingCart size={22} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePass();
+                    resetCard();
+                  }}
+                  className="flex-1 h-14 rounded-lg border border-gray-200 bg-white font-black uppercase tracking-widest text-[10px] text-gray-700"
+                >
+                  Pass
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUnlock();
+                    resetCard();
+                  }}
+                  className="flex-1 h-14 rounded-lg bg-[#2ECC71] text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-[#2ECC71]/20"
+                >
+                  Unlock ${interactionFee.toFixed(2)}
+                </button>
+              </div>
             </motion.div>
           ) : (
             <div className="p-16 text-center text-gray-400">
               <p className="text-lg font-black uppercase tracking-widest">No candidates available</p>
             </div>
           )}
-
-          {/* Navigation buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={() => swipeOut("left")}
-              disabled={!currentCandidate}
-              className="flex-1 h-16 rounded-lg border-2 border-[#FF6B6B] text-[#FF6B6B] font-black uppercase tracking-widest text-xs hover:bg-[#FF6B6B]/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              Pass
-            </button>
-            <button
-              onClick={() => swipeOut("right")}
-              disabled={!currentCandidate}
-              className="flex-1 h-16 rounded-lg bg-[#2ECC71] text-white font-black uppercase tracking-widest text-xs hover:bg-[#27AE60] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              Unlock
-            </button>
-          </div>
         </div>
       ) : (
         // Desktop grid view - keep your existing desktop layout

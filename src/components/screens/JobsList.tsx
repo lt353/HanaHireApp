@@ -250,7 +250,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                 Apply
               </motion.div>
 
-              {/* Job summary - rest of your existing JSX */}
+              {/* Job summary */}
               <div className="space-y-3">
                 <h3 className="text-3xl font-black tracking-tight leading-none break-words">
                   {currentJob.title}
@@ -275,31 +275,56 @@ export const JobsList: React.FC<JobsListProps> = ({
                 </div>
               </div>
 
-              {/* Add rest of your existing job card content here */}
+              {/* Actions */}
+              <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToQueue(currentJob);
+                    // Auto-advance to next card with animation on mobile
+                    swipeOutAndAdvance();
+                  }}
+                  className={`p-4 rounded-lg border transition-all ${
+                    isInQueue(currentJob.id)
+                      ? "bg-[#0077BE] text-white border-[#0077BE]"
+                      : "bg-gray-50 border-gray-100 text-gray-600 hover:text-[#0077BE] hover:border-[#0077BE]"
+                  }`}
+                  aria-label="Add to queue"
+                >
+                  <ShoppingCart size={22} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePass();
+                    resetCard();
+                  }}
+                  className="flex-1 h-14 rounded-lg border border-gray-200 bg-white font-black uppercase tracking-widest text-[10px] text-gray-700"
+                >
+                  Skip
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApply();
+                    resetCard();
+                  }}
+                  className="flex-1 h-14 rounded-lg bg-[#0077BE] text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-[#0077BE]/20"
+                >
+                  Apply ${interactionFee.toFixed(2)}
+                </button>
+              </div>
             </motion.div>
           ) : (
             <div className="p-16 text-center text-gray-400">
               <p className="text-lg font-black uppercase tracking-widest">No jobs available</p>
             </div>
           )}
-
-          {/* Navigation buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={() => swipeOut("left")}
-              disabled={!currentJob}
-              className="flex-1 h-16 rounded-lg border-2 border-[#FF6B6B] text-[#FF6B6B] font-black uppercase tracking-widest text-xs hover:bg-[#FF6B6B]/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              Skip
-            </button>
-            <button
-              onClick={() => swipeOut("right")}
-              disabled={!currentJob}
-              className="flex-1 h-16 rounded-lg bg-[#2ECC71] text-white font-black uppercase tracking-widest text-xs hover:bg-[#27AE60] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              Apply
-            </button>
-          </div>
         </div>
       ) : (
         // Desktop grid view - keep your existing desktop layout
