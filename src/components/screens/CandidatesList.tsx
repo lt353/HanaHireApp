@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useMotionValue, useTransform, animate } from "motion/react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
   Search,
   Filter,
@@ -38,10 +38,13 @@ function useIsMobile(breakpointPx = 768) {
     update();
 
     if (mq.addEventListener) mq.addEventListener("change", update);
+    // Safari fallback
+    // @ts-ignore
     else mq.addListener(update);
 
     return () => {
       if (mq.removeEventListener) mq.removeEventListener("change", update);
+      // @ts-ignore
       else mq.removeListener(update);
     };
   }, [breakpointPx]);
@@ -214,21 +217,21 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.18}
               onDragEnd={handleDragEnd}
-              style={{ x, rotate, opacity: cardOpacity }}
-              className="relative p-8 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden"
+              style={{ x, rotate, opacity: cardOpacity, touchAction: 'none' }}
+              className="relative p-8 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden select-none"
               onClick={() => onSelectCandidate(currentCandidate)}
             >
               {/* BADGES */}
               <motion.div
                 style={{ opacity: passOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl z-20"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl z-20 pointer-events-none"
               >
                 Pass
               </motion.div>
 
               <motion.div
                 style={{ opacity: unlockOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#2ECC71] text-white text-xs font-black uppercase tracking-widest shadow-2xl z-20"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#2ECC71] text-white text-xs font-black uppercase tracking-widest shadow-2xl z-20 pointer-events-none"
               >
                 Unlock
               </motion.div>
@@ -416,15 +419,18 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   }`}
                   aria-label="Add to queue"
                 >
-                  <ShoppingCart size={28} />
+                  <ShoppingCart size={30} />
                 </button>
 
-                <Button
-                  className="h-16 lg:h-20 px-8 lg:px-10 rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] text-white font-black uppercase tracking-widest text-xs lg:text-sm whitespace-nowrap"
-                  onClick={() => onShowPayment({ type: "employer", items: [c] })}
+                <button
+                  type="button"
+                  className="h-20 px-10 rounded-lg bg-[#2ECC71] text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-[#2ECC71]/20"
+                  onClick={() =>
+                    onShowPayment({ type: "employer", items: [c] })
+                  }
                 >
                   Unlock ${interactionFee.toFixed(2)}
-                </Button>
+                </button>
               </div>
             </div>
           ))}

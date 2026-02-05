@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useMotionValue, useTransform, animate } from "motion/react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
   Search,
   Filter,
@@ -203,21 +203,21 @@ export const JobsList: React.FC<JobsListProps> = ({
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.18}
               onDragEnd={handleDragEnd}
-              style={{ x, rotate, opacity: cardOpacity }}
-              className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden"
+              style={{ x, rotate, opacity: cardOpacity, touchAction: 'none' }}
+              className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden select-none"
               onClick={() => onSelectJob(currentJob)}
             >
               {/* ✅ Swipe badges moved to CENTER so users actually see them */}
               <motion.div
                 style={{ opacity: passOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
                 Skip
               </motion.div>
 
               <motion.div
                 style={{ opacity: applyOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#2ECC71] text-white text-xs font-black uppercase tracking-widest shadow-2xl"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#2ECC71] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
                 Apply
               </motion.div>

@@ -4151,3 +4151,17 @@ html {
     opacity: .5;
   }
 }
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Disable browser default touch behaviors on draggable elements */
+[data-draggable="true"],
+.swipe-card {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
