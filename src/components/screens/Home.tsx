@@ -1,17 +1,30 @@
-import React from "react";
-import { motion } from "motion/react";
+import React, { useEffect } from "react";
 import { Video, Search, DollarSign, CheckCircle, Sparkles, Clock, Shield, Users } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { INTERACTION_FEE } from "../../data/mockData";
-import heroImg from "figma:asset/91ba38fb159ccc8ce965117ab3cccd2035e23570.png";
+import heroImg from "../../assets/hero-image.jpg";
 
 interface HomeProps {
   onSelectRole: (role: 'seeker' | 'employer') => void;
 }
 
 export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
+  // Preload hero image for faster loading
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = heroImg;
+    link.setAttribute('fetchpriority', 'high');
+    document.head.appendChild(link);
+    
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pb-24">
+    <div className="pb-24">
       {/* Hero Section */}
       <section className="py-12 sm:py-24 px-4 max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-16 items-center">
         <div className="space-y-6 sm:space-y-10 text-center lg:text-left">
@@ -42,7 +55,14 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
         <div className="relative group">
           <div className="absolute -inset-4 bg-[#0077BE]/10 rounded-[5rem] blur-3xl"></div>
           <div className="relative rounded-[2rem] sm:rounded-[4rem] overflow-hidden shadow-[0_48px_96px_-24px_rgba(0,0,0,0.2)] aspect-square border-4 sm:border-8 border-white bg-gray-100">
-            <ImageWithFallback src={heroImg} alt="Job Seeker Filming" className="w-full h-full object-cover transition-transform duration-[5s] group-hover:scale-110" />
+            <ImageWithFallback 
+              src={heroImg} 
+              alt="Job Seeker Filming" 
+              className="w-full h-full object-cover transition-transform duration-[5s] group-hover:scale-110" 
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         </div>
@@ -221,6 +241,6 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
           </div>
         </div>
       </section>
-    </motion.div>
+    </div>
   );
 };

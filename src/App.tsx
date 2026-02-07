@@ -87,8 +87,17 @@ export default function App() {
   const [mediaType, setMediaType] = useState<"video" | "voice">("video");
 
   useEffect(() => {
+    // Load data in background, don't block UI
     fetchInitialData();
   }, []);
+  
+  // Don't block landing page on initial load
+  useEffect(() => {
+    // If we're on landing page and data hasn't loaded yet, set loading to false immediately
+    if (currentView === "landing") {
+      setIsLoading(false);
+    }
+  }, [currentView]);
 
   const fetchInitialData = async () => {
     setIsLoading(true);
@@ -303,11 +312,15 @@ export default function App() {
   };
 
   const renderScreen = () => {
+    // Show landing page immediately, don't block on data loading
+    if (currentView === "landing") {
+      return <Home onSelectRole={selectRole} />;
+    }
+    
+    // For other views, show loading if data is still loading
     if (isLoading) return <div className="h-screen flex items-center justify-center font-black text-gray-200 uppercase tracking-[0.5em]">Loading Market...</div>;
 
     switch (currentView) {
-      case "landing":
-        return <Home onSelectRole={selectRole} />;
       case "about":
         return <About onSelectRole={selectRole} onNavigate={handleNavigate} />;
       case "settings":
