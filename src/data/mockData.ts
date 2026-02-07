@@ -68,6 +68,36 @@ export const CANDIDATE_CATEGORIES = {
   locations: JOB_CATEGORIES.locations
 };
 
+// Demo profiles for quick login/signup shortcuts
+export const DEMO_PROFILES = {
+  seeker: {
+    email: 'keanu.mahalo@demo.com',
+    password: 'demo1234',
+    name: 'Keanu Mahalo',
+    phone: '(808) 555-1234',
+    location: 'Honolulu, HI',
+    skills: ['Customer Service', 'Bartending', 'Hospitality', 'Bilingual'],
+    experience: '3 years',
+    education: "Associate Degree",
+    availability: 'Immediate',
+    bio: 'Aloha! Friendly and hardworking hospitality professional with 3 years of experience in food & beverage. Love working with people and bringing the Aloha spirit to every interaction.',
+    targetPay: '$20-25/hr',
+    industries: ['Food & Beverage', 'Tourism', 'Hospitality'],
+  },
+  employer: {
+    email: 'hiring@alohabistro.demo',
+    password: 'demo1234',
+    businessName: 'Aloha Bistro & Bar',
+    contactName: 'Lani Nakamura',
+    phone: '(808) 555-9876',
+    location: 'Waikiki, HI',
+    industry: 'Food & Beverage',
+    companySize: 'Small Business (10-25)',
+    businessLicense: 'HI-BIZ-2024-88432',
+    bio: 'Family-owned restaurant in Waikiki serving modern Hawaiian fusion cuisine since 2018. We pride ourselves on a supportive team culture and aloha spirit.',
+  },
+};
+
 export const TEAM_MEMBERS = [
   { name: "Tea", role: "Co-Founder" },
   { name: "Lindsay", role: "Engineering" },

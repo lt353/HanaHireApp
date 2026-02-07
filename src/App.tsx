@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { 
-  CreditCard, 
-  ArrowRight, 
+import {
+  CreditCard,
+  ArrowRight,
   Settings as SettingsIcon,
   Video,
   Mic,
@@ -15,7 +15,13 @@ import {
   MapPin,
   DollarSign,
   Play,
-  Mail
+  Mail,
+  Zap,
+  Shield,
+  BarChart3,
+  Building2,
+  CheckCircle,
+  UserPlus
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
@@ -39,7 +45,7 @@ import { ProfileTitleCustomization } from './components/screens/ProfileTitleCust
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
-import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE } from './data/mockData';
+import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } from './data/mockData';
 
 // Utils
 import { formatCandidateTitle } from "./utils/formatters";
@@ -56,6 +62,8 @@ export default function App() {
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [signupStep, setSignupStep] = useState<'role-select' | 'form'>('role-select');
+  const [signupRole, setSignupRole] = useState<'seeker' | 'employer' | null>(null);
   
   // Modals
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -180,7 +188,7 @@ export default function App() {
   };
 
   const toggleRole = () => {
-    const newRole = currentView === 'seeker' ? 'employer' : 'seeker';
+    const newRole = userRole === 'seeker' ? 'employer' : 'seeker';
     selectRole(newRole);
     toast.success(`Switched to ${newRole === 'seeker' ? 'Job Seeker' : 'Employer'} view`);
   };
@@ -379,8 +387,9 @@ export default function App() {
         );
       case "seeker":
         return (
-          <SeekerDashboard 
+          <SeekerDashboard
             isLoggedIn={isLoggedIn}
+            userProfile={userProfile}
             onNavigate={handleNavigate}
             onShowMedia={() => setShowMediaModal(true)}
             onShowVisibility={() => setShowVisibilityModal(true)}
@@ -388,12 +397,14 @@ export default function App() {
             onLogout={handleLogout}
             unlockedJobs={jobs.filter(j => unlockedJobIds.includes(j.id))}
             onSelectJob={setSelectedJob}
+            applicationCount={unlockedJobIds.length}
           />
         );
       case "employer":
         return (
-          <EmployerDashboard 
+          <EmployerDashboard
             isLoggedIn={isLoggedIn}
+            userProfile={userProfile}
             jobs={jobs}
             candidates={candidates}
             unlockedCandidateIds={unlockedCandidateIds}
@@ -431,11 +442,24 @@ export default function App() {
 
   const handleShowAuth = (mode: "login" | "signup") => {
     setAuthMode(mode);
+    setSignupStep('role-select');
+    setSignupRole(null);
     setShowAuthModal(true);
+  };
+
+  const handleDemoLogin = (role: 'seeker' | 'employer') => {
+    const profile = role === 'seeker' ? DEMO_PROFILES.seeker : DEMO_PROFILES.employer;
+    setUserProfile({ ...profile, role });
+    setUserRole(role);
+    setIsLoggedIn(true);
+    setShowAuthModal(false);
+    handleNavigate(role === 'seeker' ? 'seeker' : 'employer');
+    toast.success(`Demo ${role === 'seeker' ? 'Job Seeker' : 'Employer'} logged in!`);
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setUserProfile(null);
     setCurrentView("landing");
   };
 
@@ -465,37 +489,258 @@ export default function App() {
 
       {/* --- Modals --- */}
       
-      <Modal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} title={authMode === 'login' ? "Access My Hub" : "Create Profile"}>
+      <Modal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} title={authMode === 'login' ? "Access My Hub" : (signupStep === 'role-select' ? "Get Started" : (signupRole === 'employer' ? "Employer Sign Up" : "Job Seeker Sign Up"))}>
          <div className="space-y-8">
-            <form onSubmit={(e) => { 
-              e.preventDefault(); 
-              const email = new FormData(e.currentTarget).get('email') as string;
-              fetchUnlocks(email);
-              setIsLoggedIn(true);
-              setShowAuthModal(false); 
-              if (currentView === 'employer') handleNavigate("employer"); 
-              else handleNavigate("seeker"); 
-              toast.success("Welcome back!"); 
-            }} className="space-y-8">
-               <div className="space-y-6">
-                  <div className="space-y-3">
-                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email Identity</label>
-                     <input required name="email" type="email" placeholder="name@region.com" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tight" />
+            {authMode === 'login' ? (
+              <>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const email = formData.get('email') as string;
+                  fetchUnlocks(email);
+                  setUserProfile({ email, role: userRole });
+                  setIsLoggedIn(true);
+                  setShowAuthModal(false);
+                  if (userRole === 'employer') handleNavigate("employer");
+                  else handleNavigate("seeker");
+                  toast.success("Welcome back!");
+                }} className="space-y-8">
+                   <div className="space-y-6">
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email Identity</label>
+                         <input required name="email" type="email" placeholder="name@region.com" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tight" />
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Access Key</label>
+                         <input required type="password" placeholder="••••••••" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tighter" />
+                      </div>
+                   </div>
+                   <Button type="submit" className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20">Log In to Hub</Button>
+                </form>
+
+                {/* Demo Login Shortcuts */}
+                <div className="pt-6 border-t border-gray-100 space-y-4">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handleDemoLogin('seeker')}
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 transition-all text-center space-y-2 group"
+                    >
+                      <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
+                      <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE]">Job Seeker</span>
+                      <span className="block text-[10px] text-gray-400 font-medium">Keanu Mahalo</span>
+                    </button>
+                    <button
+                      onClick={() => handleDemoLogin('employer')}
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all text-center space-y-2 group"
+                    >
+                      <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
+                      <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71]">Employer</span>
+                      <span className="block text-[10px] text-gray-400 font-medium">Aloha Bistro</span>
+                    </button>
                   </div>
-                  <div className="space-y-3">
-                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Access Key</label>
-                     <input required type="password" placeholder="••••••••" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tighter" />
+                </div>
+
+                <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#0077BE] hover:underline">Create Account</button></p>
+                </div>
+              </>
+            ) : signupStep === 'role-select' ? (
+              /* Signup Step 1: Role Selection */
+              <div className="space-y-8">
+                <p className="text-center text-gray-500 font-medium text-lg">What brings you to HanaHire?</p>
+
+                <div className="space-y-4">
+                  <button
+                    onClick={() => { setSignupRole('seeker'); setSignupStep('form'); }}
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#0077BE]/20 hover:border-[#0077BE] bg-white hover:bg-[#0077BE]/5 transition-all text-left space-y-3 group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-[#0077BE]/10 flex items-center justify-center shrink-0">
+                        <User size={28} className="text-[#0077BE]" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-black tracking-tight group-hover:text-[#0077BE] transition-colors">I'm Looking for a Job</h3>
+                        <p className="text-sm text-gray-500 font-medium mt-1">Browse and apply to opportunities</p>
+                      </div>
+                    </div>
+                    <div className="pl-[4.5rem] space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#0077BE] shrink-0" /> Save your intro video and profile for future applications</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#0077BE] shrink-0" /> Track profile views, applications, and unlocked jobs</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#0077BE] shrink-0" /> Come back anytime without re-entering your info</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setSignupRole('employer'); setSignupStep('form'); }}
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#2ECC71] bg-white hover:bg-[#2ECC71]/5 transition-all text-left space-y-3 group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-[#2ECC71]/10 flex items-center justify-center shrink-0">
+                        <Building2 size={28} className="text-[#2ECC71]" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-black tracking-tight group-hover:text-[#2ECC71] transition-colors">I'm Looking to Hire</h3>
+                        <p className="text-sm text-gray-500 font-medium mt-1">Post jobs and find talent</p>
+                      </div>
+                    </div>
+                    <div className="pl-[4.5rem] space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#2ECC71] shrink-0" /> Post jobs and browse candidate video profiles</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#2ECC71] shrink-0" /> Track candidates unlocked, profile views, and applicants</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#2ECC71] shrink-0" /> Verify your business for trusted hiring</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-2xl">
+                  <p className="text-xs text-gray-500 text-center font-medium">
+                    <span className="font-black text-gray-700">No account needed to browse.</span> Sign up to save your info, track activity, and come back easily.
+                  </p>
+                </div>
+
+                {/* Demo Signup Shortcuts */}
+                <div className="pt-4 border-t border-gray-100 space-y-4">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handleDemoLogin('seeker')}
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 transition-all text-center space-y-2 group"
+                    >
+                      <Zap size={20} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-[#0077BE]">Quick Seeker</span>
+                    </button>
+                    <button
+                      onClick={() => handleDemoLogin('employer')}
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all text-center space-y-2 group"
+                    >
+                      <Zap size={20} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-[#2ECC71]">Quick Employer</span>
+                    </button>
                   </div>
-               </div>
-               <Button type="submit" className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20">{authMode === 'login' ? "Log In to Hub" : "Launch My Profile"}</Button>
-            </form>
-            <div className="flex flex-col items-center gap-6 pt-8 border-t border-gray-50">
-               {authMode === 'login' ? (
-                 <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => setAuthMode('signup')} className="text-[#0077BE] hover:underline">Create Account</button></p>
-               ) : (
-                 <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
-               )}
-            </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
+                </div>
+              </div>
+            ) : (
+              /* Signup Step 2: Registration Form */
+              <div className="space-y-8">
+                <button
+                  onClick={() => { setSignupStep('role-select'); setSignupRole(null); }}
+                  className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-[#0077BE] transition-colors"
+                >
+                  &larr; Back to role selection
+                </button>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const profile: any = { role: signupRole };
+                  formData.forEach((value, key) => { profile[key] = value; });
+                  setUserProfile(profile);
+                  setUserRole(signupRole!);
+                  setIsLoggedIn(true);
+                  setShowAuthModal(false);
+                  handleNavigate(signupRole === 'employer' ? "employer" : "seeker");
+                  toast.success("Account created! Welcome to HanaHire.");
+                }} className="space-y-6">
+                   {signupRole === 'seeker' ? (
+                     /* Seeker Signup Form */
+                     <div className="space-y-5">
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Full Name</label>
+                         <input required name="name" type="text" placeholder="Your full name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight" />
+                       </div>
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email</label>
+                         <input required name="email" type="email" placeholder="name@email.com" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight" />
+                       </div>
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Password</label>
+                         <input required name="password" type="password" placeholder="Create a password" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tighter" />
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-3">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Phone</label>
+                           <input name="phone" type="tel" placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base" />
+                         </div>
+                         <div className="space-y-3">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Location</label>
+                           <select name="location" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base">
+                             {JOB_CATEGORIES.locations.map(l => <option key={l}>{l}</option>)}
+                           </select>
+                         </div>
+                       </div>
+                     </div>
+                   ) : (
+                     /* Employer Signup Form */
+                     <div className="space-y-5">
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Name</label>
+                         <input required name="businessName" type="text" placeholder="Your business name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
+                       </div>
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Contact Name</label>
+                         <input required name="contactName" type="text" placeholder="Your name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
+                       </div>
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Email</label>
+                         <input required name="email" type="email" placeholder="hiring@business.com" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
+                       </div>
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Password</label>
+                         <input required name="password" type="password" placeholder="Create a password" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tighter" />
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                         <div className="space-y-3">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Phone</label>
+                           <input name="phone" type="tel" placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base" />
+                         </div>
+                         <div className="space-y-3">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Industry</label>
+                           <select name="industry" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base">
+                             {JOB_CATEGORIES.industries.map(i => <option key={i}>{i}</option>)}
+                           </select>
+                         </div>
+                       </div>
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business License # (for verification)</label>
+                         <input name="businessLicense" type="text" placeholder="HI-BIZ-XXXX-XXXXX" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base tracking-widest" />
+                       </div>
+                       <div className="p-4 bg-[#2ECC71]/5 rounded-2xl border border-[#2ECC71]/10 flex items-start gap-3">
+                         <Shield size={20} className="text-[#2ECC71] shrink-0 mt-0.5" />
+                         <p className="text-xs text-gray-600 font-medium">Business verification is required to post jobs. We verify your license to ensure trust for job seekers.</p>
+                       </div>
+                     </div>
+                   )}
+
+                   <Button
+                     type="submit"
+                     className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
+                   >
+                     {signupRole === 'employer' ? 'Create Employer Account' : 'Launch My Profile'}
+                   </Button>
+                </form>
+
+                {/* Demo Fill Shortcut */}
+                <div className="pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => handleDemoLogin(signupRole!)}
+                    className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} transition-all flex items-center justify-center gap-3 group`}
+                  >
+                    <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'} group-hover:scale-110 transition-transform`} />
+                    <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'}`}>
+                      Skip &mdash; Use Demo {signupRole === 'employer' ? 'Employer' : 'Seeker'} Account
+                    </span>
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
+                </div>
+              </div>
+            )}
          </div>
       </Modal>
 
@@ -611,7 +856,7 @@ export default function App() {
          <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
             <div className="flex justify-between items-center pb-4 border-b border-gray-100">
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                {currentView === 'seeker' ? 'Job Filters' : 'Talent Filters'}
+                {userRole === 'seeker' ? 'Job Filters' : 'Talent Filters'}
               </span>
               <button 
                 onClick={clearFilters}
@@ -623,7 +868,7 @@ export default function App() {
 
             {/* Industry Filter: Always available now, matching interested industries for candidates */}
             <CollapsibleFilter title="Industry" isOpen={true}>
-              {(currentView === 'seeker' ? JOB_CATEGORIES.industries : CANDIDATE_CATEGORIES.industries).map(t => (
+              {(userRole === 'seeker' ? JOB_CATEGORIES.industries : CANDIDATE_CATEGORIES.industries).map(t => (
                 <button 
                   key={t} 
                   onClick={() => toggleFilter('industries', t)} 
@@ -635,8 +880,8 @@ export default function App() {
             </CollapsibleFilter>
 
             {/* Common Filter: Location */}
-            <CollapsibleFilter title="Location" isOpen={currentView === 'employer'}>
-              {(currentView === 'seeker' ? JOB_CATEGORIES.locations : CANDIDATE_CATEGORIES.locations).map(l => (
+            <CollapsibleFilter title="Location" isOpen={userRole === 'employer'}>
+              {(userRole === 'seeker' ? JOB_CATEGORIES.locations : CANDIDATE_CATEGORIES.locations).map(l => (
                 <button 
                   key={l} 
                   onClick={() => toggleFilter('locations', l)} 
@@ -648,7 +893,7 @@ export default function App() {
             </CollapsibleFilter>
 
             {/* Role Specific Filters */}
-            {currentView === 'seeker' ? (
+            {userRole === 'seeker' ? (
               <CollapsibleFilter title="Pay Range">
                 {JOB_CATEGORIES.payRanges.map(p => (
                   <button 
@@ -714,7 +959,7 @@ export default function App() {
 
             <div className="pt-6">
               <Button className="w-full h-16 rounded-2xl text-lg" onClick={() => setShowFilterModal(false)}>
-                Show {currentView === 'seeker' ? filteredJobs.length : filteredCandidates.length} Results
+                Show {userRole === 'seeker' ? filteredJobs.length : filteredCandidates.length} Results
               </Button>
             </div>
          </div>
