@@ -414,8 +414,10 @@ export default function App() {
             onNavigate={handleNavigate}
             onShowPostJob={() => handleNavigate("job-posting")}
             onSelectCandidate={(c) => setSelectedCandidate(c)}
+            onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
             onShowAuth={handleShowAuth}
             onLogout={handleLogout}
+            interactionFee={INTERACTION_FEE}
           />
         );
       case "job-posting":

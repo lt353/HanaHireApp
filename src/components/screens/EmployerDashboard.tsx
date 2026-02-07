@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from "react";
 import { motion } from "motion/react";
-import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, Building2, CheckCircle, Clock, ChevronDown, Eye } from "lucide-react";
+import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, Building2, CheckCircle, Clock, ChevronDown, Eye, DollarSign } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
@@ -22,8 +22,10 @@ interface EmployerDashboardProps {
   onNavigate: (tab: string) => void;
   onShowPostJob: () => void;
   onSelectCandidate: (candidate: any) => void;
+  onShowPayment: (target: { type: string; items: any[] }) => void;
   onShowAuth: (mode: "login" | "signup") => void;
   onLogout: () => void;
+  interactionFee: number;
 }
 
 export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
@@ -35,8 +37,10 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   onNavigate,
   onShowPostJob,
   onSelectCandidate,
+  onShowPayment,
   onShowAuth,
-  onLogout
+  onLogout,
+  interactionFee
 }) => {
   const unlockedCandidates = candidates.filter(c => unlockedCandidateIds.includes(c.id));
   const isVerified = isLoggedIn && userProfile?.businessLicense;
@@ -54,6 +58,9 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       appliedAgo: daysAgoLabels[i % daysAgoLabels.length],
     }));
   }, [isLoggedIn, candidates, jobs]);
+
+  const lockedApplicants = mockApplicants.filter(a => !unlockedCandidateIds.includes(a.id));
+  const unlockedApplicants = mockApplicants.filter(a => unlockedCandidateIds.includes(a.id));
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16 md:space-y-24 mb-12 sm:mb-16 md:mb-20">
@@ -160,6 +167,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           >
             <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px] flex items-center gap-2">Applicants Received <ChevronDown size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" /></span>
             <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#FF6B6B] transition-colors">{mockApplicants.length}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#2ECC71]">{unlockedApplicants.length} unlocked</span>
+              <span className="text-white/20">•</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#FF6B6B]/60">{lockedApplicants.length} locked</span>
+            </div>
             <Mail className="absolute -right-4 -bottom-4 text-white/5" size={80} />
           </button>
           <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
@@ -270,76 +282,197 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
               <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#FF6B6B]" /> Recent Applicants
             </h3>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <span className="text-xs font-black uppercase tracking-widest text-gray-400">{mockApplicants.length} total</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#2ECC71]">{unlockedApplicants.length} unlocked</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#FF6B6B]/60">{lockedApplicants.length} locked</span>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {mockApplicants.map((applicant, i) => {
-              const statusStyle = STATUS_COLORS[applicant.status] || STATUS_COLORS['New'];
-              return (
-                <motion.div
-                  key={applicant.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="p-5 sm:p-6 bg-white border border-gray-100 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm hover:shadow-lg transition-all group cursor-pointer"
-                  onClick={() => onSelectCandidate(applicant)}
-                >
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                    {/* Avatar */}
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-100 overflow-hidden relative shrink-0">
-                      <ImageWithFallback
-                        src={applicant.video_thumbnail_url || applicant.thumbnail}
-                        alt={applicant.name || applicant.display_title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-[#0077BE]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Play size={16} className="text-white fill-white" />
+          {/* Unlocked Applicants */}
+          {unlockedApplicants.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#2ECC71]/10 flex items-center justify-center">
+                  <CheckCircle size={14} className="text-[#2ECC71]" />
+                </div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-[#2ECC71]">Unlocked Applicants</h4>
+              </div>
+              {unlockedApplicants.map((applicant, i) => {
+                const statusStyle = STATUS_COLORS[applicant.status] || STATUS_COLORS['New'];
+                return (
+                  <motion.div
+                    key={applicant.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="p-5 sm:p-6 bg-white border border-[#2ECC71]/10 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm hover:shadow-lg transition-all group cursor-pointer"
+                    onClick={() => onSelectCandidate(applicant)}
+                  >
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                      {/* Avatar */}
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-100 overflow-hidden relative shrink-0">
+                        <ImageWithFallback
+                          src={applicant.video_thumbnail_url || applicant.thumbnail}
+                          alt={applicant.name || applicant.display_title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-[#0077BE]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play size={16} className="text-white fill-white" />
+                        </div>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                          <h4 className="text-base sm:text-lg font-black tracking-tight truncate">
+                            {applicant.name || applicant.display_title}
+                          </h4>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest w-fit ${statusStyle.bg} ${statusStyle.text}`}>
+                            {applicant.status}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          <span className="flex items-center gap-1"><MapPin size={11} /> {applicant.location}</span>
+                          <span className="flex items-center gap-1"><Clock size={11} /> {applicant.appliedAgo}</span>
+                        </div>
+                      </div>
+
+                      {/* Applied-to Job Tag */}
+                      <div className="sm:text-right shrink-0 space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Applied to</p>
+                        <p className="text-xs sm:text-sm font-black text-[#0077BE] tracking-tight truncate max-w-[200px]">
+                          {applicant.appliedToJob?.title || 'Your Job Post'}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                        <h4 className="text-base sm:text-lg font-black tracking-tight truncate">
-                          {applicant.name || applicant.display_title}
-                        </h4>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest w-fit ${statusStyle.bg} ${statusStyle.text}`}>
-                          {applicant.status}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                        <span className="flex items-center gap-1"><MapPin size={11} /> {applicant.location}</span>
-                        <span className="flex items-center gap-1"><Clock size={11} /> {applicant.appliedAgo}</span>
-                      </div>
-                    </div>
-
-                    {/* Applied-to Job Tag */}
-                    <div className="sm:text-right shrink-0 space-y-1">
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Applied to</p>
-                      <p className="text-xs sm:text-sm font-black text-[#0077BE] tracking-tight truncate max-w-[200px]">
-                        {applicant.appliedToJob?.title || 'Your Job Post'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Skills row */}
-                  {applicant.skills && applicant.skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-4 pt-4 border-t border-gray-50">
-                      {applicant.skills.slice(0, 4).map((s: string) => (
-                        <span key={s} className="px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-black uppercase tracking-widest">{s}</span>
-                      ))}
-                      {applicant.skills.length > 4 && (
-                        <span className="px-2.5 py-1 text-gray-400 text-[9px] font-black uppercase tracking-widest">+{applicant.skills.length - 4} more</span>
+                    {/* Skills + contact row */}
+                    <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                      {applicant.skills && applicant.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {applicant.skills.slice(0, 4).map((s: string) => (
+                            <span key={s} className="px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg text-[9px] font-black uppercase tracking-widest">{s}</span>
+                          ))}
+                          {applicant.skills.length > 4 && (
+                            <span className="px-2.5 py-1 text-gray-400 text-[9px] font-black uppercase tracking-widest">+{applicant.skills.length - 4} more</span>
+                          )}
+                        </div>
                       )}
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); }}
+                          className="h-9 px-4 rounded-xl bg-[#0077BE]/5 text-[#0077BE] flex items-center gap-1.5 hover:bg-[#0077BE] hover:text-white transition-all"
+                        >
+                          <Phone size={13} />
+                          <span className="font-black text-[9px] uppercase tracking-widest">Call</span>
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); }}
+                          className="h-9 px-4 rounded-xl bg-[#2ECC71]/5 text-[#2ECC71] flex items-center gap-1.5 hover:bg-[#2ECC71] hover:text-white transition-all"
+                        >
+                          <Mail size={13} />
+                          <span className="font-black text-[9px] uppercase tracking-widest">Email</span>
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Locked Applicants */}
+          {lockedApplicants.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#FF6B6B]/10 flex items-center justify-center">
+                  <Lock size={14} className="text-[#FF6B6B]" />
+                </div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-gray-500">Locked Applicants — Unlock to see full profile</h4>
+              </div>
+              {lockedApplicants.map((applicant, i) => {
+                const statusStyle = STATUS_COLORS[applicant.status] || STATUS_COLORS['New'];
+                return (
+                  <motion.div
+                    key={applicant.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="p-5 sm:p-6 bg-white border border-gray-100 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm hover:shadow-lg transition-all group relative overflow-hidden"
+                  >
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                      {/* Blurred Avatar */}
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-100 overflow-hidden relative shrink-0">
+                        <ImageWithFallback
+                          src={applicant.video_thumbnail_url || applicant.thumbnail}
+                          alt="Locked applicant"
+                          className="w-full h-full object-cover blur-[6px] opacity-60"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                          <Lock size={18} className="text-white drop-shadow-md" />
+                        </div>
+                      </div>
+
+                      {/* Anonymized Info */}
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                          <h4 className="text-base sm:text-lg font-black tracking-tight truncate text-gray-400">
+                            {applicant.display_title || 'Anonymous Applicant'}
+                          </h4>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest w-fit ${statusStyle.bg} ${statusStyle.text}`}>
+                            {applicant.status}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                          <span className="flex items-center gap-1"><MapPin size={11} /> {applicant.location}</span>
+                          <span className="flex items-center gap-1"><Clock size={11} /> {applicant.appliedAgo}</span>
+                        </div>
+                      </div>
+
+                      {/* Applied-to Job Tag */}
+                      <div className="sm:text-right shrink-0 space-y-1">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Applied to</p>
+                        <p className="text-xs sm:text-sm font-black text-[#0077BE] tracking-tight truncate max-w-[200px]">
+                          {applicant.appliedToJob?.title || 'Your Job Post'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Skills (visible) + Unlock row */}
+                    <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                      {applicant.skills && applicant.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {applicant.skills.slice(0, 4).map((s: string) => (
+                            <span key={s} className="px-2.5 py-1 bg-gray-50 text-gray-400 rounded-lg text-[9px] font-black uppercase tracking-widest">{s}</span>
+                          ))}
+                          {applicant.skills.length > 4 && (
+                            <span className="px-2.5 py-1 text-gray-300 text-[9px] font-black uppercase tracking-widest">+{applicant.skills.length - 4} more</span>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => onSelectCandidate(applicant)}
+                          className="h-9 px-4 rounded-xl bg-gray-50 text-gray-400 flex items-center gap-1.5 hover:bg-gray-100 transition-all"
+                        >
+                          <Eye size={13} />
+                          <span className="font-black text-[9px] uppercase tracking-widest">Preview</span>
+                        </button>
+                        <button
+                          onClick={() => onShowPayment({ type: 'employer', items: [applicant] })}
+                          className="h-9 px-4 rounded-xl bg-[#FF6B6B] text-white flex items-center gap-1.5 hover:bg-[#FF6B6B]/90 transition-all shadow-md shadow-[#FF6B6B]/20"
+                        >
+                          <Lock size={13} />
+                          <span className="font-black text-[9px] uppercase tracking-widest">Unlock ${interactionFee.toFixed(2)}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
     </motion.div>
