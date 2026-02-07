@@ -40,6 +40,8 @@ import { CandidatesList } from './components/screens/CandidatesList';
 import { Cart } from './components/screens/Cart';
 import { SeekerDashboard } from './components/screens/SeekerDashboard';
 import { EmployerDashboard } from './components/screens/EmployerDashboard';
+import { SeekerOnboarding } from './components/screens/SeekerOnboarding';
+import { EmployerOnboarding } from './components/screens/EmployerOnboarding';
 import { JobPostingFlow } from './components/screens/JobPostingFlow';
 import { ProfileTitleCustomization } from './components/screens/ProfileTitleCustomization';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
@@ -53,7 +55,7 @@ import { formatCandidateTitle } from "./utils/formatters";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<"landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization">("landing");
+  const [currentView, setCurrentView] = useState<"landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding">("landing");
   const [jobs, setJobs] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +66,7 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [signupStep, setSignupStep] = useState<'role-select' | 'form'>('role-select');
   const [signupRole, setSignupRole] = useState<'seeker' | 'employer' | null>(null);
+  const [signupFormData, setSignupFormData] = useState<Record<string, string>>({});
   
   // Modals
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -173,7 +176,7 @@ export default function App() {
     console.log("Unlocks loaded from local state for user:", id);
   };
 
-  const handleNavigate = (view: "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization") => {
+  const handleNavigate = (view: "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding") => {
     setCurrentView(view);
     window.scrollTo(0, 0);
   };
@@ -425,9 +428,31 @@ export default function App() {
             }}
           />
         );
+      case "seeker-onboarding":
+        return (
+          <SeekerOnboarding
+            userProfile={userProfile}
+            onComplete={(profileData) => {
+              setUserProfile(profileData);
+              handleNavigate("seeker");
+              toast.success("Profile saved! Welcome to your dashboard.");
+            }}
+          />
+        );
+      case "employer-onboarding":
+        return (
+          <EmployerOnboarding
+            userProfile={userProfile}
+            onComplete={(profileData) => {
+              setUserProfile(profileData);
+              handleNavigate("employer");
+              toast.success("Business profile saved! Welcome to your dashboard.");
+            }}
+          />
+        );
       case "profile-title-customization":
         return (
-          <ProfileTitleCustomization 
+          <ProfileTitleCustomization
             onBack={() => handleNavigate("seeker")}
             onSave={(title) => {
               toast.success("Profile Title Updated!");
@@ -444,6 +469,7 @@ export default function App() {
     setAuthMode(mode);
     setSignupStep('role-select');
     setSignupRole(null);
+    setSignupFormData({});
     setShowAuthModal(true);
   };
 
@@ -598,27 +624,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Demo Signup Shortcuts */}
-                <div className="pt-4 border-t border-gray-100 space-y-4">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => handleDemoLogin('seeker')}
-                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 transition-all text-center space-y-2 group"
-                    >
-                      <Zap size={20} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
-                      <span className="block text-[10px] font-black uppercase tracking-widest text-[#0077BE]">Quick Seeker</span>
-                    </button>
-                    <button
-                      onClick={() => handleDemoLogin('employer')}
-                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all text-center space-y-2 group"
-                    >
-                      <Zap size={20} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
-                      <span className="block text-[10px] font-black uppercase tracking-widest text-[#2ECC71]">Quick Employer</span>
-                    </button>
-                  </div>
-                </div>
-
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
                    <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
                 </div>
@@ -627,48 +632,68 @@ export default function App() {
               /* Signup Step 2: Registration Form */
               <div className="space-y-8">
                 <button
-                  onClick={() => { setSignupStep('role-select'); setSignupRole(null); }}
+                  onClick={() => { setSignupStep('role-select'); setSignupRole(null); setSignupFormData({}); }}
                   className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-[#0077BE] transition-colors"
                 >
                   &larr; Back to role selection
                 </button>
 
+                {/* Demo Auto-Fill Button */}
+                <button
+                  onClick={() => {
+                    if (signupRole === 'seeker') {
+                      const d = DEMO_PROFILES.seeker;
+                      setSignupFormData({ name: d.name, email: d.email, password: d.password, phone: d.phone, location: d.location });
+                    } else {
+                      const d = DEMO_PROFILES.employer;
+                      setSignupFormData({ businessName: d.businessName, contactName: d.contactName, email: d.email, password: d.password, phone: d.phone, industry: d.industry, businessLicense: d.businessLicense });
+                    }
+                    toast.success("Demo data filled! Review and submit.");
+                  }}
+                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} transition-all flex items-center justify-center gap-3 group`}
+                >
+                  <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'} group-hover:scale-110 transition-transform`} />
+                  <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'}`}>
+                    Auto-fill Demo Data
+                  </span>
+                </button>
+
                 <form onSubmit={(e) => {
                   e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const profile: any = { role: signupRole };
-                  formData.forEach((value, key) => { profile[key] = value; });
+                  const profile: any = { role: signupRole, ...signupFormData };
                   setUserProfile(profile);
                   setUserRole(signupRole!);
                   setIsLoggedIn(true);
                   setShowAuthModal(false);
-                  handleNavigate(signupRole === 'employer' ? "employer" : "seeker");
-                  toast.success("Account created! Welcome to HanaHire.");
+                  setSignupFormData({});
+                  handleNavigate(signupRole === 'employer' ? "employer-onboarding" : "seeker-onboarding");
+                  toast.success("Account created! Let's set up your profile.");
                 }} className="space-y-6">
                    {signupRole === 'seeker' ? (
                      /* Seeker Signup Form */
                      <div className="space-y-5">
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Full Name</label>
-                         <input required name="name" type="text" placeholder="Your full name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="text" value={signupFormData.name || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Your full name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email</label>
-                         <input required name="email" type="email" placeholder="name@email.com" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="name@email.com" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Password</label>
-                         <input required name="password" type="password" placeholder="Create a password" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tighter" />
+                         <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tighter" />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Phone</label>
-                           <input name="phone" type="tel" placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base" />
+                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Location</label>
-                           <select name="location" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base">
-                             {JOB_CATEGORIES.locations.map(l => <option key={l}>{l}</option>)}
+                           <select value={signupFormData.location || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, location: e.target.value }))} className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base">
+                             <option value="">Select...</option>
+                             {JOB_CATEGORIES.locations.map(l => <option key={l} value={l}>{l}</option>)}
                            </select>
                          </div>
                        </div>
@@ -678,35 +703,36 @@ export default function App() {
                      <div className="space-y-5">
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Name</label>
-                         <input required name="businessName" type="text" placeholder="Your business name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="text" value={signupFormData.businessName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessName: e.target.value }))} placeholder="Your business name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Contact Name</label>
-                         <input required name="contactName" type="text" placeholder="Your name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="text" value={signupFormData.contactName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, contactName: e.target.value }))} placeholder="Your name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Email</label>
-                         <input required name="email" type="email" placeholder="hiring@business.com" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="hiring@business.com" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Password</label>
-                         <input required name="password" type="password" placeholder="Create a password" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tighter" />
+                         <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tighter" />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Phone</label>
-                           <input name="phone" type="tel" placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base" />
+                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Industry</label>
-                           <select name="industry" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base">
-                             {JOB_CATEGORIES.industries.map(i => <option key={i}>{i}</option>)}
+                           <select value={signupFormData.industry || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, industry: e.target.value }))} className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base">
+                             <option value="">Select...</option>
+                             {JOB_CATEGORIES.industries.map(i => <option key={i} value={i}>{i}</option>)}
                            </select>
                          </div>
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business License # (for verification)</label>
-                         <input name="businessLicense" type="text" placeholder="HI-BIZ-XXXX-XXXXX" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base tracking-widest" />
+                         <input type="text" value={signupFormData.businessLicense || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessLicense: e.target.value }))} placeholder="HI-BIZ-XXXX-XXXXX" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base tracking-widest" />
                        </div>
                        <div className="p-4 bg-[#2ECC71]/5 rounded-2xl border border-[#2ECC71]/10 flex items-start gap-3">
                          <Shield size={20} className="text-[#2ECC71] shrink-0 mt-0.5" />
@@ -719,22 +745,9 @@ export default function App() {
                      type="submit"
                      className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
                    >
-                     {signupRole === 'employer' ? 'Create Employer Account' : 'Launch My Profile'}
+                     {signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account'}
                    </Button>
                 </form>
-
-                {/* Demo Fill Shortcut */}
-                <div className="pt-4 border-t border-gray-100">
-                  <button
-                    onClick={() => handleDemoLogin(signupRole!)}
-                    className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} transition-all flex items-center justify-center gap-3 group`}
-                  >
-                    <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'} group-hover:scale-110 transition-transform`} />
-                    <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'}`}>
-                      Skip &mdash; Use Demo {signupRole === 'employer' ? 'Employer' : 'Seeker'} Account
-                    </span>
-                  </button>
-                </div>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
                    <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
