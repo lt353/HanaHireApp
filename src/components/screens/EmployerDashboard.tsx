@@ -1,6 +1,6 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, Building2, CheckCircle, Clock, ChevronDown, Eye, DollarSign } from "lucide-react";
+import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, Building2, CheckCircle, Clock, ChevronDown, Eye, DollarSign, X, Filter } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
@@ -59,8 +59,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     }));
   }, [isLoggedIn, candidates, jobs]);
 
-  const lockedApplicants = mockApplicants.filter(a => !unlockedCandidateIds.includes(a.id));
-  const unlockedApplicants = mockApplicants.filter(a => unlockedCandidateIds.includes(a.id));
+  const [filterByJobId, setFilterByJobId] = useState<number | null>(null);
+
+  const filteredApplicants = filterByJobId
+    ? mockApplicants.filter(a => a.appliedToJob?.id === filterByJobId)
+    : mockApplicants;
+  const lockedApplicants = filteredApplicants.filter(a => !unlockedCandidateIds.includes(a.id));
+  const unlockedApplicants = filteredApplicants.filter(a => unlockedCandidateIds.includes(a.id));
+  const filterJobTitle = filterByJobId ? jobs.find(j => j.id === filterByJobId)?.title : null;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16 md:space-y-24 mb-12 sm:mb-16 md:mb-20">
@@ -162,16 +168,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             <Users className="absolute -right-4 -bottom-4 text-white/5" size={80} />
           </div>
           <button
-            onClick={() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            onClick={() => { setFilterByJobId(null); setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}
             className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden text-left hover:ring-2 ring-[#FF6B6B]/40 transition-all"
           >
             <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px] flex items-center gap-2">Applicants Received <ChevronDown size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" /></span>
             <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#FF6B6B] transition-colors">{mockApplicants.length}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#2ECC71]">{unlockedApplicants.length} unlocked</span>
-              <span className="text-white/20">•</span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#FF6B6B]/60">{lockedApplicants.length} locked</span>
-            </div>
             <Mail className="absolute -right-4 -bottom-4 text-white/5" size={80} />
           </button>
           <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
@@ -197,24 +198,33 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             </Button>
           </div>
           <div className="space-y-4 sm:space-y-6">
-            {jobs.slice(0, 2).map(j => (
+            {jobs.slice(0, 2).map(j => {
+              const jobApplicantCount = mockApplicants.filter(a => a.appliedToJob?.id === j.id).length;
+              return (
               <div key={j.id} className="p-6 sm:p-8 md:p-10 bg-white border border-gray-100 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] shadow-sm space-y-6 sm:space-y-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-words">{j.title}</h4>
-                    <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • LIVE</p>
+                    <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • LIVE • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
                   </div>
                   <Button variant="outline" className="h-9 sm:h-10 border-none bg-gray-50 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0">
                     Manage
                   </Button>
                 </div>
                 <div className="flex gap-3 sm:gap-4">
-                  <Button variant="outline" className="flex-1 h-12 sm:h-14 md:h-16 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest" onClick={() => onNavigate("candidates")}>
-                    Browse Matches
+                  <Button variant="outline" className="flex-1 h-12 sm:h-14 md:h-16 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest" onClick={() => {
+                    setFilterByJobId(j.id);
+                    setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                  }}>
+                    View Applicants
+                  </Button>
+                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-5 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest" onClick={() => onNavigate("candidates")}>
+                    Talent Pool
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -278,15 +288,31 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       {/* Recent Applicants Section */}
       {isLoggedIn && mockApplicants.length > 0 && (
         <section ref={applicantsRef} className="space-y-8 sm:space-y-12 scroll-mt-28">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-              <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#FF6B6B]" /> Recent Applicants
-            </h3>
-            <div className="flex items-center gap-4">
-              <span className="text-xs font-black uppercase tracking-widest text-gray-400">{mockApplicants.length} total</span>
-              <span className="text-xs font-black uppercase tracking-widest text-[#2ECC71]">{unlockedApplicants.length} unlocked</span>
-              <span className="text-xs font-black uppercase tracking-widest text-[#FF6B6B]/60">{lockedApplicants.length} locked</span>
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
+                <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#FF6B6B]" /> {filterJobTitle ? 'Applicants' : 'Recent Applicants'}
+              </h3>
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-black uppercase tracking-widest text-gray-400">{filteredApplicants.length} total</span>
+                <span className="text-xs font-black uppercase tracking-widest text-[#2ECC71]">{unlockedApplicants.length} unlocked</span>
+                <span className="text-xs font-black uppercase tracking-widest text-[#FF6B6B]/60">{lockedApplicants.length} locked</span>
+              </div>
             </div>
+
+            {/* Job filter indicator */}
+            {filterJobTitle && (
+              <div className="flex items-center gap-3 p-3 bg-[#0077BE]/5 rounded-xl border border-[#0077BE]/10">
+                <Filter size={14} className="text-[#0077BE] shrink-0" />
+                <span className="text-xs font-bold text-[#0077BE] flex-1 truncate">Showing applicants for: {filterJobTitle}</span>
+                <button
+                  onClick={() => setFilterByJobId(null)}
+                  className="p-1 rounded-lg hover:bg-[#0077BE]/10 transition-colors shrink-0"
+                >
+                  <X size={14} className="text-[#0077BE]" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Unlocked Applicants */}
@@ -392,7 +418,6 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                 <h4 className="text-sm font-black uppercase tracking-widest text-gray-500">Locked Applicants — Unlock to see full profile</h4>
               </div>
               {lockedApplicants.map((applicant, i) => {
-                const statusStyle = STATUS_COLORS[applicant.status] || STATUS_COLORS['New'];
                 return (
                   <motion.div
                     key={applicant.id}
@@ -416,14 +441,9 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
                       {/* Anonymized Info */}
                       <div className="flex-1 min-w-0 space-y-1.5">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                          <h4 className="text-base sm:text-lg font-black tracking-tight truncate text-gray-400">
-                            {formatCandidateTitle(applicant)}
-                          </h4>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest w-fit ${statusStyle.bg} ${statusStyle.text}`}>
-                            {applicant.status}
-                          </span>
-                        </div>
+                        <h4 className="text-base sm:text-lg font-black tracking-tight truncate text-gray-400">
+                          {formatCandidateTitle(applicant)}
+                        </h4>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
                           <span className="flex items-center gap-1"><MapPin size={11} /> {applicant.location}</span>
                           <span className="flex items-center gap-1"><Clock size={11} /> {applicant.appliedAgo}</span>
