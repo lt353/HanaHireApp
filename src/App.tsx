@@ -457,9 +457,16 @@ export default function App() {
           <ProfileTitleCustomization
             onBack={() => handleNavigate("seeker")}
             onSave={(title) => {
+              setUserProfile((prev: any) => prev ? { ...prev, displayTitle: title } : prev);
               toast.success("Profile Title Updated!");
               handleNavigate("seeker");
             }}
+            initialData={userProfile ? {
+              location: userProfile.location || "Honolulu, HI",
+              yearsExperience: userProfile.experience || "3-5 Years",
+              suggestedTitle: userProfile.skills?.slice(0, 2).join(" & ") || "Customer Service & Team Leadership",
+              skills: userProfile.skills || [],
+            } : undefined}
           />
         );
       default:

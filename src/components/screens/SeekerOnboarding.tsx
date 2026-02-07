@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { User, Zap, CheckCircle, Video, Camera, ChevronRight, Sparkles } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { User, Zap, CheckCircle, Video, Camera, ChevronRight, Sparkles, Edit3, Lock } from "lucide-react";
 import { Button } from "../ui/Button";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
 
@@ -18,6 +18,23 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedWorkStyles, setSelectedWorkStyles] = useState<string[]>([]);
   const [jobTypesSeeking, setJobTypesSeeking] = useState<string[]>([]);
+  const [useCustomTitle, setUseCustomTitle] = useState(false);
+  const [customTitle, setCustomTitle] = useState("");
+
+  // System-generated title based on selected skills + experience
+  const systemTitle = useMemo(() => {
+    const parts: string[] = [];
+    if (experience) {
+      const years = parseInt(experience);
+      if (years >= 5) parts.push("Experienced");
+      else if (years >= 2) parts.push("Skilled");
+    }
+    if (selectedSkills.length > 0) {
+      parts.push(selectedSkills[0]);
+      if (selectedSkills.length > 1) parts.push(`& ${selectedSkills[1]}`);
+    }
+    return parts.length > 0 ? parts.join(" ") : "Professional Talent";
+  }, [selectedSkills, experience]);
 
   const toggleItem = (list: string[], setList: (v: string[]) => void, item: string) => {
     if (list.includes(item)) {
@@ -38,6 +55,8 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
     setSelectedIndustries(d.industries);
     setSelectedWorkStyles(["Collaborative", "Outgoing", "Energetic"]);
     setJobTypesSeeking(["Full-time", "Part-time"]);
+    setUseCustomTitle(true);
+    setCustomTitle("Experienced Bartender & Hospitality Pro");
   };
 
   const handleSubmit = () => {
@@ -52,6 +71,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       industries: selectedIndustries,
       workStyles: selectedWorkStyles,
       jobTypesSeeking,
+      displayTitle: useCustomTitle && customTitle.trim() ? customTitle.trim() : systemTitle,
     };
     onComplete(profileData);
   };
@@ -119,6 +139,56 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
               rows={4}
               className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-medium text-base resize-none"
             />
+          </div>
+
+          {/* Display Title */}
+          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <Edit3 size={18} className="text-[#0077BE]" />
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Display Title</h2>
+            </div>
+            <p className="text-xs text-gray-500 font-medium">
+              This is what employers see before unlocking your profile. Choose a system-generated title based on your skills, or write your own.
+            </p>
+
+            {/* System-generated preview */}
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">System Generated</span>
+                <div className="flex items-center gap-1 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+                  <Lock size={10} /> Employer view
+                </div>
+              </div>
+              <p className="font-black text-lg tracking-tight text-gray-600">{systemTitle}</p>
+            </div>
+
+            {/* Toggle custom */}
+            <button
+              onClick={() => setUseCustomTitle(!useCustomTitle)}
+              className={`w-full p-3 rounded-xl border-2 text-xs font-black uppercase tracking-widest transition-all ${
+                useCustomTitle
+                  ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]'
+                  : 'border-gray-100 text-gray-400 hover:border-gray-200'
+              }`}
+            >
+              {useCustomTitle ? 'Using Custom Title' : 'Write My Own Title Instead'}
+            </button>
+
+            {useCustomTitle && (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value.slice(0, 50))}
+                  placeholder="e.g. Experienced Bartender & Hospitality Pro"
+                  className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base"
+                />
+                <div className="flex justify-between items-center px-1">
+                  <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest">No names or contact info allowed</p>
+                  <p className={`text-[9px] font-black uppercase tracking-widest ${customTitle.length > 45 ? 'text-[#FF6B6B]' : 'text-gray-300'}`}>{customTitle.length}/50</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Skills */}
