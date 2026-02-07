@@ -75,7 +75,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             <h2 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">For Job Seekers</h2>
             <p className="text-lg sm:text-xl text-gray-500 font-medium">Get hired faster with video intros</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0077BE]/10 flex items-center justify-center text-[#0077BE]">
                 <Video size={28} className="sm:w-8 sm:h-8" />
@@ -129,7 +129,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             <h2 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">For Employers</h2>
             <p className="text-lg sm:text-xl text-gray-500 font-medium">Find the right fit in minutes, not weeks</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg border-2 border-gray-100">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#2ECC71]/10 flex items-center justify-center text-[#2ECC71]">
                 <Sparkles size={28} className="sm:w-8 sm:h-8" />
