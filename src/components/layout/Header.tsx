@@ -47,18 +47,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {isRoleSelected ? (
           <div className="hidden lg:flex items-center gap-6">
-            <button
-              onClick={() =>
-                onNavigate(role === "seeker" ? "seeker" : "employer")
-              }
-              className={`font-black text-[10px] uppercase tracking-[0.2em] ${
-                (currentTab === "seeker" || currentTab === "employer")
-                  ? "text-[#0077BE]"
-                  : "text-gray-400 hover:text-gray-900"
-              }`}
-            >
-              Dashboard
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={() =>
+                  onNavigate(role === "seeker" ? "seeker" : "employer")
+                }
+                className={`font-black text-[10px] uppercase tracking-[0.2em] ${
+                  (currentTab === "seeker" || currentTab === "employer")
+                    ? "text-[#0077BE]"
+                    : "text-gray-400 hover:text-gray-900"
+                }`}
+              >
+                Dashboard
+              </button>
+            )}
 
             {role === "seeker" && (
               <button
