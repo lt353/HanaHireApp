@@ -407,9 +407,9 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                         <ImageWithFallback
                           src={applicant.video_thumbnail_url || applicant.thumbnail}
                           alt="Locked applicant"
-                          className="w-full h-full object-cover blur-[6px] opacity-60"
+                          className="w-full h-full object-cover blur-[8px] scale-110 opacity-50"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                           <Lock size={18} className="text-white drop-shadow-md" />
                         </div>
                       </div>
@@ -418,7 +418,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                       <div className="flex-1 min-w-0 space-y-1.5">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                           <h4 className="text-base sm:text-lg font-black tracking-tight truncate text-gray-400">
-                            {applicant.display_title || 'Anonymous Applicant'}
+                            {formatCandidateTitle(applicant)}
                           </h4>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest w-fit ${statusStyle.bg} ${statusStyle.text}`}>
                             {applicant.status}
