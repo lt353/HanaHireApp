@@ -3,9 +3,11 @@ import { Video, Search, DollarSign, CheckCircle, Sparkles, Clock, Shield, Users 
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { INTERACTION_FEE } from "../../data/mockData";
 import heroImg from "../../assets/hero-image.jpg";
+import { ViewType } from '../../App';
 
 interface HomeProps {
   onSelectRole: (role: 'seeker' | 'employer') => void;
+  onNavigate: (view: ViewType) => void;
 }
 
 export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {

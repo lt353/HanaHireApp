@@ -1,12 +1,13 @@
 import React from "react";
 import { motion } from "motion/react";
 import { User } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
+import { ViewType } from '../../App';
 import { TEAM_MEMBERS, INTERACTION_FEE } from "../../data/mockData";
 
 interface AboutProps {
   onSelectRole: (role: 'seeker' | 'employer') => void;
-  onNavigate: (tab: string) => void;
+  onNavigate: (view: ViewType) => void;  
 }
 
 export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {

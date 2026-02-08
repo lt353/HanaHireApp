@@ -1,20 +1,22 @@
 import React from "react";
 import { Zap, ShoppingCart, Settings as SettingsIcon } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
+
+import { ViewType } from '../../App';
 
 interface HeaderProps {
   isRoleSelected: boolean;
-  role: "seeker" | "employer" | null;
-  currentTab: string;
+  role: 'seeker' | 'employer';
+  currentTab: ViewType;
   isLoggedIn: boolean;
   seekerQueueCount: number;
   employerQueueCount: number;
-  onNavigate: (tab: string) => void;
-  onSelectRole: (role: "seeker" | "employer") => void;
-  onToggleRole: () => void;
-  onLogout: () => void;
-  onShowAuth: (mode: "login" | "signup") => void;
-  onReset: () => void;
+  onNavigate: (view: ViewType) => void;
+  onSelectRole: (role: 'seeker' | 'employer') => void;  // ADD
+  onToggleRole: () => void;  // ADD
+  onLogout: () => void;  // ADD
+  onShowAuth: (mode: "login" | "signup") => void;  // ADD
+  onReset: () => void;  // ADD
 }
 
 export const Header: React.FC<HeaderProps> = ({

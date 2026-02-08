@@ -30,7 +30,7 @@ import { projectId, publicAnonKey } from './utils/supabase/info';
 // Components
 import { Header } from './components/layout/Header';
 import { Modal } from './components/ui/Modal';
-import { Button } from './components/ui/Button';
+import { Button } from './components/ui/button';
 import { CollapsibleFilter } from './components/CollapsibleFilter';
 import { Home } from './components/screens/Home';
 import { About } from './components/screens/About';
@@ -52,6 +52,7 @@ import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } 
 // Utils
 import { formatCandidateTitle } from "./utils/formatters";
 
+export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 export default function App() {
@@ -176,10 +177,10 @@ export default function App() {
     console.log("Unlocks loaded from local state for user:", id);
   };
 
-  const handleNavigate = (view: "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding") => {
-    setCurrentView(view);
-    window.scrollTo(0, 0);
-  };
+  const handleNavigate = (view: ViewType) => {
+  setCurrentView(view);
+  window.scrollTo(0, 0);
+};
 
   const selectRole = (selectedRole: 'seeker' | 'employer') => {
     if (selectedRole === 'employer') {
@@ -576,7 +577,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
                    <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#0077BE] hover:underline">Create Account</button></p>
                 </div>
               </>
@@ -838,8 +839,8 @@ export default function App() {
               <Lock size={18} className="mr-2" /> Pay ${((paymentTarget?.items?.length || 0) * INTERACTION_FEE).toFixed(2)} & Unlock <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
             </Button>
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
+           {/* Trust Indicators */}
+<div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
               <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
                 <Shield size={12} /> Secure Payment
               </div>
@@ -1055,10 +1056,12 @@ export default function App() {
       </Modal>
 
       {/* Mobile Nav */}
-      {currentView !== "landing" && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-4 z-50 shadow-2xl">
-           <button onClick={() => handleNavigate("landing")} className={`flex flex-col items-center gap-2 ${currentView === 'landing' ? 'text-[#0077BE]' : 'text-gray-300'}`}><Eye size={24} /><span className="text-[9px] font-black uppercase tracking-widest">EXPLORE</span></button>
-           <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#0077BE]' : 'text-gray-300'}`}><Briefcase size={24} /><span className="text-[9px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span></button>
+{currentView !== "landing" && (
+  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-4 z-50 shadow-2xl">
+     <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300">
+       <Eye size={24} />
+       <span className="text-[9px] font-black uppercase tracking-widest">EXPLORE</span>
+     </button>
            <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#0077BE]' : 'text-gray-300'}`}><User size={24} /><span className="text-[9px] font-black uppercase tracking-widest">HUB</span></button>
            <button onClick={() => handleNavigate("cart")} className={`flex flex-col items-center gap-2 relative ${currentView === 'cart' ? 'text-[#0077BE]' : 'text-gray-300'}`}><ShoppingCart size={24} /><span className="text-[9px] font-black uppercase tracking-widest">CART</span>{(userRole === 'seeker' ? seekerQueue.length : employerQueue.length) > 0 && <span className="absolute top-0 right-2 bg-[#FF6B6B] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">{(userRole === 'seeker' ? seekerQueue.length : employerQueue.length)}</span>}</button>
         </div>

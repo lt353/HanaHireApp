@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, Building2, CheckCircle, Clock, ChevronDown, Eye, DollarSign, X, Filter } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
+import { ViewType } from '../../App';
 
 const APPLICANT_STATUSES = ['New', 'Reviewed', 'Shortlisted', 'Interview Scheduled'] as const;
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -19,7 +20,7 @@ interface EmployerDashboardProps {
   jobs: any[];
   candidates: any[];
   unlockedCandidateIds: number[];
-  onNavigate: (tab: string) => void;
+  onNavigate: (view: ViewType) => void;
   onShowPostJob: () => void;
   onSelectCandidate: (candidate: any) => void;
   onShowPayment: (target: { type: string; items: any[] }) => void;

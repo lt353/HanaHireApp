@@ -10,9 +10,11 @@ import {
   ShoppingCart,
   Briefcase,
 } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
+import { ViewType } from '../../App';
 
 interface CandidatesListProps {
+  onNavigate: (view: ViewType) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   filteredCandidates: any;

@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from "react";
 import { User, Zap, CheckCircle, Video, Camera, ChevronRight, Sparkles, Edit3, Lock } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
+import { ViewType } from '../../App';
 
 interface SeekerOnboardingProps {
   userProfile: any;
   onComplete: (profileData: any) => void;
+  onNavigate: (view: ViewType) => void;
 }
 
 export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile, onComplete }) => {

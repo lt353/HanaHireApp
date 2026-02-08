@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner@2.0.3";
+import { ViewType } from '../../App';
 import { 
   ArrowLeft, 
   Info, 
@@ -11,11 +13,12 @@ import {
   Edit3,
   ChevronUp
 } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 
 interface ProfileTitleCustomizationProps {
   onBack: () => void;
   onSave: (title: string) => void;
+  onNavigate?: (view: ViewType) => void;
   initialData?: {
     location: string;
     yearsExperience: string;

@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { ChevronRight, CreditCard, HelpCircle, Mail, Phone, Plus, RefreshCw, Database } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { toast } from "sonner@2.0.3";
 import { projectId, publicAnonKey } from "../../utils/supabase/info";
+import { ViewType } from '../../App';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 interface SettingsProps {
   onRefreshData?: () => void;
+  onNavigate: (view: ViewType) => void;
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {

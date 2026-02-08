@@ -1,13 +1,14 @@
 import React from "react";
 import { motion } from "motion/react";
 import { Plus, Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, Eye, FileText, BarChart3 } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { ViewType } from '../../App';
 
 interface SeekerDashboardProps {
   isLoggedIn: boolean;
   userProfile?: any;
-  onNavigate: (tab: string) => void;
+ onNavigate: (view: ViewType) => void;
   onShowMedia: () => void;
   onShowVisibility: () => void;
   onShowAuth: (mode: "login" | "signup") => void;

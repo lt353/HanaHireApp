@@ -1,14 +1,15 @@
 import React from "react";
 import { Briefcase, User, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "motion/react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { formatCandidateTitle } from "../../utils/formatters";
+import { ViewType } from '../../App';
 
 interface CartProps {
   role: 'seeker' | 'employer';
   queue: any[];
   onRemoveFromQueue: (id: number) => void;
-  onNavigate: (tab: string) => void;
+  onNavigate: (view: ViewType) => void;
   onShowPayment: (target: any) => void;
   interactionFee: number;
 }
@@ -75,44 +76,44 @@ export const Cart: React.FC<CartProps> = ({
                     <motion.div 
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
-                      className="px-10 pb-10 border-t border-gray-50 pt-8 space-y-6"
+                      className="px-4 sm:px-6 lg:px-10 pb-6 sm:pb-8 lg:pb-10 border-t border-gray-50 pt-6 sm:pt-8 space-y-4 sm:space-y-6 overflow-x-hidden"
                     >
                       {role === 'employer' ? (
-                        <div className="grid grid-cols-2 gap-8">
-                          <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+                          <div className="space-y-3 sm:space-y-4 overflow-hidden">
                             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Experience & Availability</h4>
                             <div className="space-y-2">
-                              <p className="text-sm font-bold text-gray-600">Years: <span className="text-gray-900">{item.years_experience}</span></p>
-                              <p className="text-sm font-bold text-gray-600">Availability: <span className="text-gray-900">{item.availability}</span></p>
-                              <p className="text-sm font-bold text-gray-600">Status: <span className="text-gray-900">{item.current_employment_status}</span></p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-600 break-words">Years: <span className="text-gray-900">{item.years_experience}</span></p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-600 break-words">Availability: <span className="text-gray-900">{item.availability}</span></p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-600 break-words">Status: <span className="text-gray-900">{item.current_employment_status}</span></p>
                             </div>
                           </div>
-                          <div className="space-y-4">
+                          <div className="space-y-3 sm:space-y-4 overflow-hidden">
                             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Skills</h4>
                             <div className="flex flex-wrap gap-2">
                               {item.skills?.map((s: string, i: number) => (
-                                <span key={i} className="px-3 py-1 bg-gray-50 text-[10px] font-black text-gray-500 rounded-lg uppercase tracking-widest">{s}</span>
+                                <span key={i} className="px-2 sm:px-3 py-1 bg-gray-50 text-[9px] sm:text-[10px] font-black text-gray-500 rounded-lg uppercase tracking-widest break-words">{s}</span>
                               ))}
                             </div>
                           </div>
-                          <div className="col-span-2 space-y-4">
+                          <div className="col-span-1 md:col-span-2 space-y-3 sm:space-y-4 overflow-hidden">
                             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Professional Bio</h4>
-                            <p className="text-sm text-gray-600 leading-relaxed italic">"{item.bio}"</p>
+                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed italic break-words">"{item.bio}"</p>
                           </div>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-8">
-                          <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+                          <div className="space-y-3 sm:space-y-4 overflow-hidden">
                             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Role Details</h4>
                             <div className="space-y-2">
-                              <p className="text-sm font-bold text-gray-600">Industry: <span className="text-gray-900">{item.company_industry}</span></p>
-                              <p className="text-sm font-bold text-gray-600">Pay Range: <span className="text-gray-900">{item.pay_range}</span></p>
-                              <p className="text-sm font-bold text-gray-600">Type: <span className="text-gray-900">{item.job_type}</span></p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-600 break-words">Industry: <span className="text-gray-900">{item.company_industry}</span></p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-600 break-words">Pay Range: <span className="text-gray-900">{item.pay_range}</span></p>
+                              <p className="text-xs sm:text-sm font-bold text-gray-600 break-words">Type: <span className="text-gray-900">{item.job_type}</span></p>
                             </div>
                           </div>
-                          <div className="space-y-4">
+                          <div className="space-y-3 sm:space-y-4 overflow-hidden">
                             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Summary</h4>
-                            <p className="text-sm text-gray-600 leading-relaxed truncate-3-lines">{item.description}</p>
+                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed truncate-3-lines break-words">{item.description}</p>
                           </div>
                         </div>
                       )}
