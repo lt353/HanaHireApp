@@ -839,18 +839,18 @@ export default function App() {
               <Lock size={18} className="mr-2" /> Pay ${((paymentTarget?.items?.length || 0) * INTERACTION_FEE).toFixed(2)} & Unlock <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
             </Button>
 
-           {/* Trust Indicators */}
+    {/* Trust Indicators */}
 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
-              <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-                <Shield size={12} /> Secure Payment
-              </div>
-              <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-                <Lock size={12} /> 256-bit Encryption
-              </div>
-              <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-                <CheckCircle size={12} /> Money-back Guarantee
-              </div>
-            </div>
+  <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+    <Shield size={12} /> Secure Payment
+  </div>
+  <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+    <Lock size={12} /> 256-bit Encryption
+  </div>
+  <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+    <CheckCircle size={12} /> Money-back Guarantee
+  </div>
+</div>
          </div>
       </Modal>
 
