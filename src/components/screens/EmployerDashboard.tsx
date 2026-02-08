@@ -137,12 +137,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             <Plus size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Post a Job
           </Button>
           <Button
-            variant="secondary"
-            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#FF6B6B]/20 text-base sm:text-lg md:text-xl whitespace-nowrap"
-            onClick={() => onNavigate("candidates")}
-          >
-            <Users size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Candidates
-          </Button>
+  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#FF6B6B]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 text-white"
+  onClick={() => onNavigate("candidates")}
+>
+  <Users size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Candidates
+</Button>
           {isLoggedIn && (
             <Button
               variant="outline"
