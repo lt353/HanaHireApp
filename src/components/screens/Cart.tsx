@@ -45,15 +45,15 @@ export const Cart: React.FC<CartProps> = ({
                 <div key={item.id} className="bg-white border border-gray-100 rounded-[2rem] sm:rounded-[3rem] lg:rounded-[3.5rem] overflow-hidden shadow-sm group transition-all hover:shadow-xl">
                   <div className="p-4 sm:p-6 lg:p-10 flex items-center justify-between gap-2 sm:gap-4 cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
                     <div className="flex items-center gap-2 sm:gap-4 lg:gap-8 min-w-0 flex-1">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] bg-[#0077BE]/5 flex items-center justify-center text-[#0077BE] shadow-inner group-hover:rotate-6 transition-transform shrink-0">
-                        {role === 'seeker' ? <Briefcase size={20} className="sm:w-6 sm:h-6 lg:w-8 lg:h-8" /> : <User size={20} className="sm:w-6 sm:h-6 lg:w-8 lg:h-8" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-base sm:text-xl lg:text-2xl font-black tracking-tighter leading-none truncate">
-                          {role === 'seeker' ? item.title : formatCandidateTitle(item)}
-                        </p>
-                        <p className="text-[9px] sm:text-[10px] text-gray-400 font-black uppercase tracking-widest pt-1 sm:pt-2 truncate">{item.location} • ${interactionFee.toFixed(2)} Fee</p>
-                      </div>
+                      <div className="w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] bg-[#0077BE]/5 flex items-center justify-center text-[#0077BE] shadow-inner group-hover:rotate-6 transition-transform shrink-0">
+  {role === 'seeker' ? <Briefcase size={16} className="sm:w-6 sm:h-6 lg:w-8 lg:h-8" /> : <User size={16} className="sm:w-6 sm:h-6 lg:w-8 lg:h-8" />}
+</div>
+                      <div className="min-w-0 flex-1 overflow-hidden">
+  <p className="text-sm sm:text-base lg:text-2xl font-black tracking-tight leading-tight break-words line-clamp-2">
+    {role === 'seeker' ? item.title : formatCandidateTitle(item)}
+  </p>
+  <p className="text-[9px] sm:text-[10px] text-gray-400 font-black uppercase tracking-widest pt-1 sm:pt-2 truncate">{item.location} • ${interactionFee.toFixed(2)} Fee</p>
+</div>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 lg:gap-4 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button 
