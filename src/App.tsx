@@ -27,6 +27,7 @@ import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
+
 // Components
 import { Header } from './components/layout/Header';
 import { Modal } from './components/ui/Modal';
@@ -835,7 +836,7 @@ export default function App() {
             </div>
 
             {/* Pay Button */}
-            <Button className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group" onClick={processPayment}>
+            <Button className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" onClick={processPayment}>
               <Lock size={18} className="mr-2" /> Pay ${((paymentTarget?.items?.length || 0) * INTERACTION_FEE).toFixed(2)} & Unlock <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
             </Button>
 

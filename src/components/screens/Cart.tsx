@@ -131,11 +131,11 @@ export const Cart: React.FC<CartProps> = ({
                   <span className="text-5xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
                 </div>
                 <Button 
-                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#0077BE]/20" 
-                  onClick={() => onShowPayment({ type: role, items: queue })}
-                >
-                  Confirm & Pay
-                </Button>
+  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+  onClick={() => onShowPayment({ type: role, items: queue })}
+>
+  Confirm & Pay
+</Button>
               </div>
             </div>
           </div>
@@ -148,11 +148,11 @@ export const Cart: React.FC<CartProps> = ({
                 <span className="text-3xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
               </div>
               <Button 
-                className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20" 
-                onClick={() => onShowPayment({ type: role, items: queue })}
-              >
-                Proceed to Checkout
-              </Button>
+  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+  onClick={() => onShowPayment({ type: role, items: queue })}
+>
+  Proceed to Checkout
+</Button>
             </div>
           </div>
         </>
