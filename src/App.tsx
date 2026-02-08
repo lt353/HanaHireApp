@@ -1055,17 +1055,32 @@ export default function App() {
          </div>
       </Modal>
 
-      {/* Mobile Nav */}
+     {/* Mobile Nav */}
 {currentView !== "landing" && (
   <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-4 z-50 shadow-2xl">
      <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300">
        <Eye size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">EXPLORE</span>
      </button>
-           <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#0077BE]' : 'text-gray-300'}`}><User size={24} /><span className="text-[9px] font-black uppercase tracking-widest">HUB</span></button>
-           <button onClick={() => handleNavigate("cart")} className={`flex flex-col items-center gap-2 relative ${currentView === 'cart' ? 'text-[#0077BE]' : 'text-gray-300'}`}><ShoppingCart size={24} /><span className="text-[9px] font-black uppercase tracking-widest">CART</span>{(userRole === 'seeker' ? seekerQueue.length : employerQueue.length) > 0 && <span className="absolute top-0 right-2 bg-[#FF6B6B] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">{(userRole === 'seeker' ? seekerQueue.length : employerQueue.length)}</span>}</button>
-        </div>
-      )}
+     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#0077BE]' : 'text-gray-300'}`}>
+       <Briefcase size={24} />
+       <span className="text-[9px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
+     </button>
+     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#0077BE]' : 'text-gray-300'}`}>
+       <User size={24} />
+       <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
+     </button>
+     <button onClick={() => handleNavigate("cart")} className={`flex flex-col items-center gap-2 relative ${currentView === 'cart' ? 'text-[#0077BE]' : 'text-gray-300'}`}>
+       <ShoppingCart size={24} />
+       <span className="text-[9px] font-black uppercase tracking-widest">CART</span>
+       {(userRole === 'seeker' ? seekerQueue.length : employerQueue.length) > 0 && (
+         <span className="absolute top-0 right-2 bg-[#FF6B6B] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+           {(userRole === 'seeker' ? seekerQueue.length : employerQueue.length)}
+         </span>
+       )}
+     </button>
+  </div>
+)}
 
       {/* --- Detail Modals --- */}
       <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Role Intelligence">
