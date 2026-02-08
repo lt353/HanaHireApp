@@ -3,13 +3,12 @@ import { Briefcase, User, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import { formatCandidateTitle } from "../../utils/formatters";
-import { ViewType } from '../../App';
 
 interface CartProps {
   role: 'seeker' | 'employer';
   queue: any[];
   onRemoveFromQueue: (id: number) => void;
-  onNavigate: (view: ViewType) => void;
+  onNavigate: (tab: string) => void;
   onShowPayment: (target: any) => void;
   interactionFee: number;
 }
@@ -33,7 +32,7 @@ export const Cart: React.FC<CartProps> = ({
           <Briefcase size={48} className="sm:w-16 sm:h-16 text-gray-100 mx-auto" />
           <p className="text-gray-400 font-black text-lg sm:text-xl md:text-2xl uppercase tracking-widest">Your cart is empty</p>
           <div className="flex justify-center">
-            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
+            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
               Start Browsing
             </Button>
           </div>
@@ -44,8 +43,8 @@ export const Cart: React.FC<CartProps> = ({
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {queue.map(item => (
                 <div key={item.id} className="bg-white border border-gray-100 rounded-[2rem] sm:rounded-[3rem] lg:rounded-[3.5rem] overflow-hidden shadow-sm group transition-all hover:shadow-xl">
-                  <div className="p-6 sm:p-8 lg:p-10 flex items-center justify-between gap-4 cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
-                    <div className="flex items-center gap-4 sm:gap-6 lg:gap-8 min-w-0 flex-1">
+                  <div className="p-4 sm:p-6 lg:p-10 flex items-center justify-between gap-2 sm:gap-4 cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
+                    <div className="flex items-center gap-2 sm:gap-4 lg:gap-8 min-w-0 flex-1">
                       <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] bg-[#0077BE]/5 flex items-center justify-center text-[#0077BE] shadow-inner group-hover:rotate-6 transition-transform shrink-0">
                         {role === 'seeker' ? <Briefcase size={20} className="sm:w-6 sm:h-6 lg:w-8 lg:h-8" /> : <User size={20} className="sm:w-6 sm:h-6 lg:w-8 lg:h-8" />}
                       </div>
@@ -56,16 +55,16 @@ export const Cart: React.FC<CartProps> = ({
                         <p className="text-[9px] sm:text-[10px] text-gray-400 font-black uppercase tracking-widest pt-1 sm:pt-2 truncate">{item.location} • ${interactionFee.toFixed(2)} Fee</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1 sm:gap-2 lg:gap-4 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                        className="p-2 sm:p-3 lg:p-4 text-gray-300 hover:text-[#0077BE] rounded-full transition-all"
+                        className="p-1.5 sm:p-2 lg:p-4 text-gray-300 hover:text-[#0077BE] rounded-full transition-all"
                       >
                         {expandedId === item.id ? <ChevronUp size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" /> : <ChevronDown size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />}
                       </button>
                       <button 
                         onClick={() => onRemoveFromQueue(item.id)} 
-                        className="p-3 sm:p-4 lg:p-6 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] transition-all"
+                        className="p-2 sm:p-3 lg:p-6 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] transition-all"
                       >
                         <Trash2 size={20} className="sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                       </button>
@@ -131,11 +130,11 @@ export const Cart: React.FC<CartProps> = ({
                   <span className="text-5xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
                 </div>
                 <Button 
-  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
-  onClick={() => onShowPayment({ type: role, items: queue })}
->
-  Confirm & Pay
-</Button>
+                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+                  onClick={() => onShowPayment({ type: role, items: queue })}
+                >
+                  Confirm & Pay
+                </Button>
               </div>
             </div>
           </div>
@@ -148,11 +147,11 @@ export const Cart: React.FC<CartProps> = ({
                 <span className="text-3xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
               </div>
               <Button 
-  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
-  onClick={() => onShowPayment({ type: role, items: queue })}
->
-  Proceed to Checkout
-</Button>
+                className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+                onClick={() => onShowPayment({ type: role, items: queue })}
+              >
+                Proceed to Checkout
+              </Button>
             </div>
           </div>
         </>
