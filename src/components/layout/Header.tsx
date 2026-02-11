@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
   }
 
   return (
-    <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-3 sm:px-4 md:px-8 h-20 flex items-center justify-between gap-2">
+    <nav className="hidden md:flex sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-3 sm:px-4 md:px-8 h-20 items-center justify-between gap-2">
       {/* Left */}
       <div className="flex items-center gap-2 sm:gap-4 md:gap-10 min-w-0 flex-1">
         <button
