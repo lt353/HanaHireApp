@@ -12,11 +12,12 @@ interface HeaderProps {
   seekerQueueCount: number;
   employerQueueCount: number;
   onNavigate: (view: ViewType) => void;
-  onSelectRole: (role: 'seeker' | 'employer') => void;  // ADD
-  onToggleRole: () => void;  // ADD
-  onLogout: () => void;  // ADD
-  onShowAuth: (mode: "login" | "signup") => void;  // ADD
-  onReset: () => void;  // ADD
+  onSelectRole: (role: 'seeker' | 'employer') => void;
+  onToggleRole: () => void;
+  onLogout: () => void;
+  onShowAuth: (mode: "login" | "signup") => void;
+  onReset: () => void;
+  isPaymentModalOpen?: boolean;  // ADD THIS LINE
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,9 +32,15 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleRole,
   onLogout,
   onShowAuth,
-  onReset
+  onReset,
+  isPaymentModalOpen = false  // ADD THIS LINE
 }) => {
   const queueCount = role === "seeker" ? seekerQueueCount : employerQueueCount;
+
+  // HIDE HEADER WHEN PAYMENT MODAL IS OPEN
+  if (isPaymentModalOpen) {
+    return null;
+  }
 
   return (
     <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-3 sm:px-4 md:px-8 h-20 flex items-center justify-between gap-2">
@@ -99,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
                     : "text-gray-400 hover:text-gray-900"
                 }`}
               >
-                Talent Pool
+                Find Talent
               </button>
             )}
 
@@ -113,107 +120,75 @@ export const Header: React.FC<HeaderProps> = ({
             >
               About
             </button>
-          </div>
-        ) : (
-          <div className="hidden lg:flex items-center gap-6">
+
             <button
-              onClick={() => onNavigate("about")}
+              onClick={() => onNavigate("settings")}
               className={`font-black text-[10px] uppercase tracking-[0.2em] ${
-                currentTab === "about"
+                currentTab === "settings"
                   ? "text-[#0077BE]"
                   : "text-gray-400 hover:text-gray-900"
               }`}
             >
-              About
-            </button>
-            <button
-              onClick={() => onSelectRole("seeker")}
-              className="font-black text-[10px] uppercase tracking-[0.2em] text-gray-400 hover:text-[#0077BE]"
-            >
-              Looking for a job
-            </button>
-            <button
-              onClick={() => onSelectRole("employer")}
-              className="font-black text-[10px] uppercase tracking-[0.2em] text-gray-400 hover:text-[#0077BE]"
-            >
-              Looking to hire
+              <SettingsIcon size={16} />
             </button>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Right */}
       <div className="flex items-center gap-1 sm:gap-2 md:gap-4 shrink-0">
-        {/* Auth / account controls */}
-        {!isLoggedIn ? (
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Button
-              variant="outline"
-              className="h-9 sm:h-10 px-2 sm:px-3 md:px-5 border-none text-[9px] sm:text-[10px] whitespace-nowrap"
-              onClick={() => onShowAuth("login")}
-            >
-              Log In
-            </Button>
-
-            <Button
-              className={`h-9 sm:h-10 px-2 sm:px-3 md:px-5 text-[9px] sm:text-[10px] whitespace-nowrap ${
-                role === "employer" ? "bg-[#2ECC71]" : ""
-              }`}
-              onClick={() => onShowAuth("signup")}
-            >
-              {role === "employer" ? "Get Started" : "Sign Up"}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 sm:gap-4">
-            {isRoleSelected && (
-              <button
-                onClick={onToggleRole}
-                className="hidden sm:block px-4 py-2 rounded-xl bg-gray-50 text-gray-500 text-[9px] font-black hover:bg-gray-100 border border-gray-100 transition-all uppercase tracking-widest whitespace-nowrap"
-              >
-                Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
-              </button>
-            )}
-
-            <button
-              onClick={onLogout}
-              className="hidden sm:block text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest whitespace-nowrap"
-            >
-              Log Out
-            </button>
-          </div>
-        )}
-
-        {/* Cart + settings only after role is selected (not on Home) */}
         {isRoleSelected && (
           <>
+            {/* Role Toggle - Desktop Only */}
+            <button
+              onClick={onToggleRole}
+              className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 hover:border-[#0077BE] hover:bg-[#0077BE]/5 transition-all text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-[#0077BE]"
+            >
+              Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
+            </button>
+
+            {/* Cart Button */}
             <button
               onClick={() => onNavigate("cart")}
-              className="relative p-2 sm:p-3 rounded-2xl bg-gray-50 text-gray-400 border border-gray-100 hover:bg-white transition-all"
-              aria-label="Cart"
+              className={`relative p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl transition-all ${
+                currentTab === "cart"
+                  ? "bg-[#0077BE] text-white shadow-lg"
+                  : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+              }`}
             >
-              <ShoppingCart size={18} className="sm:w-5 sm:h-5" />
+              <ShoppingCart size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
               {queueCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#FF6B6B] text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                <span className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 bg-[#FF6B6B] text-white text-[9px] sm:text-[10px] font-black w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                   {queueCount}
                 </span>
               )}
             </button>
-
-            {isLoggedIn && (
-              <button
-                onClick={() => onNavigate("settings")}
-                className={`p-2 sm:p-3 rounded-2xl transition-all ${
-                  currentTab === "settings"
-                    ? "bg-[#0077BE]/10 text-[#0077BE]"
-                    : "text-gray-400 hover:bg-gray-50"
-                }`}
-                aria-label="Settings"
-              >
-                <SettingsIcon size={18} className="sm:w-5 sm:h-5" />
-              </button>
-            )}
           </>
+        )}
+
+        {/* Auth Buttons */}
+        {isLoggedIn ? (
+          <Button
+            onClick={onLogout}
+            className="h-9 sm:h-10 md:h-12 px-3 sm:px-4 md:px-6 text-[10px] sm:text-xs md:text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-black uppercase tracking-widest"
+          >
+            Sign Out
+          </Button>
+        ) : (
+          <div className="flex gap-1 sm:gap-2">
+            <Button
+              onClick={() => onShowAuth("login")}
+              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-black uppercase tracking-widest"
+            >
+              Log In
+            </Button>
+            <Button
+              onClick={() => onShowAuth("signup")}
+              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm bg-[#0077BE] hover:bg-[#0077BE]/90 text-white font-black uppercase tracking-widest shadow-lg shadow-[#0077BE]/20"
+            >
+              Sign Up
+            </Button>
+          </div>
         )}
       </div>
     </nav>
