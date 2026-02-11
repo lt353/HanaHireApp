@@ -13,7 +13,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[45] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
       <motion.div 
         initial={{ opacity: 0, y: 50 }} 
         animate={{ opacity: 1, y: 0 }} 
@@ -26,7 +26,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
             <X size={20} className="sm:w-6 sm:h-6" />
           </button>
         </div>
-        <div className="px-4 py-6 sm:p-8 overflow-y-auto custom-scrollbar">
+        <div className="px-4 py-6 sm:p-8 pb-24 sm:pb-8 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </motion.div>

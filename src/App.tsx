@@ -770,17 +770,13 @@ export default function App() {
       </Modal>
 
       <Modal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} title="Secure Checkout">
-  <div className="space-y-8 pb-40 sm:pb-8">
+  <div className="space-y-8">
     {/* Order Summary */}
-    <div className="bg-gradient-to-br from-gray-50 to-white rounded-[2rem] border-2 border-gray-100 overflow-hidden shadow-sm">
+    <div className="bg-gray-50 rounded-[2rem] border border-gray-100 overflow-hidden">
       <div className="p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Order Summary</span>
-          <div className="px-3 py-1.5 bg-gradient-to-r from-[#2ECC71] to-[#27AE60] rounded-full">
-            <span className="text-[10px] font-black text-white uppercase tracking-wider">
-              {paymentTarget?.items?.length || 0} {(paymentTarget?.items?.length || 0) === 1 ? 'unlock' : 'unlocks'}
-            </span>
-          </div>
+          <span className="text-[10px] font-black text-[#2ECC71] uppercase tracking-widest">{paymentTarget?.items?.length || 0} {(paymentTarget?.items?.length || 0) === 1 ? 'unlock' : 'unlocks'}</span>
         </div>
         {paymentTarget?.items?.map((item: any, i: number) => (
           <div key={i} className="flex items-center justify-between py-3 border-t border-gray-100 first:border-0">
@@ -794,7 +790,7 @@ export default function App() {
           </div>
         ))}
       </div>
-      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 px-6 sm:px-8 py-5 flex items-center justify-between">
+      <div className="bg-gray-900 px-6 sm:px-8 py-5 flex items-center justify-between">
         <span className="text-white/60 font-black uppercase tracking-[0.3em] text-[10px]">Total</span>
         <span className="text-white text-3xl sm:text-4xl font-black tracking-tighter">${((paymentTarget?.items?.length || 0) * INTERACTION_FEE).toFixed(2)}</span>
       </div>
@@ -805,33 +801,30 @@ export default function App() {
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Payment Details</span>
         <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-          <Lock size={10} /> SSL Encrypted
+          <Lock size={10} className="text-[#0077BE]" /> SSL Encrypted
         </div>
       </div>
 
       {/* Name on Card */}
       <div className="space-y-2">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Name on Card</label>
-        <input type="text" placeholder="Full name as shown on card" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base transition-colors" />
+        <input 
+          type="text" 
+          placeholder="Full name as shown on card" 
+          className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base transition-colors" 
+        />
       </div>
 
       {/* Card Number */}
       <div className="space-y-2">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Card Number</label>
         <div className="relative">
-          <CreditCard size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" />
-          <input type="text" placeholder="1234  5678  1234  5678" className="w-full p-4 sm:p-5 pl-14 rounded-2xl bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base tracking-widest transition-colors" />
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1.5">
-            <div className="w-8 h-5 rounded bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-white text-[8px] font-black">
-              VISA
-            </div>
-            <div className="w-8 h-5 rounded bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
-              <div className="flex gap-[1px]">
-                <div className="w-2 h-2 rounded-full bg-white/90"></div>
-                <div className="w-2 h-2 rounded-full bg-white/90"></div>
-              </div>
-            </div>
-          </div>
+          <CreditCard size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#0077BE]/40" />
+          <input 
+            type="text" 
+            placeholder="1234  5678  1234  5678" 
+            className="w-full p-4 sm:p-5 pl-14 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base tracking-widest transition-colors" 
+          />
         </div>
       </div>
 
@@ -839,33 +832,44 @@ export default function App() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Expiry</label>
-          <input type="text" placeholder="MM / YY" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
+          <input 
+            type="text" 
+            placeholder="MM / YY" 
+            className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" 
+          />
         </div>
         <div className="space-y-2">
           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Security Code</label>
           <div className="relative">
-            <input type="text" placeholder="CVC" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
-            <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-200" />
+            <input 
+              type="text" 
+              placeholder="CVC" 
+              className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" 
+            />
+            <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0077BE]/30" />
           </div>
         </div>
       </div>
     </div>
 
     {/* Pay Button */}
-    <Button className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 hover:shadow-[#0077BE]/40 tracking-tight group bg-gradient-to-r from-[#0077BE] to-[#0066A6] text-white font-black uppercase transition-all" onClick={processPayment}>
+    <Button 
+      className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+      onClick={processPayment}
+    >
       <Lock size={18} className="mr-2" /> Pay ${((paymentTarget?.items?.length || 0) * INTERACTION_FEE).toFixed(2)} & Unlock <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
     </Button>
 
     {/* Trust Indicators */}
-    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
-      <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-        <Shield size={12} /> Secure Payment
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
+      <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+        <Shield size={12} className="text-[#0077BE]" /> Secure Payment
       </div>
-      <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-        <Lock size={12} /> 256-bit Encryption
+      <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+        <Lock size={12} className="text-[#0077BE]" /> 256-bit Encryption
       </div>
-      <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-        <CheckCircle size={12} /> Money-back Guarantee
+      <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+        <CheckCircle size={12} className="text-[#0077BE]" /> Money-back Guarantee
       </div>
     </div>
   </div>
