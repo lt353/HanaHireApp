@@ -528,7 +528,7 @@ export default function App() {
       {/* --- Modals --- */}
       
       <Modal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} title={authMode === 'login' ? "Access My Hub" : (signupStep === 'role-select' ? "Get Started" : (signupRole === 'employer' ? "Employer Sign Up" : "Job Seeker Sign Up"))}>
-         <div className="space-y-8">
+         <div className="space-y-8 pb-32 sm:pb-8">
             {authMode === 'login' ? (
               <>
                 <form onSubmit={(e) => {
@@ -579,7 +579,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
                    <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#0077BE] hover:underline">Create Account</button></p>
                 </div>
               </>
@@ -770,7 +770,7 @@ export default function App() {
       </Modal>
 
       <Modal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} title="Secure Checkout">
-  <div className="space-y-8 pb-24 sm:pb-8">
+  <div className="space-y-8 pb-40 sm:pb-8">
     {/* Order Summary */}
     <div className="bg-gradient-to-br from-gray-50 to-white rounded-[2rem] border-2 border-gray-100 overflow-hidden shadow-sm">
       <div className="p-6 sm:p-8 space-y-4">
@@ -857,7 +857,7 @@ export default function App() {
     </Button>
 
     {/* Trust Indicators */}
-    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
       <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
         <Shield size={12} /> Secure Payment
       </div>
