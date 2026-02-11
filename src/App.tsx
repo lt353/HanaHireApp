@@ -389,6 +389,7 @@ export default function App() {
             onNavigate={handleNavigate}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
             interactionFee={INTERACTION_FEE}
+            isPaymentModalOpen={showPaymentModal}
           />
         );
       case "seeker":
@@ -517,6 +518,7 @@ export default function App() {
         onLogout={handleLogout}
         onShowAuth={handleShowAuth}
         onReset={() => { setCurrentView("landing"); }}
+        className={showPaymentModal ? 'hidden' : ''}
       />
 
       <main>
@@ -1077,7 +1079,7 @@ export default function App() {
       </Modal>
 
      {/* Mobile Nav */}
-{currentView !== "landing" && (
+{currentView !== "landing" && !showPaymentModal && (
   <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-4 z-50 shadow-2xl">
      <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300">
        <Eye size={24} />
