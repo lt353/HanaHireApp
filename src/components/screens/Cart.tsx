@@ -11,6 +11,7 @@ interface CartProps {
   onNavigate: (tab: string) => void;
   onShowPayment: (target: any) => void;
   interactionFee: number;
+  isPaymentModalOpen?: boolean;  // ADD THIS LINE
 }
 
 export const Cart: React.FC<CartProps> = ({
@@ -19,7 +20,8 @@ export const Cart: React.FC<CartProps> = ({
   onRemoveFromQueue,
   onNavigate,
   onShowPayment,
-  interactionFee
+  interactionFee,
+  isPaymentModalOpen = false  // ADD THIS LINE
 }) => {
   const [expandedId, setExpandedId] = React.useState<number | null>(null);
   const total = queue.length * interactionFee;
@@ -139,21 +141,23 @@ export const Cart: React.FC<CartProps> = ({
             </div>
           </div>
 
-          {/* Mobile checkout button - Fixed at bottom */}
-          <div className="lg:hidden fixed bottom-20 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-2xl z-40">
-            <div className="max-w-5xl mx-auto space-y-3">
-              <div className="flex justify-between items-center px-2">
-                <span className="text-lg font-black tracking-tight text-gray-600">Total</span>
-                <span className="text-3xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
+          {/* Mobile checkout button - Fixed at bottom - NOW WITH CONDITIONAL RENDERING */}
+          {!isPaymentModalOpen && (
+            <div className="lg:hidden fixed bottom-20 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-2xl z-40">
+              <div className="max-w-5xl mx-auto space-y-3">
+                <div className="flex justify-between items-center px-2">
+                  <span className="text-lg font-black tracking-tight text-gray-600">Total</span>
+                  <span className="text-3xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
+                </div>
+                <Button 
+                  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+                  onClick={() => onShowPayment({ type: role, items: queue })}
+                >
+                  Proceed to Checkout
+                </Button>
               </div>
-              <Button 
-                className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
-                onClick={() => onShowPayment({ type: role, items: queue })}
-              >
-                Proceed to Checkout
-              </Button>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>
