@@ -1,5 +1,6 @@
 import React from "react";
 import { Zap, ShoppingCart, Settings as SettingsIcon } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 import { Button } from "../ui/button";
 
 import { ViewType } from '../../App';

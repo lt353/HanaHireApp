@@ -7,7 +7,7 @@ import {
   Lock,
   Play,
   Eye,
-  ShoppingCart,
+  FolderPlus,
   Briefcase,
 } from "lucide-react";
 import { Button } from "../ui/button";
@@ -21,6 +21,7 @@ interface CandidatesListProps {
   unlockedCandidateIds: any;
   employerQueue: any;
   onAddToQueue: (candidate: any) => void;
+  onRemoveFromQueue: (id: number) => void;
   onShowPayment: (target: any) => void;
   onShowFilters: () => void;
   onSelectCandidate: (candidate: any) => void;
@@ -39,13 +40,10 @@ function useIsMobile(breakpointPx = 768) {
     update();
 
     if (mq.addEventListener) mq.addEventListener("change", update);
-    // Safari fallback
-    // @ts-ignore
     else mq.addListener(update);
 
     return () => {
       if (mq.removeEventListener) mq.removeEventListener("change", update);
-      // @ts-ignore
       else mq.removeListener(update);
     };
   }, [breakpointPx]);
@@ -53,7 +51,6 @@ function useIsMobile(breakpointPx = 768) {
   return isMobile;
 }
 
-// Simple image component with fallback
 const ImageWithFallback: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
   return <img src={src} className={className} alt="" />;
 };
@@ -65,6 +62,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   unlockedCandidateIds,
   employerQueue,
   onAddToQueue,
+  onRemoveFromQueue,
   onShowPayment,
   onShowFilters,
   onSelectCandidate,
@@ -82,9 +80,11 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
   // Mobile swipe state
   const [index, setIndex] = React.useState(0);
+  const [passedCandidates, setPassedCandidates] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     setIndex(0);
+    setPassedCandidates([]);
   }, [searchQuery, candidates.length]);
 
   const currentCandidate = candidates[index];
@@ -103,7 +103,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   const cardOpacity = useTransform(x, [-220, 0, 220], [0.75, 1, 0.75]);
 
   // BADGES: fade in immediately when swipe starts
-  const unlockOpacity = useTransform(x, [4, 40], [0, 1]);
+  const saveOpacity = useTransform(x, [4, 40], [0, 1]);
   const passOpacity = useTransform(x, [-4, -40], [0, 1]);
   const badgeScale = useTransform(
     x,
@@ -120,15 +120,35 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   const isInQueue = (id: any) => queue.some((q) => q?.id === id);
   const isUnlocked = (id: any) => unlockedIds.includes(id);
 
-  const handlePass = React.useCallback(() => {
-    goNext();
-  }, [goNext]);
+  // Toggle bookmark - add or remove from queue
+  const handleToggleBookmark = (candidate: any) => {
+    if (isInQueue(candidate.id)) {
+      onRemoveFromQueue(candidate.id);
+    } else {
+      onAddToQueue(candidate);
+    }
+  };
 
-  const handleUnlock = React.useCallback(() => {
-    if (!currentCandidate) return;
-    onShowPayment({ type: "employer", items: [currentCandidate] });
+  const handlePass = React.useCallback(() => {
+    if (currentCandidate) {
+      setPassedCandidates(prev => [...prev, currentCandidate]);
+    }
     goNext();
-  }, [currentCandidate, goNext, onShowPayment]);
+  }, [currentCandidate, goNext]);
+
+  const handleSave = React.useCallback(() => {
+    if (!currentCandidate) return;
+    onAddToQueue(currentCandidate);
+    goNext();
+  }, [currentCandidate, goNext, onAddToQueue]);
+
+  const handleUndo = React.useCallback(() => {
+    if (passedCandidates.length === 0) return;
+    // Go back one index
+    setIndex(prev => Math.max(0, prev - 1));
+    // Remove last passed candidate
+    setPassedCandidates(prev => prev.slice(0, -1));
+  }, [passedCandidates.length]);
 
   const swipeOut = (direction: "left" | "right") => {
     const targetX = direction === "left" ? -420 : 420;
@@ -136,18 +156,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
     window.setTimeout(() => {
       if (direction === "left") handlePass();
-      else handleUnlock();
-      animate(x, 0, { type: "spring", stiffness: 320, damping: 26 });
-    }, 140);
-  };
-
-  const swipeOutAndAdvance = () => {
-    // For cart button: animate swipe right and advance WITHOUT opening payment
-    const targetX = 420;
-    animate(x, targetX, { type: "spring", stiffness: 260, damping: 24 });
-
-    window.setTimeout(() => {
-      goNext();
+      else handleSave();
       animate(x, 0, { type: "spring", stiffness: 320, damping: 26 });
     }, 140);
   };
@@ -166,7 +175,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
     resetCard();
   };
 
-  // ✅ iOS Safari touch handling - manual touch events
+  // iOS Safari touch handling - manual touch events
   const touchStartX = React.useRef(0);
   const isDragging = React.useRef(false);
 
@@ -177,7 +186,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging.current) return;
-    e.preventDefault(); // Prevent scrolling while swiping
+    e.preventDefault();
     const currentX = e.touches[0].clientX;
     const diff = currentX - touchStartX.current;
     x.set(diff);
@@ -199,7 +208,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
       <div className="space-y-4">
         <h2 className="text-6xl font-black tracking-tighter">Browse Talent</h2>
         <p className="text-2xl text-gray-500 font-medium">
-          Unlock a candidate to reveal full video and contact details.
+          Swipe right to save candidates. Review and unlock from your saved folder.
         </p>
       </div>
 
@@ -233,43 +242,41 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
         <div className="space-y-6">
           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
             <span>
-              Candidate {candidates.length === 0 ? 0 : index + 1} of{" "}
-              {candidates.length}
+              Candidate {candidates.length === 0 ? 0 : index + 1} of {candidates.length}
             </span>
-            <span>Swipe left to pass, swipe right to unlock</span>
+            <span>Swipe left to skip, swipe right to save</span>
           </div>
 
           {currentCandidate ? (
             <motion.div
               drag="x"
-              dragListener={false} // Disable Framer Motion's drag listener
+              dragListener={false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.18}
               data-swipe-card="true"
               style={{ x, rotate, opacity: cardOpacity }}
-              className="relative p-8 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden select-none"
+              className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden select-none"
               onClick={() => onSelectCandidate(currentCandidate)}
-              // ✅ Manual touch event handlers for iOS Safari
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              {/* BADGES */}
+              {/* Swipe badges */}
               <motion.div
                 style={{ opacity: passOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl z-20 pointer-events-none"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
-                Pass
+                Skip
               </motion.div>
 
               <motion.div
-                style={{ opacity: unlockOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#2ECC71] text-white text-xs font-black uppercase tracking-widest shadow-2xl z-20 pointer-events-none"
+                style={{ opacity: saveOpacity, scale: badgeScale }}
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#0077BE] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
-                Unlock
+                Save
               </motion.div>
 
-              {/* Video Preview Blur */}
+              {/* Video preview with blur effect */}
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-gray-100 mb-6">
                 <ImageWithFallback 
                   src={currentCandidate.thumbnail || currentCandidate.video_thumbnail_url}
@@ -291,28 +298,27 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 )}
               </div>
 
-              {/* Candidate summary */}
               <div className="space-y-3">
-                <h3 className="text-4xl font-black tracking-tight leading-none">
+                <h3 className="text-3xl font-black tracking-tight leading-none break-words">
                   {currentCandidate.display_title || currentCandidate.name || "Verified Talent"}
                 </h3>
 
-                <div className="flex flex-wrap gap-4 text-xs font-black uppercase tracking-widest text-gray-400">
-                  <span className="flex items-center gap-2">
-                    <MapPin size={16} /> {currentCandidate.location}
+                <div className="flex flex-wrap gap-3 text-xs font-black uppercase tracking-widest text-gray-400">
+                  <span className="flex items-center gap-2 shrink-0">
+                    <MapPin size={14} /> <span className="truncate">{currentCandidate.location}</span>
                   </span>
 
-                  <span className="flex items-center gap-2">
-                    <Briefcase size={16} /> {currentCandidate.years_experience} YRS
+                  <span className="flex items-center gap-2 shrink-0">
+                    <Briefcase size={14} /> <span className="truncate">{currentCandidate.years_experience} YRS</span>
                   </span>
 
-                  <span className="flex items-center gap-2 text-[#2ECC71]">
-                    {currentCandidate.availability || 'Immediate'}
+                  {/* Schedule Preferences / Availability */}
+                  <span className="flex items-center gap-2 shrink-0 text-[#2ECC71]">
+                    <span className="truncate">{currentCandidate.availability || currentCandidate.schedule_preference || 'Immediate'}</span>
                   </span>
 
-                  <span className="flex items-center gap-2">
-                    <Lock size={16} />{" "}
-                    {isUnlocked(currentCandidate.id) ? "Unlocked" : "Locked"}
+                  <span className="flex items-center gap-2 shrink-0">
+                    <Lock size={14} /> {isUnlocked(currentCandidate.id) ? "Unlocked" : "Locked"}
                   </span>
                 </div>
 
@@ -331,142 +337,177 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToQueue(currentCandidate);
-                    // Auto-advance to next card with animation on mobile
-                    swipeOutAndAdvance();
-                  }}
-                  className={`p-4 rounded-lg border transition-all ${
-                    isInQueue(currentCandidate.id)
-                      ? "bg-[#0077BE] text-white border-[#0077BE]"
-                      : "bg-gray-50 border-gray-100 text-gray-600 hover:text-[#0077BE] hover:border-[#0077BE]"
-                  }`}
-                  aria-label="Add to queue"
-                >
-                  <ShoppingCart size={22} />
-                </button>
+              {/* Action buttons - Skip, Save (bookmark fills in), Undo */}
+              <div className="pt-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+                {/* Main actions: Skip and Save */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handlePass();
+                      resetCard();
+                    }}
+                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all"
+                  >
+                    Skip
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePass();
-                    resetCard();
-                  }}
-                  className="flex-1 h-14 rounded-lg border border-gray-200 bg-white font-black uppercase tracking-widest text-[10px] text-gray-700"
-                >
-                  Pass
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleToggleBookmark(currentCandidate);
+                      resetCard();
+                    }}
+                    className="h-14 rounded-xl bg-[#0077BE] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#0077BE]/20 flex items-center justify-center gap-2"
+                  >
+                    <svg 
+                      className="w-5 h-5 transition-all"
+                      style={{
+                        fill: isInQueue(currentCandidate.id) ? '#2ECC71' : 'none',
+                        stroke: 'white',
+                        strokeWidth: '2.5'
+                      }}
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                    Save
+                  </button>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleUnlock();
-                    resetCard();
-                  }}
-                  className="flex-1 h-14 rounded-lg bg-[#2ECC71] text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-[#2ECC71]/20"
-                >
-                  Unlock ${interactionFee.toFixed(2)}
-                </button>
+                {/* Undo button - styled to match */}
+                {passedCandidates.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    className="w-full h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    Undo
+                  </button>
+                )}
               </div>
             </motion.div>
           ) : (
-            <div className="p-16 text-center text-gray-400">
-              <p className="text-lg font-black uppercase tracking-widest">No candidates available</p>
+            <div className="p-12 bg-white border-4 border-dashed border-gray-100 rounded-3xl text-center">
+              <p className="text-gray-400 font-black text-lg uppercase tracking-widest">
+                No more candidates
+              </p>
             </div>
           )}
         </div>
       ) : (
-        /* DESKTOP: Normal list */
+        /* DESKTOP: Match original design layout with proper sizing */
         <div className="grid gap-6">
-          {candidates.map((c) => (
-            <div
-              key={c.id}
-              onClick={() => onSelectCandidate(c)}
-              className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col lg:flex-row items-center gap-6 lg:gap-8 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
-            >
-              {/* Video Thumbnail Preview */}
-              <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-gray-50 group-hover:scale-[1.02] transition-transform duration-500">
-                <ImageWithFallback 
-                  src={c.thumbnail || c.video_thumbnail_url}
-                  className={`w-full h-full object-cover transition-all duration-1000 ${isUnlocked(c.id) ? 'blur-0 scale-100' : 'blur-[7px] scale-105 opacity-85'}`}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border-2 border-white/40 shadow-2xl group-hover:scale-110 transition-transform">
-                    {isUnlocked(c.id) ? <Play size={24} className="text-white fill-white ml-1" /> : <Lock size={24} className="text-white" />}
-                  </div>
-                </div>
-                {!isUnlocked(c.id) && (
-                  <div className="absolute bottom-4 left-4 right-4 text-center">
-                    <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">
-                      Locked Preview
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1 space-y-4 text-center lg:text-left min-w-0 w-full lg:w-auto">
-                <div className="space-y-1">
-                  <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#0077BE] transition-colors truncate">
-                    {c.display_title || c.name || "Verified Talent"}
-                  </h3>
-                  <div className="flex flex-wrap justify-center lg:justify-start gap-4 lg:gap-6 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
-                    <span className="flex items-center gap-2">
-                      <MapPin size={18} /> {c.location}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <Briefcase size={18} /> {c.years_experience} YRS EXP
-                    </span>
-                    <span className="flex items-center gap-2 text-[#2ECC71]">
-                      {c.availability}
-                    </span>
-                  </div>
-                </div>
-
-                {Array.isArray(c.skills) && (
-                  <div className="flex flex-wrap justify-center lg:justify-start gap-2 pt-2">
-                    {c.skills.slice(0, 6).map((s: string, i: number) => (
-                      <span
-                        key={`${s}-${i}`}
-                        className="px-3 lg:px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3 lg:gap-4 shrink-0 w-full lg:w-auto justify-center" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={() => onAddToQueue(c)}
-                  className={`p-5 lg:p-6 rounded-2xl border transition-all ${
-                    isInQueue(c.id)
-                      ? "bg-[#0077BE] text-white border-[#0077BE]"
-                      : "bg-gray-50 border-gray-100 text-gray-600 hover:text-[#0077BE] hover:border-[#0077BE]"
-                  }`}
-                  aria-label="Add to queue"
-                >
-                  <ShoppingCart size={22} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onShowPayment({ type: "employer", items: [c] })}
-                  className="px-8 py-4 lg:px-10 lg:py-5 rounded-2xl bg-[#2ECC71] text-white font-black uppercase tracking-widest text-xs hover:bg-[#27AE60] transition-all shadow-xl shadow-[#2ECC71]/20"
-                >
-                  {isUnlocked(c.id) ? "View Full Profile" : `Unlock $${interactionFee.toFixed(2)}`}
-                </button>
-              </div>
+          {candidates.length === 0 ? (
+            <div className="p-16 bg-white border-4 border-dashed border-gray-100 rounded-3xl text-center">
+              <p className="text-gray-400 font-black text-xl uppercase tracking-widest">
+                No candidates found
+              </p>
             </div>
-          ))}
+          ) : (
+            candidates.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => onSelectCandidate(c)}
+                className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col lg:flex-row items-center gap-6 lg:gap-8 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
+              >
+                {/* Video Thumbnail Preview with blur - match original size */}
+                <div 
+                  className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-gray-50 cursor-pointer group-hover:scale-[1.02] transition-transform duration-500"
+                  onClick={() => onSelectCandidate(c)}
+                >
+                  <ImageWithFallback 
+                    src={c.thumbnail || c.video_thumbnail_url || "/api/placeholder/800/450"}
+                    className={`w-full h-full object-cover transition-all duration-1000 ${isUnlocked(c.id) ? 'blur-0 scale-100' : 'blur-[7px] scale-105 opacity-85'}`}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border-2 border-white/40 shadow-2xl group-hover:scale-110 transition-transform">
+                      {isUnlocked(c.id) ? (
+                        <Play size={24} className="text-white fill-white ml-1" />
+                      ) : (
+                        <Lock size={24} className="text-white" />
+                      )}
+                    </div>
+                  </div>
+                  {!isUnlocked(c.id) && (
+                    <div className="absolute bottom-4 left-4 right-4 text-center">
+                      <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">
+                        Locked Preview
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Candidate Info - matches original layout */}
+                <div className="flex-1 space-y-4 text-center lg:text-left min-w-0 w-full lg:w-auto">
+                  <div className="space-y-1">
+                    <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#0077BE] transition-colors truncate">
+                      {c.display_title || c.name || "Verified Talent"}
+                    </h3>
+                    <div className="flex flex-wrap justify-center lg:justify-start gap-4 lg:gap-6 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
+                      <span className="flex items-center gap-2">
+                        <MapPin size={18} /> {c.location}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Briefcase size={18} /> {c.years_experience} YRS EXP
+                      </span>
+                      <span className="flex items-center gap-2 text-[#2ECC71]">
+                        {c.availability || c.schedule_preference || 'Immediate'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {Array.isArray(c.skills) && c.skills.length > 0 && (
+                    <div className="flex flex-wrap justify-center lg:justify-start gap-2 pt-2">
+                      {c.skills.slice(0, 6).map((s: string, i: number) => (
+                        <span
+                          key={`${s}-${i}`}
+                          className="px-3 lg:px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action button - bookmark/save with toggle */}
+                <div className="flex gap-3 lg:gap-4 shrink-0 w-full lg:w-auto justify-center" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleBookmark(c)}
+                    className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all"
+                    aria-label={isInQueue(c.id) ? "Remove from saved" : "Save candidate"}
+                  >
+                    <svg 
+                      className="w-6 h-6 transition-all"
+                      style={{
+                        fill: isInQueue(c.id) ? '#2ECC71' : 'none',
+                        stroke: isInQueue(c.id) ? '#2ECC71' : '#9CA3AF',
+                        strokeWidth: '2'
+                      }}
+                      viewBox="0 0 24 24" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <span 
+                      className="text-xs font-bold uppercase tracking-wide transition-all"
+                      style={{ color: isInQueue(c.id) ? '#2ECC71' : '#6B7280' }}
+                    >
+                      Save
+                    </span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </motion.div>

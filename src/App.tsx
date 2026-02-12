@@ -10,7 +10,7 @@ import {
   Eye,
   Briefcase,
   User,
-  ShoppingCart,
+  FolderOpen, 
   Lock,
   MapPin,
   DollarSign,
@@ -340,43 +340,51 @@ export default function App() {
       case "settings":
         return <Settings onRefreshData={fetchInitialData} />;
       case "jobs":
-        return (
-          <JobsList 
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            filteredJobs={filteredJobs}
-            unlockedJobIds={unlockedJobIds}
-            seekerQueue={seekerQueue}
-            onAddToQueue={(j) => {
-              if (seekerQueue.find(q => q.id === j.id)) return;
-              setSeekerQueue([...seekerQueue, j]);
-              toast.success("Added to Queue");
-            }}
-            onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
-            onShowFilters={() => setShowFilterModal(true)}
-            onSelectJob={(job) => setSelectedJob(job)}
-            interactionFee={INTERACTION_FEE}
-          />
-        );
+  return (
+    <JobsList 
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      filteredJobs={filteredJobs}
+      unlockedJobIds={unlockedJobIds}
+      seekerQueue={seekerQueue}
+      onAddToQueue={(j) => {
+        if (seekerQueue.find(q => q.id === j.id)) return;
+        setSeekerQueue([...seekerQueue, j]);
+        toast.success("Added to Queue");
+      }}
+      onRemoveFromQueue={(id) => {
+        setSeekerQueue(seekerQueue.filter(q => q.id !== id));
+        toast.success("Removed from saved");
+      }}
+      onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
+      onShowFilters={() => setShowFilterModal(true)}
+      onSelectJob={(job) => setSelectedJob(job)}
+      interactionFee={INTERACTION_FEE}
+    />
+  );
       case "candidates":
-        return (
-          <CandidatesList 
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            filteredCandidates={filteredCandidates}
-            unlockedCandidateIds={unlockedCandidateIds}
-            employerQueue={employerQueue}
-            onAddToQueue={(c) => {
-              if (employerQueue.find(q => q.id === c.id)) return;
-              setEmployerQueue([...employerQueue, c]);
-              toast.success("Added to Queue");
-            }}
-            onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
-            onShowFilters={() => setShowFilterModal(true)}
-            onSelectCandidate={(c) => setSelectedCandidate(c)}
-            interactionFee={INTERACTION_FEE}
-          />
-        );
+  return (
+    <CandidatesList 
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      filteredCandidates={filteredCandidates}
+      unlockedCandidateIds={unlockedCandidateIds}
+      employerQueue={employerQueue}
+      onAddToQueue={(c) => {
+        if (employerQueue.find(q => q.id === c.id)) return;
+        setEmployerQueue([...employerQueue, c]);
+        toast.success("Added to Queue");
+      }}
+      onRemoveFromQueue={(id) => {
+        setEmployerQueue(employerQueue.filter(q => q.id !== id));
+        toast.success("Removed from saved");
+      }}
+      onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
+      onShowFilters={() => setShowFilterModal(true)}
+      onSelectCandidate={(c) => setSelectedCandidate(c)}
+      interactionFee={INTERACTION_FEE}
+    />
+  );
       case "cart":
         return (
           <Cart 
@@ -1094,7 +1102,7 @@ export default function App() {
        <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
      </button>
      <button onClick={() => handleNavigate("cart")} className={`flex flex-col items-center gap-2 relative ${currentView === 'cart' ? 'text-[#0077BE]' : 'text-gray-300'}`}>
-       <ShoppingCart size={24} />
+       <FolderOpen size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">CART</span>
        {(userRole === 'seeker' ? seekerQueue.length : employerQueue.length) > 0 && (
          <span className="absolute top-0 right-2 bg-[#FF6B6B] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
