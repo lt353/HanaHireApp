@@ -8,6 +8,9 @@ import {
   Briefcase,
   Lock,
   FolderPlus,
+  Trash2,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ViewType } from "../../App";
@@ -72,13 +75,17 @@ export const JobsList: React.FC<JobsListProps> = ({
   // Mobile swipe index
   const [index, setIndex] = React.useState(0);
   const [passedJobs, setPassedJobs] = React.useState<any[]>([]);
+  const [recoveredQueue, setRecoveredQueue] = React.useState<any[]>([]);
+  const [showPassedBin, setShowPassedBin] = React.useState(false);
 
   React.useEffect(() => {
     setIndex(0);
     setPassedJobs([]);
+    setRecoveredQueue([]);
   }, [searchQuery, jobs.length]);
 
-  const currentJob = jobs[index];
+  // Show recovered items first before continuing the main deck
+  const currentJob = recoveredQueue.length > 0 ? recoveredQueue[0] : jobs[index];
 
   const goNext = React.useCallback(() => {
     setIndex((prev) => {
@@ -118,25 +125,52 @@ export const JobsList: React.FC<JobsListProps> = ({
   };
 
   const handlePass = React.useCallback(() => {
+    if (recoveredQueue.length > 0) {
+      // Re-passing a recovered job puts it back in the bin
+      setPassedJobs(prev => [...prev, recoveredQueue[0]]);
+      setRecoveredQueue(prev => prev.slice(1));
+      return;
+    }
     if (currentJob) {
       setPassedJobs(prev => [...prev, currentJob]);
     }
     goNext();
-  }, [currentJob, goNext]);
+  }, [currentJob, goNext, recoveredQueue]);
 
   const handleSave = React.useCallback(() => {
+    if (recoveredQueue.length > 0) {
+      // Saving a recovered job adds it to queue without touching main deck index
+      onAddToQueue(recoveredQueue[0]);
+      setRecoveredQueue(prev => prev.slice(1));
+      return;
+    }
     if (!currentJob) return;
     onAddToQueue(currentJob);
     goNext();
-  }, [currentJob, goNext, onAddToQueue]);
+  }, [currentJob, goNext, onAddToQueue, recoveredQueue]);
 
   const handleUndo = React.useCallback(() => {
     if (passedJobs.length === 0) return;
-    // Go back one index
     setIndex(prev => Math.max(0, prev - 1));
-    // Remove last passed job
     setPassedJobs(prev => prev.slice(0, -1));
   }, [passedJobs.length]);
+
+  // Recycle bin actions
+  const handleRecover = React.useCallback((job: any) => {
+    setPassedJobs(prev => prev.filter(j => j.id !== job.id));
+    setRecoveredQueue(prev => [...prev, job]);
+  }, []);
+
+  const handleRecoverAll = React.useCallback(() => {
+    setRecoveredQueue(prev => [...prev, ...passedJobs]);
+    setPassedJobs([]);
+    setShowPassedBin(false);
+  }, [passedJobs]);
+
+  const handleClearBin = React.useCallback(() => {
+    setPassedJobs([]);
+    setShowPassedBin(false);
+  }, []);
 
   const swipeOut = (direction: "left" | "right") => {
     const targetX = direction === "left" ? -420 : 420;
@@ -227,10 +261,20 @@ export const JobsList: React.FC<JobsListProps> = ({
         <div className="space-y-6">
           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
             <span>
-              Job {jobs.length === 0 ? 0 : index + 1} of {jobs.length}
+              {recoveredQueue.length > 0
+                ? `Recovered · ${recoveredQueue.length} to review`
+                : `Job ${jobs.length === 0 ? 0 : index + 1} of ${jobs.length}`}
             </span>
             <span>Swipe left to skip, swipe right to save</span>
           </div>
+
+          {/* Recovered-item indicator */}
+          {recoveredQueue.length > 0 && (
+            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#0077BE]">
+              <RotateCcw size={12} />
+              Reviewing recovered job
+            </div>
+          )}
 
           {currentJob ? (
             <motion.div
@@ -332,18 +376,33 @@ export const JobsList: React.FC<JobsListProps> = ({
                   </button>
                 </div>
 
-                {/* Undo button - styled to match */}
+                {/* Undo + Passed Bin row */}
                 {passedJobs.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleUndo}
-                    className="w-full h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                    </svg>
-                    Undo
-                  </button>
+                  <div className="flex gap-2">
+                    {/* Undo — only for main deck swipes, not while reviewing recovered items */}
+                    {recoveredQueue.length === 0 && (
+                      <button
+                        type="button"
+                        onClick={handleUndo}
+                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                        Undo
+                      </button>
+                    )}
+
+                    {/* Passed bin trigger */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassedBin(true)}
+                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#FF6B6B] hover:text-[#FF6B6B] hover:bg-red-50 transition-all flex items-center justify-center gap-2`}
+                    >
+                      <Trash2 size={14} />
+                      {passedJobs.length} Passed
+                    </button>
+                  </div>
                 )}
               </div>
             </motion.div>
@@ -435,6 +494,107 @@ export const JobsList: React.FC<JobsListProps> = ({
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* ── Passed Jobs Bin (slide-up panel) ── */}
+      {showPassedBin && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowPassedBin(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-white rounded-t-3xl shadow-2xl flex flex-col"
+            style={{ maxHeight: "75vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-gray-200 rounded-full" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div>
+                <h3 className="text-xl font-black tracking-tight">Passed</h3>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-0.5">
+                  {passedJobs.length} job{passedJobs.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {passedJobs.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleRecoverAll}
+                    className="text-[10px] font-black uppercase tracking-widest text-[#0077BE] hover:text-[#006aa8] transition-colors"
+                  >
+                    Recover All
+                  </button>
+                )}
+                {passedJobs.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearBin}
+                    className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowPassedBin(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Item list */}
+            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-3">
+              {passedJobs.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Trash2 size={32} className="mx-auto text-gray-200 mb-3" />
+                  <p className="text-gray-400 font-black text-sm uppercase tracking-widest">
+                    Bin is empty
+                  </p>
+                </div>
+              ) : (
+                [...passedJobs].reverse().map((job) => (
+                  <div
+                    key={job.id}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl"
+                  >
+                    {/* Job icon placeholder */}
+                    <div className="w-12 h-12 rounded-xl bg-gray-200 shrink-0 flex items-center justify-center">
+                      <Briefcase size={20} className="text-gray-400" />
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black truncate">{job.title}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 truncate">
+                        {job.location} · {job.pay_range}
+                      </p>
+                      <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                        {job.job_type}
+                      </p>
+                    </div>
+
+                    {/* Recover button */}
+                    <button
+                      type="button"
+                      onClick={() => handleRecover(job)}
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0077BE] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors"
+                    >
+                      <RotateCcw size={12} />
+                      Recover
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
     </motion.div>
