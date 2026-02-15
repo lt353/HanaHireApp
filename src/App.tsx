@@ -861,7 +861,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setExpandedPaymentItemId(expandedPaymentItemId === item.id ? null : item.id)}
-                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
                   title="Toggle details"
                 >
                   {expandedPaymentItemId === item.id
@@ -876,7 +876,7 @@ export default function App() {
                     setPaymentItems(next);
                     if (expandedPaymentItemId === item.id) setExpandedPaymentItemId(null);
                   }}
-                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-300 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors"
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors"
                   title="Remove from checkout"
                 >
                   <X size={14} />
