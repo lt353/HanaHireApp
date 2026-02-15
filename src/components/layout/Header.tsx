@@ -147,22 +147,6 @@ export const Header: React.FC<HeaderProps> = ({
               Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
             </button>
 
-            {/* Cart Button */}
-            <button
-              onClick={() => onNavigate("cart")}
-              className={`relative p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl transition-all ${
-                currentTab === "cart"
-                  ? "bg-[#0077BE] text-white shadow-lg"
-                  : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-              }`}
-            >
-              <FolderOpen size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
-              {queueCount > 0 && (
-                <span className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 bg-[#0077BE] text-white text-[9px] sm:text-[10px] font-black w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                  {queueCount}
-                </span>
-              )}
-            </button>
           </>
         )}
 

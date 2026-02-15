@@ -10,7 +10,7 @@ import {
   Eye,
   Briefcase,
   User,
-  FolderOpen, 
+  FolderOpen,
   Lock,
   MapPin,
   DollarSign,
@@ -21,7 +21,10 @@ import {
   BarChart3,
   Building2,
   CheckCircle,
-  UserPlus
+  UserPlus,
+  ChevronDown,
+  ChevronUp,
+  X
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
@@ -86,6 +89,8 @@ export default function App() {
   const [unlockedJobIds, setUnlockedJobIds] = useState<any[]>([]);
   const [unlockedCandidateIds, setUnlockedCandidateIds] = useState<any[]>([]);
   const [paymentTarget, setPaymentTarget] = useState<any>(null);
+  const [paymentItems, setPaymentItems] = useState<any[]>([]);
+  const [expandedPaymentItemId, setExpandedPaymentItemId] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -199,24 +204,33 @@ export default function App() {
     toast.success(`Switched to ${newRole === 'seeker' ? 'Job Seeker' : 'Employer'} view`);
   };
 
+  // Sync local editable items list whenever a new payment is initiated
+  useEffect(() => {
+    if (paymentTarget?.items) {
+      setPaymentItems([...paymentTarget.items]);
+      setExpandedPaymentItemId(null);
+    }
+  }, [paymentTarget]);
+
   const processPayment = async () => {
     if (!paymentTarget) return;
     
     try {
+      if (paymentItems.length === 0) return;
       // Process payment locally without API
-      const itemIds = paymentTarget.items.map((i: any) => i.id);
+      const itemIds = paymentItems.map((i: any) => i.id);
       
       if (paymentTarget.type === 'seeker') {
         setUnlockedJobIds([...unlockedJobIds, ...itemIds]);
-        setSeekerQueue(seekerQueue.filter(q => !paymentTarget.items.find((i:any) => i.id === q.id)));
+        setSeekerQueue(seekerQueue.filter(q => !itemIds.includes(q.id)));
         setShowPaymentModal(false);
-        toast.success("Success!", { description: "Unlocks reveal immediately." });
+        toast.success("Applied!", { description: "Business details now revealed in your jobs." });
         handleNavigate("seeker");
       } else {
         setUnlockedCandidateIds([...unlockedCandidateIds, ...itemIds]);
-        setEmployerQueue(employerQueue.filter(q => !paymentTarget.items.find((i:any) => i.id === q.id)));
+        setEmployerQueue(employerQueue.filter(q => !itemIds.includes(q.id)));
         setShowPaymentModal(false);
-        toast.success("Success!", { description: "Unlocks reveal immediately." });
+        toast.success("Unlocked!", { description: "Full profiles and contact info are now visible." });
         handleNavigate("employer");
       }
     } catch (err) {
@@ -779,96 +793,216 @@ export default function App() {
          </div>
       </Modal>
 
-      <Modal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} title="Secure Checkout">
+      <Modal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={paymentTarget?.type === 'seeker' ? "Secure Application Checkout" : "Secure Unlock Checkout"}>
   <div className="space-y-8">
-    {/* Order Summary */}
+
+    {/* What you get after purchase */}
+    <div className={`p-4 rounded-2xl border ${paymentTarget?.type === 'seeker' ? 'bg-[#0077BE]/5 border-[#0077BE]/10' : 'bg-[#FF6B6B]/5 border-[#FF6B6B]/10'}`}>
+      <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: paymentTarget?.type === 'seeker' ? '#0077BE' : '#FF6B6B' }}>
+        {paymentTarget?.type === 'seeker' ? 'What you get after applying' : 'What unlocks after payment'}
+      </p>
+      {paymentTarget?.type === 'seeker' ? (
+        <ul className="space-y-1">
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#0077BE] shrink-0" /> Business name and branding revealed</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#0077BE] shrink-0" /> Direct contact details for the hiring team</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#0077BE] shrink-0" /> Your application is submitted immediately</li>
+        </ul>
+      ) : (
+        <ul className="space-y-1">
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#FF6B6B] shrink-0" /> Full video intro becomes playable</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#FF6B6B] shrink-0" /> Candidate's real name revealed</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#FF6B6B] shrink-0" /> Direct phone number and verified email</li>
+        </ul>
+      )}
+    </div>
+
+    {/* Unlock Summary */}
     <div className="bg-gray-50 rounded-[2rem] border border-gray-100 overflow-hidden">
-      <div className="p-6 sm:p-8 space-y-4">
+      <div className="p-5 sm:p-6 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Order Summary</span>
-          <span className="text-[10px] font-black text-[#2ECC71] uppercase tracking-widest">{paymentTarget?.items?.length || 0} {(paymentTarget?.items?.length || 0) === 1 ? 'unlock' : 'unlocks'}</span>
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
+            {paymentTarget?.type === 'seeker' ? 'Application Summary' : 'Unlock Summary'}
+          </span>
+          <span className="text-[10px] font-black text-[#2ECC71] uppercase tracking-widest">
+            {paymentItems.length} {paymentItems.length === 1 ? 'item' : 'items'}
+          </span>
         </div>
-        {paymentTarget?.items?.map((item: any, i: number) => (
-          <div key={i} className="flex items-center justify-between py-3 border-t border-gray-100 first:border-0">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#0077BE]/10 flex items-center justify-center shrink-0">
-                {paymentTarget.type === 'seeker' ? <Briefcase size={14} className="text-[#0077BE]" /> : <User size={14} className="text-[#0077BE]" />}
+
+        {paymentItems.map((item: any) => (
+          <div key={item.id} className="border-t border-gray-100 pt-3">
+            {/* Item header row */}
+            <div className="flex items-center gap-3">
+              {/* Thumbnail or icon */}
+              {paymentTarget?.type === 'employer' && (item.thumbnail || item.video_thumbnail_url) ? (
+                <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-200 shrink-0 relative">
+                  <img src={item.thumbnail || item.video_thumbnail_url} className="w-full h-full object-cover blur-[7px] scale-110" alt="" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <Lock size={9} className="text-white" />
+                  </div>
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-[#0077BE]/10 flex items-center justify-center shrink-0">
+                  <Briefcase size={14} className="text-[#0077BE]" />
+                </div>
+              )}
+
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-gray-800 truncate">
+                  {item.title || item.display_title || 'Profile'}
+                </p>
+                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest truncate">
+                  {item.location} {item.pay_range ? `· ${item.pay_range}` : item.preferred_pay_range ? `· ${item.preferred_pay_range}` : ''}
+                </p>
               </div>
-              <span className="text-sm font-bold text-gray-700 truncate">{item.title || item.display_title || item.name || 'Profile Unlock'}</span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-sm font-black text-gray-900">${INTERACTION_FEE.toFixed(2)}</span>
+                {/* Expand/collapse details */}
+                <button
+                  type="button"
+                  onClick={() => setExpandedPaymentItemId(expandedPaymentItemId === item.id ? null : item.id)}
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Toggle details"
+                >
+                  {expandedPaymentItemId === item.id
+                    ? <ChevronUp size={14} />
+                    : <ChevronDown size={14} />}
+                </button>
+                {/* Remove from list */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = paymentItems.filter((pi: any) => pi.id !== item.id);
+                    setPaymentItems(next);
+                    if (expandedPaymentItemId === item.id) setExpandedPaymentItemId(null);
+                  }}
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-300 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors"
+                  title="Remove from checkout"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
-            <span className="text-sm font-black text-gray-900 shrink-0 ml-3">${INTERACTION_FEE.toFixed(2)}</span>
+
+            {/* Expanded details */}
+            {expandedPaymentItemId === item.id && (
+              <div className="mt-3 ml-13 pl-1 space-y-2 border-l-2 border-gray-100">
+                {paymentTarget?.type === 'employer' ? (
+                  <div className="ml-2 space-y-2">
+                    {item.bio && <p className="text-xs text-gray-500 leading-relaxed">{item.bio}</p>}
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.years_experience && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.years_experience} yrs exp</span>}
+                      {item.availability && <span className="px-2 py-1 bg-[#2ECC71]/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#2ECC71]">{item.availability}</span>}
+                      {item.work_style && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.work_style}</span>}
+                      {item.education && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.education}</span>}
+                      {item.current_employment_status && <span className="px-2 py-1 bg-[#0077BE]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#0077BE]">{item.current_employment_status}</span>}
+                    </div>
+                    {Array.isArray(item.skills) && item.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.skills.map((s: string, si: number) => (
+                          <span key={si} className="px-2 py-1 bg-white border border-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-500">{s}</span>
+                        ))}
+                      </div>
+                    )}
+                    {Array.isArray(item.industries_interested) && item.industries_interested.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.industries_interested.map((ind: string, ii: number) => (
+                          <span key={ii} className="px-2 py-1 bg-[#0077BE]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#0077BE]">{ind}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="ml-2 space-y-2">
+                    {item.description && <p className="text-xs text-gray-500 leading-relaxed">{item.description}</p>}
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.job_type && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.job_type}</span>}
+                      {item.company_industry && <span className="px-2 py-1 bg-[#0077BE]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#0077BE]">{item.company_industry}</span>}
+                      {item.company_size && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.company_size}</span>}
+                      {item.start_date && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">Start: {item.start_date}</span>}
+                    </div>
+                    {Array.isArray(item.requirements) && item.requirements.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.requirements.map((r: string, ri: number) => (
+                          <span key={ri} className="px-2 py-1 bg-[#0077BE]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#0077BE]">{r}</span>
+                        ))}
+                      </div>
+                    )}
+                    {Array.isArray(item.benefits) && item.benefits.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.benefits.map((b: string, bi: number) => (
+                          <span key={bi} className="px-2 py-1 bg-[#2ECC71]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#2ECC71]">{b}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
-      <div className="bg-gray-900 px-6 sm:px-8 py-5 flex items-center justify-between">
+
+      <div className="bg-gray-900 px-5 sm:px-6 py-4 flex items-center justify-between">
         <span className="text-white/60 font-black uppercase tracking-[0.3em] text-[10px]">Total</span>
-        <span className="text-white text-3xl sm:text-4xl font-black tracking-tighter">${((paymentTarget?.items?.length || 0) * INTERACTION_FEE).toFixed(2)}</span>
+        <span className="text-white text-3xl sm:text-4xl font-black tracking-tighter">${(paymentItems.length * INTERACTION_FEE).toFixed(2)}</span>
       </div>
     </div>
 
+    {paymentItems.length === 0 && (
+      <p className="text-center text-gray-400 font-black text-sm uppercase tracking-widest py-4">No items in checkout</p>
+    )}
+
     {/* Payment Form */}
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Payment Details</span>
-        <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
-          <Lock size={10} className="text-[#0077BE]" /> SSL Encrypted
+    {paymentItems.length > 0 && (
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Payment Details</span>
+          <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+            <Lock size={10} className="text-[#0077BE]" /> SSL Encrypted
+          </div>
         </div>
-      </div>
 
-      {/* Name on Card */}
-      <div className="space-y-2">
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Name on Card</label>
-        <input 
-          type="text" 
-          placeholder="Full name as shown on card" 
-          className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base transition-colors" 
-        />
-      </div>
-
-      {/* Card Number */}
-      <div className="space-y-2">
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Card Number</label>
-        <div className="relative">
-          <CreditCard size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#0077BE]/40" />
-          <input 
-            type="text" 
-            placeholder="1234  5678  1234  5678" 
-            className="w-full p-4 sm:p-5 pl-14 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base tracking-widest transition-colors" 
-          />
-        </div>
-      </div>
-
-      {/* Expiry + CVC Row */}
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Expiry</label>
-          <input 
-            type="text" 
-            placeholder="MM / YY" 
-            className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" 
-          />
+          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Name on Card</label>
+          <input type="text" placeholder="Full name as shown on card" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base transition-colors" />
         </div>
+
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Security Code</label>
+          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Card Number</label>
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="CVC" 
-              className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" 
-            />
-            <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0077BE]/30" />
+            <CreditCard size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#0077BE]/40" />
+            <input type="text" placeholder="1234  5678  1234  5678" className="w-full p-4 sm:p-5 pl-14 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base tracking-widest transition-colors" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Expiry</label>
+            <input type="text" placeholder="MM / YY" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Security Code</label>
+            <div className="relative">
+              <input type="text" placeholder="CVC" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#0077BE] focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
+              <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0077BE]/30" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    )}
 
     {/* Pay Button */}
-    <Button 
-      className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
-      onClick={processPayment}
-    >
-      <Lock size={18} className="mr-2" /> Pay ${((paymentTarget?.items?.length || 0) * INTERACTION_FEE).toFixed(2)} & Unlock <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
-    </Button>
+    {paymentItems.length > 0 && (
+      <Button
+        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white"
+        onClick={processPayment}
+      >
+        <Lock size={18} className="mr-2" />
+        {paymentTarget?.type === 'seeker' ? `Apply & Reveal` : `Unlock ${paymentItems.length > 1 ? `${paymentItems.length} Profiles` : 'Profile'}`} — ${(paymentItems.length * INTERACTION_FEE).toFixed(2)}
+        <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
+      </Button>
+    )}
 
     {/* Trust Indicators */}
     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
@@ -1088,7 +1222,7 @@ export default function App() {
 
      {/* Mobile Nav */}
 {currentView !== "landing" && !showPaymentModal && (
-  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-4 z-50 shadow-2xl">
+  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-3 z-50 shadow-2xl">
      <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300">
        <Eye size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">EXPLORE</span>
@@ -1101,77 +1235,103 @@ export default function App() {
        <User size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
      </button>
-     <button onClick={() => handleNavigate("cart")} className={`flex flex-col items-center gap-2 relative ${currentView === 'cart' ? 'text-[#0077BE]' : 'text-gray-300'}`}>
-       <FolderOpen size={24} />
-       <span className="text-[9px] font-black uppercase tracking-widest">CART</span>
-       {(userRole === 'seeker' ? seekerQueue.length : employerQueue.length) > 0 && (
-         <span className="absolute top-0 right-2 bg-[#FF6B6B] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-           {(userRole === 'seeker' ? seekerQueue.length : employerQueue.length)}
-         </span>
-       )}
-     </button>
   </div>
 )}
 
       {/* --- Detail Modals --- */}
-      <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Role Intelligence">
+      <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Job Details">
         {selectedJob && (
-          <div className="space-y-10">
-            <div className="space-y-4">
-              <h3 className="text-5xl font-black tracking-tighter leading-none">{selectedJob.title}</h3>
-              <div className="flex flex-wrap gap-6 text-sm font-black uppercase tracking-widest text-[#0077BE]">
-                <span>{selectedJob.location}</span>
-                <span className="text-[#2ECC71]">{selectedJob.pay_range}</span>
-                <span className="text-gray-400">{selectedJob.job_type}</span>
+          <div className="space-y-8 pb-4">
+            {/* Title + core tags */}
+            <div className="space-y-3">
+              <h3 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none">{selectedJob.title}</h3>
+              <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-widest">
+                <span className="flex items-center gap-1.5 text-[#0077BE]"><MapPin size={13} />{selectedJob.location}</span>
+                <span className="flex items-center gap-1.5 text-[#2ECC71]"><DollarSign size={13} />{selectedJob.pay_range}</span>
+                <span className="px-3 py-1 bg-gray-100 rounded-lg text-gray-600">{selectedJob.job_type}</span>
+                {selectedJob.company_industry && <span className="px-3 py-1 bg-[#0077BE]/5 text-[#0077BE] rounded-lg">{selectedJob.company_industry}</span>}
+                {selectedJob.company_size && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">{selectedJob.company_size}</span>}
+                {selectedJob.start_date && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">Start: {selectedJob.start_date}</span>}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-6 bg-gray-50 rounded-3xl space-y-2">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Business Identity</span>
-                <p className="font-black text-xl tracking-tight">
-                  {(selectedJob.is_anonymous && !unlockedJobIds.includes(selectedJob.id)) ? `[${selectedJob.company_industry} Business]` : selectedJob.company_name}
+            {/* Business identity (locked until applied) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-5 bg-gray-50 rounded-2xl space-y-1">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Business</span>
+                <p className="font-black text-base tracking-tight">
+                  {(selectedJob.is_anonymous && !unlockedJobIds.includes(selectedJob.id))
+                    ? `[${selectedJob.company_industry || 'Local'} Business]`
+                    : selectedJob.company_name}
                 </p>
               </div>
-              <div className="p-6 bg-gray-50 rounded-3xl space-y-2">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Team Scale</span>
-                <p className="font-black text-xl tracking-tight">{selectedJob.company_size}</p>
-              </div>
+              {selectedJob.applicant_count !== undefined && (
+                <div className="p-5 bg-gray-50 rounded-2xl space-y-1">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Applicants</span>
+                  <p className="font-black text-base tracking-tight">{selectedJob.applicant_count}</p>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-6">
+            {/* Description */}
+            {selectedJob.description && (
               <div className="space-y-2">
-                <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Context & Mission</h4>
-                <p className="text-lg text-gray-600 leading-relaxed font-medium">{selectedJob.description}</p>
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Overview</h4>
+                <p className="text-base text-gray-600 leading-relaxed font-medium">{selectedJob.description}</p>
               </div>
-              {selectedJob.requirements && selectedJob.requirements.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Core Requirements</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedJob.requirements.map((r: string, i: number) => (
-                      <span key={i} className="px-4 py-2 bg-[#0077BE]/5 text-[#0077BE] rounded-xl text-xs font-black uppercase tracking-widest">{r}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {selectedJob.responsibilities && selectedJob.responsibilities.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Key Responsibilities</h4>
-                  <ul className="space-y-3">
-                    {selectedJob.responsibilities.map((r: string, i: number) => (
-                      <li key={i} className="flex gap-4 items-start text-gray-600 font-medium">
-                        <div className="w-2 h-2 mt-2 rounded-full bg-[#0077BE] shrink-0" />
-                        {r}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            )}
 
+            {/* Company description */}
+            {selectedJob.company_description && (
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">About the Business</h4>
+                <p className="text-sm text-gray-600 leading-relaxed font-medium">{selectedJob.company_description}</p>
+              </div>
+            )}
+
+            {/* Requirements */}
+            {Array.isArray(selectedJob.requirements) && selectedJob.requirements.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Requirements</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedJob.requirements.map((r: string, i: number) => (
+                    <span key={i} className="px-4 py-2 bg-[#0077BE]/5 text-[#0077BE] rounded-xl text-xs font-black uppercase tracking-widest">{r}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Responsibilities */}
+            {Array.isArray(selectedJob.responsibilities) && selectedJob.responsibilities.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Key Responsibilities</h4>
+                <ul className="space-y-2">
+                  {selectedJob.responsibilities.map((r: string, i: number) => (
+                    <li key={i} className="flex gap-3 items-start text-sm text-gray-600 font-medium">
+                      <div className="w-1.5 h-1.5 mt-2 rounded-full bg-[#0077BE] shrink-0" />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Benefits */}
+            {Array.isArray(selectedJob.benefits) && selectedJob.benefits.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Benefits</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedJob.benefits.map((b: string, i: number) => (
+                    <span key={i} className="px-4 py-2 bg-[#2ECC71]/5 text-[#2ECC71] rounded-xl text-xs font-black uppercase tracking-widest">{b}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA */}
             {!unlockedJobIds.includes(selectedJob.id) && (
-              <Button className="w-full h-24 text-2xl rounded-3xl shadow-2xl shadow-[#0077BE]/20" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
-                Apply & Reveal Business ${INTERACTION_FEE.toFixed(2)}
+              <Button className="w-full h-20 text-xl rounded-3xl shadow-2xl shadow-[#0077BE]/20" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
+                Apply & Reveal Business — ${INTERACTION_FEE.toFixed(2)}
               </Button>
             )}
           </div>
@@ -1299,6 +1459,38 @@ export default function App() {
                   <div className="flex flex-wrap gap-2">
                     {selectedCandidate.skills.map((s: string, i: number) => (
                       <span key={i} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest">{s}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Work Style */}
+              {selectedCandidate.work_style && (
+                <div className="flex items-center justify-between gap-2 border-t border-gray-50 pt-4 sm:pt-5">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Work Style</span>
+                  <span className="text-xs font-black text-gray-900 uppercase">{selectedCandidate.work_style}</span>
+                </div>
+              )}
+
+              {/* Industries Interested */}
+              {Array.isArray(selectedCandidate.industries_interested) && selectedCandidate.industries_interested.length > 0 && (
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Industries Interested</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCandidate.industries_interested.map((ind: string, i: number) => (
+                      <span key={i} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#0077BE]/5 text-[#0077BE] rounded-xl text-[10px] font-black uppercase tracking-widest">{ind}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Open To (Job Types Seeking) */}
+              {Array.isArray(selectedCandidate.job_types_seeking) && selectedCandidate.job_types_seeking.length > 0 && (
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Open To</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCandidate.job_types_seeking.map((jt: string, i: number) => (
+                      <span key={i} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest">{jt}</span>
                     ))}
                   </div>
                 </div>

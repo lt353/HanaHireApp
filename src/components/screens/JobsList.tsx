@@ -72,17 +72,6 @@ export const JobsList: React.FC<JobsListProps> = ({
   const unlockedIds: any[] = Array.isArray(unlockedJobIds) ? unlockedJobIds : [];
   const queue: any[] = Array.isArray(seekerQueue) ? seekerQueue : [];
 
-  const [selectedJobIds, setSelectedJobIds] = React.useState<Set<any>>(new Set());
-
-  const toggleSelect = (id: any) => {
-    setSelectedJobIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   // Mobile swipe index
   const [index, setIndex] = React.useState(0);
   const [passedJobs, setPassedJobs] = React.useState<any[]>([]);
@@ -426,108 +415,53 @@ export const JobsList: React.FC<JobsListProps> = ({
           )}
         </div>
       ) : (
-        /* DESKTOP: Full detail cards with checkboxes */
-        <div className="space-y-6 relative">
-          {/* Floating Apply to Selected button */}
-          {selectedJobIds.size > 0 && (
-            <div className="fixed top-20 right-4 z-30">
+        /* DESKTOP: Moderate-detail cards + floating Apply button tied to bookmark queue */
+        <div className="space-y-6">
+          {/* Floating Apply button — visible when items are bookmarked */}
+          {queue.length > 0 && (
+            <div className="fixed bottom-8 right-8 z-30">
               <button
                 type="button"
-                onClick={() => onShowPayment({ type: 'seeker', items: jobs.filter(j => selectedJobIds.has(j.id)) })}
-                className="flex items-center gap-2 px-5 py-3 bg-[#0077BE] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-xl shadow-[#0077BE]/30 hover:bg-[#006aa8] transition-all"
+                onClick={() => onShowPayment({ type: 'seeker', items: queue })}
+                className="flex items-center gap-2 px-6 py-4 bg-[#0077BE] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#0077BE]/40 hover:bg-[#006aa8] transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                Apply to Selected ({selectedJobIds.size})
+                Apply to Saved Jobs ({queue.length})
               </button>
             </div>
           )}
 
           {jobs.length === 0 ? (
             <div className="p-16 bg-white border-4 border-dashed border-gray-100 rounded-3xl text-center">
-              <p className="text-gray-400 font-black text-xl uppercase tracking-widest">
-                No jobs found
-              </p>
+              <p className="text-gray-400 font-black text-xl uppercase tracking-widest">No jobs found</p>
             </div>
           ) : (
             jobs.map((job) => (
               <div
                 key={job.id}
-                className={`p-6 bg-white border rounded-2xl hover:shadow-lg transition-all group ${selectedJobIds.has(job.id) ? 'border-[#0077BE] ring-2 ring-[#0077BE]/20' : 'border-gray-100'}`}
+                className="p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all group"
               >
-                <div className="flex items-start gap-4">
-                  {/* Checkbox */}
-                  <div className="pt-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selectedJobIds.has(job.id)}
-                      onChange={() => toggleSelect(job.id)}
-                      className="w-5 h-5 rounded accent-[#0077BE] cursor-pointer"
-                    />
-                  </div>
-
-                  {/* Job Info - clickable */}
+                <div className="flex items-start gap-6">
+                  {/* Job Info - clickable to open full detail modal */}
                   <div
                     className="flex-1 min-w-0 cursor-pointer space-y-3"
                     onClick={() => onSelectJob(job)}
                   >
-                    <h3 className="text-xl font-black tracking-tight leading-tight">
-                      {job.title}
-                    </h3>
+                    <h3 className="text-xl font-black tracking-tight leading-tight">{job.title}</h3>
 
-                    {/* Primary tags */}
                     <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wider">
                       <span className="flex items-center gap-1.5 text-gray-500"><MapPin size={13} /> {job.location}</span>
                       <span className="flex items-center gap-1.5 text-[#2ECC71]"><DollarSign size={13} /> {job.pay_range}</span>
                       <span className="flex items-center gap-1.5 text-gray-500"><Briefcase size={13} /> {job.job_type}</span>
                       {job.company_industry && <span className="px-2.5 py-1 bg-[#0077BE]/5 text-[#0077BE] rounded-lg">{job.company_industry}</span>}
                       {job.company_size && <span className="px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg border border-gray-100">{job.company_size}</span>}
-                      {job.start_date && <span className="px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg border border-gray-100">Start: {job.start_date}</span>}
-                      <span className="flex items-center gap-1.5 text-gray-400"><Lock size={13} /> {isUnlocked(job.id) ? "Unlocked" : "Locked"}</span>
                     </div>
 
-                    {/* Description */}
                     {job.description && (
-                      <p className="text-sm text-gray-600 leading-relaxed">{job.description}</p>
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">{job.description}</p>
                     )}
 
-                    {/* Requirements */}
-                    {Array.isArray(job.requirements) && job.requirements.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Requirements</p>
-                        <div className="flex flex-wrap gap-2">
-                          {job.requirements.map((r: string, i: number) => (
-                            <span key={i} className="px-3 py-1.5 bg-[#0077BE]/5 text-[#0077BE] rounded-lg text-[10px] font-black uppercase tracking-widest">{r}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Responsibilities */}
-                    {Array.isArray(job.responsibilities) && job.responsibilities.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Responsibilities</p>
-                        <ul className="space-y-1">
-                          {job.responsibilities.map((r: string, i: number) => (
-                            <li key={i} className="flex gap-2 items-start text-xs text-gray-600">
-                              <div className="w-1.5 h-1.5 mt-1.5 rounded-full bg-[#0077BE] shrink-0" />
-                              {r}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Benefits */}
-                    {Array.isArray(job.benefits) && job.benefits.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Benefits</p>
-                        <div className="flex flex-wrap gap-2">
-                          {job.benefits.map((b: string, i: number) => (
-                            <span key={i} className="px-3 py-1.5 bg-[#2ECC71]/5 text-[#2ECC71] rounded-lg text-[10px] font-black uppercase tracking-widest">{b}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <p className="text-[10px] font-black text-[#0077BE] uppercase tracking-widest">Tap to see full details →</p>
                   </div>
 
                   {/* Bookmark button */}
@@ -555,7 +489,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                         className="text-xs font-bold uppercase tracking-wide transition-all"
                         style={{ color: isInQueue(job.id) ? '#2ECC71' : '#6B7280' }}
                       >
-                        Save
+                        {isInQueue(job.id) ? 'Saved' : 'Save'}
                       </span>
                     </button>
                   </div>

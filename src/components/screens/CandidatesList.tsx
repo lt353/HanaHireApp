@@ -81,17 +81,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
     : [];
   const queue: any[] = Array.isArray(employerQueue) ? employerQueue : [];
 
-  const [selectedCandidateIds, setSelectedCandidateIds] = React.useState<Set<any>>(new Set());
-
-  const toggleSelect = (id: any) => {
-    setSelectedCandidateIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   // Mobile swipe state
   const [index, setIndex] = React.useState(0);
   const [passedCandidates, setPassedCandidates] = React.useState<any[]>([]);
@@ -471,158 +460,95 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
           )}
         </div>
       ) : (
-        /* DESKTOP: Full detail cards with checkboxes */
-        <div className="grid gap-6 relative">
-          {/* Floating Unlock Selected button */}
-          {selectedCandidateIds.size > 0 && (
-            <div className="fixed top-20 right-4 z-30">
+        /* DESKTOP: Moderate-detail cards + floating Unlock button tied to bookmark queue */
+        <div className="grid gap-6">
+          {/* Floating Unlock button — visible when candidates are bookmarked */}
+          {queue.length > 0 && (
+            <div className="fixed bottom-8 right-8 z-30">
               <button
                 type="button"
-                onClick={() => onShowPayment({ type: 'employer', items: candidates.filter(c => selectedCandidateIds.has(c.id)) })}
-                className="flex items-center gap-2 px-5 py-3 bg-[#FF6B6B] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-xl shadow-[#FF6B6B]/30 hover:bg-[#e55a5a] transition-all"
+                onClick={() => onShowPayment({ type: 'employer', items: queue })}
+                className="flex items-center gap-2 px-6 py-4 bg-[#FF6B6B] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#FF6B6B]/40 hover:bg-[#e55a5a] transition-all"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                Unlock Applicants ({selectedCandidateIds.size})
+                <Lock size={16} />
+                Unlock Applicants ({queue.length})
               </button>
             </div>
           )}
 
           {candidates.length === 0 ? (
             <div className="p-16 bg-white border-4 border-dashed border-gray-100 rounded-3xl text-center">
-              <p className="text-gray-400 font-black text-xl uppercase tracking-widest">
-                No candidates found
-              </p>
+              <p className="text-gray-400 font-black text-xl uppercase tracking-widest">No candidates found</p>
             </div>
           ) : (
             candidates.map((c) => (
               <div
                 key={c.id}
-                className={`p-6 lg:p-8 bg-white border rounded-2xl hover:shadow-2xl transition-all group overflow-hidden ${selectedCandidateIds.has(c.id) ? 'border-[#FF6B6B] ring-2 ring-[#FF6B6B]/20' : 'border-gray-100'}`}
+                onClick={() => onSelectCandidate(c)}
+                className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col lg:flex-row items-center gap-6 lg:gap-8 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
               >
-                <div className="flex flex-col lg:flex-row items-start gap-6 lg:gap-8">
-                  {/* Checkbox + Thumbnail column */}
-                  <div className="flex items-start gap-3 w-full lg:w-auto shrink-0">
-                    {/* Checkbox */}
-                    <div className="pt-1" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedCandidateIds.has(c.id)}
-                        onChange={() => toggleSelect(c.id)}
-                        className="w-5 h-5 rounded accent-[#FF6B6B] cursor-pointer"
-                      />
+                {/* Blurred video thumbnail */}
+                <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-gray-50 group-hover:scale-[1.02] transition-transform duration-500">
+                  <ImageWithFallback
+                    src={c.thumbnail || c.video_thumbnail_url || "/api/placeholder/800/450"}
+                    className={`w-full h-full object-cover transition-all duration-1000 ${isUnlocked(c.id) ? 'blur-0 scale-100' : 'blur-[7px] scale-105 opacity-85'}`}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border-2 border-white/40 shadow-2xl group-hover:scale-110 transition-transform">
+                      {isUnlocked(c.id) ? <Play size={24} className="text-white fill-white ml-1" /> : <Lock size={24} className="text-white" />}
                     </div>
+                  </div>
+                  {!isUnlocked(c.id) && (
+                    <div className="absolute bottom-4 left-4 right-4 text-center">
+                      <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">Locked Preview</span>
+                    </div>
+                  )}
+                </div>
 
-                    {/* Video Thumbnail */}
-                    <div
-                      className="flex-1 lg:w-52 xl:w-60 aspect-video rounded-2xl overflow-hidden relative bg-gray-50 cursor-pointer group-hover:scale-[1.02] transition-transform duration-500"
-                      onClick={() => onSelectCandidate(c)}
-                    >
-                      <ImageWithFallback
-                        src={c.thumbnail || c.video_thumbnail_url || "/api/placeholder/800/450"}
-                        className={`w-full h-full object-cover transition-all duration-1000 ${isUnlocked(c.id) ? 'blur-0 scale-100' : 'blur-[7px] scale-105 opacity-85'}`}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border-2 border-white/40 shadow-2xl group-hover:scale-110 transition-transform">
-                          {isUnlocked(c.id) ? (
-                            <Play size={22} className="text-white fill-white ml-1" />
-                          ) : (
-                            <Lock size={22} className="text-white" />
-                          )}
-                        </div>
-                      </div>
-                      {!isUnlocked(c.id) && (
-                        <div className="absolute bottom-3 left-3 right-3 text-center">
-                          <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">
-                            Locked Preview
-                          </span>
-                        </div>
-                      )}
+                {/* Candidate info */}
+                <div className="flex-1 space-y-3 text-center lg:text-left min-w-0 w-full lg:w-auto">
+                  <div className="space-y-1">
+                    <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#0077BE] transition-colors truncate">
+                      {c.display_title || "Verified Talent"}
+                    </h3>
+                    <div className="flex flex-wrap justify-center lg:justify-start gap-3 lg:gap-5 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
+                      <span className="flex items-center gap-2"><MapPin size={16} /> {c.location}</span>
+                      <span className="flex items-center gap-2"><Briefcase size={16} /> {c.years_experience} yrs exp</span>
+                      <span className="text-[#2ECC71]">{c.availability || 'Immediate'}</span>
+                      {c.preferred_pay_range && <span className="text-[#2ECC71]">{c.preferred_pay_range}</span>}
                     </div>
                   </div>
 
-                  {/* Candidate Info */}
-                  <div
-                    className="flex-1 space-y-4 min-w-0 w-full cursor-pointer"
-                    onClick={() => onSelectCandidate(c)}
+                  {Array.isArray(c.skills) && c.skills.length > 0 && (
+                    <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                      {c.skills.slice(0, 6).map((s: string, i: number) => (
+                        <span key={`${s}-${i}`} className="px-3 lg:px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100">{s}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] font-black text-[#0077BE] uppercase tracking-widest">Tap to see full profile details →</p>
+                </div>
+
+                {/* Bookmark button */}
+                <div className="flex gap-3 lg:gap-4 shrink-0 w-full lg:w-auto justify-center" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleBookmark(c)}
+                    className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all"
+                    aria-label={isInQueue(c.id) ? "Remove from saved" : "Save candidate"}
                   >
-                    <div className="space-y-2">
-                      <h3 className="text-2xl lg:text-3xl font-black tracking-tight leading-none group-hover:text-[#0077BE] transition-colors">
-                        {c.display_title || "Verified Talent"}
-                      </h3>
-                      <div className="flex flex-wrap gap-3 text-xs font-black uppercase tracking-widest text-gray-400">
-                        <span className="flex items-center gap-1.5"><MapPin size={14} /> {c.location}</span>
-                        <span className="flex items-center gap-1.5"><Briefcase size={14} /> {c.years_experience} yrs exp</span>
-                        <span className="text-[#2ECC71]">{c.availability || 'Immediate'}</span>
-                        {c.work_style && <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-lg">{c.work_style}</span>}
-                        {c.education && <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-lg">{c.education}</span>}
-                        {c.preferred_pay_range && <span className="px-2.5 py-1 bg-[#2ECC71]/5 text-[#2ECC71] rounded-lg">{c.preferred_pay_range}</span>}
-                        {c.current_employment_status && <span className="px-2.5 py-1 bg-[#0077BE]/5 text-[#0077BE] rounded-lg">{c.current_employment_status}</span>}
-                      </div>
-                    </div>
-
-                    {/* Skills */}
-                    {Array.isArray(c.skills) && c.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {c.skills.map((s: string, i: number) => (
-                          <span key={`${s}-${i}`} className="px-3 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100">{s}</span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Industries interested */}
-                    {Array.isArray(c.industries_interested) && c.industries_interested.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Industries Interested</p>
-                        <div className="flex flex-wrap gap-2">
-                          {c.industries_interested.map((ind: string, i: number) => (
-                            <span key={i} className="px-3 py-1.5 bg-[#0077BE]/5 text-[#0077BE] rounded-lg text-[10px] font-black uppercase tracking-widest">{ind}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Job types seeking */}
-                    {Array.isArray(c.job_types_seeking) && c.job_types_seeking.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Open To</p>
-                        <div className="flex flex-wrap gap-2">
-                          {c.job_types_seeking.map((jt: string, i: number) => (
-                            <span key={i} className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{jt}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bookmark button */}
-                  <div className="flex gap-3 shrink-0 w-full lg:w-auto justify-center lg:justify-start" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleBookmark(c)}
-                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all"
-                      aria-label={isInQueue(c.id) ? "Remove from saved" : "Save candidate"}
+                    <svg
+                      className="w-6 h-6 transition-all"
+                      style={{ fill: isInQueue(c.id) ? '#2ECC71' : 'none', stroke: isInQueue(c.id) ? '#2ECC71' : '#9CA3AF', strokeWidth: '2' }}
+                      viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"
                     >
-                      <svg
-                        className="w-6 h-6 transition-all"
-                        style={{
-                          fill: isInQueue(c.id) ? '#2ECC71' : 'none',
-                          stroke: isInQueue(c.id) ? '#2ECC71' : '#9CA3AF',
-                          strokeWidth: '2'
-                        }}
-                        viewBox="0 0 24 24"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                      </svg>
-                      <span
-                        className="text-xs font-bold uppercase tracking-wide transition-all"
-                        style={{ color: isInQueue(c.id) ? '#2ECC71' : '#6B7280' }}
-                      >
-                        Save
-                      </span>
-                    </button>
-                  </div>
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <span className="text-xs font-bold uppercase tracking-wide transition-all" style={{ color: isInQueue(c.id) ? '#2ECC71' : '#6B7280' }}>
+                      {isInQueue(c.id) ? 'Saved' : 'Save'}
+                    </span>
+                  </button>
                 </div>
               </div>
             ))
