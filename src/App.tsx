@@ -1038,7 +1038,7 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#0077BE] hover:underline">Create Account</button></p>
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#0077BE] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Create Account</button></p>
                 </div>
               </>
             ) : signupStep === 'role-select' ? (
@@ -1095,7 +1095,7 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             ) : (
@@ -1103,7 +1103,7 @@ export default function App() {
               <div className="space-y-8">
                 <button
                   onClick={() => { setSignupStep('role-select'); setSignupRole(null); setSignupFormData({}); }}
-                  className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-[#0077BE] transition-colors"
+                  className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-[#0077BE] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                 >
                   &larr; Back to role selection
                 </button>
@@ -1288,7 +1288,7 @@ export default function App() {
                 </form>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             )}
@@ -1363,7 +1363,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setExpandedPaymentItemId(expandedPaymentItemId === item.id ? null : item.id)}
-                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   title="Toggle details"
                 >
                   {expandedPaymentItemId === item.id
@@ -1378,7 +1378,7 @@ export default function App() {
                     setPaymentItems(next);
                     if (expandedPaymentItemId === item.id) setExpandedPaymentItemId(null);
                   }}
-                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors"
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   title="Remove from checkout"
                 >
                   <X size={14} />
@@ -1554,11 +1554,11 @@ export default function App() {
             <div className="space-y-4">
                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Job Intro Format</label>
                <div className="flex gap-4">
-                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'}`}>
+                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'} hover:scale-105 active:scale-95 duration-200`}>
                      <Video size={24} />
                      <span className="font-black text-[10px]">VIDEO INTRO</span>
                   </button>
-                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'}`}>
+                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'} hover:scale-105 active:scale-95 duration-200`}>
                      <Mic size={24} />
                      <span className="font-black text-[10px]">VOICE ONLY</span>
                   </button>
@@ -1615,9 +1615,9 @@ export default function App() {
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 {userRole === 'seeker' ? 'Job Filters' : 'Talent Filters'}
               </span>
-              <button 
+              <button
                 onClick={clearFilters}
-                className="text-[10px] font-black text-[#FF6B6B] uppercase tracking-widest hover:underline"
+                className="text-[10px] font-black text-[#FF6B6B] uppercase tracking-widest hover:underline hover:scale-105 active:scale-95 transition-all duration-200"
               >
                 Clear All
               </button>
@@ -1626,10 +1626,10 @@ export default function App() {
             {/* Industry Filter: Always available now, matching interested industries for candidates */}
             <CollapsibleFilter title="Industry" isOpen={true}>
               {(userRole === 'seeker' ? JOB_CATEGORIES.industries : CANDIDATE_CATEGORIES.industries).map(t => (
-                <button 
-                  key={t} 
-                  onClick={() => toggleFilter('industries', t)} 
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                <button
+                  key={t}
+                  onClick={() => toggleFilter('industries', t)}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {t}
                 </button>
@@ -1639,10 +1639,10 @@ export default function App() {
             {/* Common Filter: Location */}
             <CollapsibleFilter title="Location" isOpen={userRole === 'employer'}>
               {(userRole === 'seeker' ? JOB_CATEGORIES.locations : CANDIDATE_CATEGORIES.locations).map(l => (
-                <button 
-                  key={l} 
-                  onClick={() => toggleFilter('locations', l)} 
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                <button
+                  key={l}
+                  onClick={() => toggleFilter('locations', l)}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {l}
                 </button>
@@ -1653,10 +1653,10 @@ export default function App() {
             {userRole === 'seeker' ? (
               <CollapsibleFilter title="Pay Range">
                 {JOB_CATEGORIES.payRanges.map(p => (
-                  <button 
-                    key={p} 
-                    onClick={() => toggleFilter('payRanges', p)} 
-                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                  <button
+                    key={p}
+                    onClick={() => toggleFilter('payRanges', p)}
+                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                   >
                     {p}
                   </button>
@@ -1666,10 +1666,10 @@ export default function App() {
               <>
                 <CollapsibleFilter title="Experience Level" isOpen={true}>
                   {CANDIDATE_CATEGORIES.experienceLevels.map(e => (
-                    <button 
-                      key={e} 
-                      onClick={() => toggleFilter('experienceLevels', e)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experienceLevels.includes(e) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                    <button
+                      key={e}
+                      onClick={() => toggleFilter('experienceLevels', e)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experienceLevels.includes(e) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {e}
                     </button>
@@ -1678,10 +1678,10 @@ export default function App() {
 
                 <CollapsibleFilter title="Skills">
                   {CANDIDATE_CATEGORIES.skills.map(s => (
-                    <button 
-                      key={s} 
-                      onClick={() => toggleFilter('skills', s)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                    <button
+                      key={s}
+                      onClick={() => toggleFilter('skills', s)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {s}
                     </button>
@@ -1690,10 +1690,10 @@ export default function App() {
 
                 <CollapsibleFilter title="Education">
                   {CANDIDATE_CATEGORIES.educationLevels.map(edu => (
-                    <button 
-                      key={edu} 
-                      onClick={() => toggleFilter('educationLevels', edu)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.educationLevels.includes(edu) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                    <button
+                      key={edu}
+                      onClick={() => toggleFilter('educationLevels', edu)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.educationLevels.includes(edu) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {edu}
                     </button>
@@ -1725,15 +1725,15 @@ export default function App() {
      {/* Mobile Nav */}
 {currentView !== "landing" && !showPaymentModal && (
   <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-3 z-50 shadow-2xl">
-     <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300">
+     <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200">
        <Eye size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">EXPLORE</span>
      </button>
-     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#0077BE]' : 'text-gray-300'}`}>
+     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#0077BE]' : 'text-gray-300'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <Briefcase size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
      </button>
-     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#0077BE]' : 'text-gray-300'}`}>
+     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#0077BE]' : 'text-gray-300'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <User size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
      </button>
@@ -1873,8 +1873,8 @@ export default function App() {
                 </div>
 
                 <div className="flex gap-4 p-1 bg-gray-50 rounded-2xl">
-                  <button className="flex-1 py-4 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase tracking-widest">Video Intro</button>
-                  <button className="flex-1 py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-600 transition-colors">Transcript</button>
+                  <button className="flex-1 py-4 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200">Video Intro</button>
+                  <button className="flex-1 py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-600 transition-colors hover:scale-105 active:scale-95 transition-all duration-200">Transcript</button>
                 </div>
               </div>
             ) : (
