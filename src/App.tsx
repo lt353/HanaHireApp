@@ -37,7 +37,6 @@ import { Header } from './components/layout/Header';
 import { ImprovedPaymentModalContent } from './components/ui/ImprovedPaymentModal';
 import { Modal } from './components/ui/Modal';
 import { Button } from './components/ui/button';
-import { ActionButton } from './components/ActionButton';
 import { CollapsibleFilter } from './components/CollapsibleFilter';
 import { Home } from './components/screens/Home';
 import { About } from './components/screens/About';
@@ -997,50 +996,44 @@ export default function App() {
                          />
                       </div>
                    </div>
-                   <ActionButton
+                   <Button
                      type="submit"
-                     variant="primary"
-                     size="xl"
-                     fullWidth
+                     className="w-full h-20 rounded-[1.5rem] text-xl border-2 border-[#0077BE]/30 hover:border-[#0077BE] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200"
                    >
                      Log In to Hub
-                   </ActionButton>
+                   </Button>
                 </form>
 
                 {/* Demo Login Shortcuts */}
                 <div className="pt-6 border-t border-gray-100 space-y-4">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
                   <div className="grid grid-cols-2 gap-3">
-                    <ActionButton
+                    <button
                       type="button"
-                      variant="outline"
-                      size="md"
                       onClick={() => {
                         setLoginEmail('demo.seeker@hanahire.com');
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="text-center space-y-2 group"
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:border-[#0077BE] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE]">Job Seeker</span>
                       <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
-                    </ActionButton>
-                    <ActionButton
+                    </button>
+                    <button
                       type="button"
-                      variant="outline"
-                      size="md"
                       onClick={() => {
                         setLoginEmail('demo.employer@hanahire.com');
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="text-center space-y-2 group border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:border-[#2ECC71]"
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:border-[#2ECC71] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71]">Employer</span>
                       <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
-                    </ActionButton>
+                    </button>
                   </div>
                 </div>
 
@@ -1054,12 +1047,9 @@ export default function App() {
                 <p className="text-center text-gray-500 font-medium text-lg">What brings you to HanaHire?</p>
 
                 <div className="space-y-4">
-                  <ActionButton
-                    variant="outline"
-                    size="lg"
-                    fullWidth
+                  <button
                     onClick={() => { setSignupRole('seeker'); setSignupStep('form'); }}
-                    className="text-left space-y-3 group !bg-white hover:!bg-[#0077BE]/5 border-[#0077BE]/20 hover:!border-[#0077BE]"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#0077BE]/20 hover:border-[#0077BE] bg-white hover:bg-[#0077BE]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#0077BE]/10 flex items-center justify-center shrink-0">
@@ -1075,14 +1065,11 @@ export default function App() {
                       <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#0077BE] shrink-0" /> Track profile views, applications, and unlocked jobs</div>
                       <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#0077BE] shrink-0" /> Come back anytime without re-entering your info</div>
                     </div>
-                  </ActionButton>
+                  </button>
 
-                  <ActionButton
-                    variant="success"
-                    size="lg"
-                    fullWidth
+                  <button
                     onClick={() => { setSignupRole('employer'); setSignupStep('form'); }}
-                    className="text-left space-y-3 group !bg-white hover:!bg-[#2ECC71]/5 border-[#2ECC71]/20 hover:!border-[#1a7a3e]"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#2ECC71]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#2ECC71]/10 flex items-center justify-center shrink-0">
@@ -1098,7 +1085,7 @@ export default function App() {
                       <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#2ECC71] shrink-0" /> Track candidates unlocked, profile views, and applicants</div>
                       <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#2ECC71] shrink-0" /> Verify your business for trusted hiring</div>
                     </div>
-                  </ActionButton>
+                  </button>
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-2xl">
@@ -1122,10 +1109,7 @@ export default function App() {
                 </button>
 
                 {/* Demo Auto-Fill Button */}
-                <ActionButton
-                  variant="outline"
-                  size="md"
-                  fullWidth
+                <button
                   onClick={() => {
                     if (signupRole === 'seeker') {
                       const d = DEMO_PROFILES.seeker;
@@ -1136,13 +1120,13 @@ export default function App() {
                     }
                     toast.success("Demo data filled! Review and submit.");
                   }}
-                  className={`flex items-center justify-center gap-3 group ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:!bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:!bg-[#0077BE]/10'}`}
+                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group`}
                 >
                   <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'} group-hover:scale-110 transition-transform`} />
                   <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'}`}>
                     Auto-fill Demo Data
                   </span>
-                </ActionButton>
+                </button>
 
                 <form onSubmit={async (e) => {
                   e.preventDefault();
@@ -1295,14 +1279,12 @@ export default function App() {
                      </div>
                    )}
 
-                   <ActionButton
+                   <Button
                      type="submit"
-                     variant={signupRole === 'employer' ? 'success' : 'primary'}
-                     size="lg"
-                     fullWidth
+                     className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
                    >
                      {signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account'}
-                   </ActionButton>
+                   </Button>
                 </form>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
@@ -1514,17 +1496,14 @@ export default function App() {
 
     {/* Pay Button */}
     {paymentItems.length > 0 && (
-      <ActionButton
-        variant="primary"
-        size="xl"
-        fullWidth
+      <Button
+        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
         onClick={processPayment}
-        className="group"
       >
         <Lock size={18} className="mr-2" />
         {paymentTarget?.type === 'seeker' ? `Apply & Reveal` : `Unlock ${paymentItems.length > 1 ? `${paymentItems.length} Profiles` : 'Profile'}`}
         <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
-      </ActionButton>
+      </Button>
     )}
 
     {/* Trust Indicators */}
@@ -1591,7 +1570,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Overview</label><textarea required name="description" rows={4} className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 font-medium text-lg" /></div>
-            <ActionButton type="submit" variant="primary" size="xl" fullWidth className="!h-24 !text-3xl">Go Live ($0 Post Fee)</ActionButton>
+            <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#0077BE]/20 hover:scale-105 active:scale-95 transition-all duration-200">Go Live ($0 Post Fee)</Button>
          </form>
       </Modal>
 
@@ -1736,9 +1715,9 @@ export default function App() {
             )}
 
             <div className="pt-6">
-              <ActionButton variant="primary" size="lg" fullWidth onClick={() => setShowFilterModal(false)}>
+              <Button className="w-full h-16 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => setShowFilterModal(false)}>
                 Show {userRole === 'seeker' ? filteredJobs.length : filteredCandidates.length} Results
-              </ActionButton>
+              </Button>
             </div>
          </div>
       </Modal>
@@ -1853,9 +1832,9 @@ export default function App() {
 
             {/* CTA */}
             {!unlockedJobIds.includes(selectedJob.id) && (
-              <ActionButton variant="primary" size="xl" fullWidth onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
+              <Button className="w-full h-20 text-xl rounded-3xl shadow-2xl shadow-[#0077BE]/20 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
                 Apply & Reveal Business
-              </ActionButton>
+              </Button>
             )}
           </div>
         )}
@@ -2056,9 +2035,9 @@ export default function App() {
             </div>
 
             {!unlockedCandidateIds.includes(selectedCandidate.id) && (
-              <ActionButton variant="danger" size="xl" fullWidth className="!h-16 sm:!h-20 md:!h-24 !text-base sm:!text-xl md:!text-2xl" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
+              <Button className="w-full h-16 sm:h-20 md:h-24 text-base sm:text-xl md:text-2xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-[#FF6B6B]/20 bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
                 Unlock Full Video & Contact ${INTERACTION_FEE.toFixed(2)}
-              </ActionButton>
+              </Button>
             )}
           </div>
         )}
