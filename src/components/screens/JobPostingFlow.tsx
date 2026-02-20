@@ -31,6 +31,7 @@ import { supabase } from '../../utils/supabase/client';
 // const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 interface JobPostingFlowProps {
+  userProfile?: any;
   onBack: () => void;
   onComplete: (job: any) => void;
 }
@@ -102,7 +103,7 @@ const INDUSTRIES = [
   "HVAC", "Electrical", "Plumbing", "Solar", "Logistics", "Agriculture", "Other"
 ];
 
-export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
+export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFlowProps) {
   const [step, setStep] = useState<FlowStep>('selection');
   const [prompt, setPrompt] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -132,6 +133,23 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
     video_url: "",
     image_url: ""
   });
+
+  // Auto-populate business info from userProfile
+  useEffect(() => {
+    if (userProfile && userProfile.role === 'employer') {
+      setFormData((prev: any) => ({
+        ...prev,
+        company_name: userProfile.businessName || prev.company_name,
+        contact_email: userProfile.email || prev.contact_email,
+        contact_phone: userProfile.phone || prev.contact_phone,
+        industry: userProfile.industry || prev.industry,
+        company_size: userProfile.companySize || prev.company_size,
+        location: userProfile.location || prev.location,
+        company_description: userProfile.bio || prev.company_description,
+        image_url: userProfile.companyLogoUrl || prev.image_url
+      }));
+    }
+  }, [userProfile]);
 
   const parsePrompt = (input: string) => {
     const text = input.toLowerCase();
@@ -238,7 +256,7 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
         : `$${formData.pay_min}-${formData.pay_max}/yr`;
 
       // Prepare job data for Supabase
-      const jobData = {
+      const jobData: any = {
         title: formData.title,
         company_name: formData.company_name,
         company_industry: formData.industry === "Other" ? formData.custom_industry : formData.industry,
@@ -257,6 +275,12 @@ export function JobPostingFlow({ onBack, onComplete }: JobPostingFlowProps) {
         status: 'active',
         applicant_count: 0
       };
+
+      // Add optional fields
+      if (formData.image_url) jobData.company_logo_url = formData.image_url;
+      if (formData.video_url) jobData.video_url = formData.video_url;
+      if (formData.start_date) jobData.start_date = formData.start_date;
+      if (userProfile?.employerId) jobData.employer_id = userProfile.employerId;
 
       // Insert job into Supabase
       const { data, error: insertError } = await supabase

@@ -29,6 +29,7 @@ import {
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
 import { projectId, publicAnonKey } from './utils/supabase/info';
+import { supabase } from './utils/supabase/client';
 
 
 // Components
@@ -448,7 +449,8 @@ export default function App() {
         );
       case "job-posting":
         return (
-          <JobPostingFlow 
+          <JobPostingFlow
+            userProfile={userProfile}
             onBack={() => handleNavigate("employer")}
             onComplete={(newJob) => {
               setJobs([newJob, ...jobs]);
@@ -471,7 +473,30 @@ export default function App() {
         return (
           <EmployerOnboarding
             userProfile={userProfile}
-            onComplete={(profileData) => {
+            onComplete={async (profileData) => {
+              // Update employers table with onboarding data
+              if (profileData.employerId) {
+                try {
+                  const { error: updateError } = await supabase
+                    .from('employers')
+                    .update({
+                      company_size: profileData.companySize || null,
+                      company_description: profileData.bio || null,
+                      location: profileData.location || null,
+                      phone: profileData.phone || null,
+                      industry: profileData.industry || null,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', profileData.employerId);
+
+                  if (updateError) {
+                    console.error("Error updating employer profile:", updateError);
+                    toast.error("Profile saved locally, but failed to sync to database.");
+                  }
+                } catch (err) {
+                  console.error("Unexpected error updating employer:", err);
+                }
+              }
               setUserProfile(profileData);
               handleNavigate("employer");
               toast.success("Business profile saved! Welcome to your dashboard.");
@@ -694,16 +719,57 @@ export default function App() {
                   </span>
                 </button>
 
-                <form onSubmit={(e) => {
+                <form onSubmit={async (e) => {
                   e.preventDefault();
-                  const profile: any = { role: signupRole, ...signupFormData };
-                  setUserProfile(profile);
-                  setUserRole(signupRole!);
-                  setIsLoggedIn(true);
-                  setShowAuthModal(false);
-                  setSignupFormData({});
-                  handleNavigate(signupRole === 'employer' ? "employer-onboarding" : "seeker-onboarding");
-                  toast.success("Account created! Let's set up your profile.");
+
+                  // If employer, insert into employers table first
+                  if (signupRole === 'employer') {
+                    try {
+                      const { data: employerData, error: employerError } = await supabase
+                        .from('employers')
+                        .insert([{
+                          email: signupFormData.email,
+                          phone: signupFormData.phone || null,
+                          business_name: signupFormData.businessName,
+                          industry: signupFormData.industry || null,
+                        }])
+                        .select()
+                        .single();
+
+                      if (employerError) {
+                        console.error("Error creating employer:", employerError);
+                        toast.error("Failed to create employer account. Please try again.");
+                        return;
+                      }
+
+                      // Store employer with database ID
+                      const profile: any = {
+                        role: signupRole,
+                        ...signupFormData,
+                        employerId: employerData.id
+                      };
+                      setUserProfile(profile);
+                      setUserRole(signupRole!);
+                      setIsLoggedIn(true);
+                      setShowAuthModal(false);
+                      setSignupFormData({});
+                      handleNavigate("employer-onboarding");
+                      toast.success("Account created! Let's set up your profile.");
+                    } catch (err) {
+                      console.error("Unexpected error:", err);
+                      toast.error("An unexpected error occurred. Please try again.");
+                    }
+                  } else {
+                    // Seeker signup - keep existing behavior
+                    const profile: any = { role: signupRole, ...signupFormData };
+                    setUserProfile(profile);
+                    setUserRole(signupRole!);
+                    setIsLoggedIn(true);
+                    setShowAuthModal(false);
+                    setSignupFormData({});
+                    handleNavigate("seeker-onboarding");
+                    toast.success("Account created! Let's set up your profile.");
+                  }
                 }} className="space-y-6">
                    {signupRole === 'seeker' ? (
                      /* Seeker Signup Form */
