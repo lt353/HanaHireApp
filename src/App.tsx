@@ -462,7 +462,36 @@ export default function App() {
         return (
           <SeekerOnboarding
             userProfile={userProfile}
-            onComplete={(profileData) => {
+            onComplete={async (profileData) => {
+              // Update candidates table with onboarding data
+              if (profileData.candidateId) {
+                try {
+                  const { error: updateError } = await supabase
+                    .from('candidates')
+                    .update({
+                      bio: profileData.bio || null,
+                      skills: profileData.skills || [],
+                      years_experience: profileData.experience ? parseInt(profileData.experience) : null,
+                      education: profileData.education || null,
+                      availability: profileData.availability || null,
+                      preferred_pay_range: profileData.targetPay || null,
+                      industries_interested: profileData.industries || [],
+                      work_style: profileData.workStyles?.join(', ') || null,
+                      job_types_seeking: profileData.jobTypesSeeking || [],
+                      display_title: profileData.displayTitle || null,
+                      is_profile_complete: true,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', profileData.candidateId);
+
+                  if (updateError) {
+                    console.error("Error updating candidate profile:", updateError);
+                    toast.error("Profile saved locally, but failed to sync to database.");
+                  }
+                } catch (err) {
+                  console.error("Unexpected error updating candidate:", err);
+                }
+              }
               setUserProfile(profileData);
               handleNavigate("seeker");
               toast.success("Profile saved! Welcome to your dashboard.");
@@ -485,6 +514,7 @@ export default function App() {
                       location: profileData.location || null,
                       phone: profileData.phone || null,
                       industry: profileData.industry || null,
+                      company_logo_url: profileData.companyLogoUrl || null,
                       updated_at: new Date().toISOString()
                     })
                     .eq('id', profileData.employerId);
@@ -760,15 +790,42 @@ export default function App() {
                       toast.error("An unexpected error occurred. Please try again.");
                     }
                   } else {
-                    // Seeker signup - keep existing behavior
-                    const profile: any = { role: signupRole, ...signupFormData };
-                    setUserProfile(profile);
-                    setUserRole(signupRole!);
-                    setIsLoggedIn(true);
-                    setShowAuthModal(false);
-                    setSignupFormData({});
-                    handleNavigate("seeker-onboarding");
-                    toast.success("Account created! Let's set up your profile.");
+                    // Seeker signup - insert into candidates table
+                    try {
+                      const { data: candidateData, error: candidateError } = await supabase
+                        .from('candidates')
+                        .insert([{
+                          name: signupFormData.name,
+                          email: signupFormData.email,
+                          phone: signupFormData.phone || null,
+                          location: signupFormData.location || null,
+                        }])
+                        .select()
+                        .single();
+
+                      if (candidateError) {
+                        console.error("Error creating candidate:", candidateError);
+                        toast.error("Failed to create candidate account. Please try again.");
+                        return;
+                      }
+
+                      // Store candidate with database ID
+                      const profile: any = {
+                        role: signupRole,
+                        ...signupFormData,
+                        candidateId: candidateData.id
+                      };
+                      setUserProfile(profile);
+                      setUserRole(signupRole!);
+                      setIsLoggedIn(true);
+                      setShowAuthModal(false);
+                      setSignupFormData({});
+                      handleNavigate("seeker-onboarding");
+                      toast.success("Account created! Let's set up your profile.");
+                    } catch (err) {
+                      console.error("Unexpected error:", err);
+                      toast.error("An unexpected error occurred. Please try again.");
+                    }
                   }
                 }} className="space-y-6">
                    {signupRole === 'seeker' ? (

@@ -24,6 +24,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
   const [phone, setPhone] = useState(userProfile?.phone || "");
   const [website, setWebsite] = useState("");
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
+  const [logoUrl, setLogoUrl] = useState("");
 
   const handleDemoFill = () => {
     const d = DEMO_PROFILES.employer;
@@ -34,6 +35,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
     setPhone(d.phone);
     setWebsite("www.alohabistro.com");
     setBusinessLicense(d.businessLicense);
+    setLogoUrl("https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200&h=200&fit=crop");
   };
 
   const handleSubmit = () => {
@@ -46,6 +48,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
       phone,
       website,
       businessLicense,
+      companyLogoUrl: logoUrl,
     };
     onComplete(profileData);
   };
@@ -218,17 +221,22 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
             </div>
           </div>
 
-          {/* Logo Upload Placeholder */}
+          {/* Logo URL */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Logo (optional)</h2>
-            <button
-              onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-300 hover:text-[#2ECC71] hover:border-[#2ECC71]/30 transition-all"
-            >
-              <Upload size={36} />
-              <span className="font-black text-xs uppercase tracking-widest">Upload Your Logo</span>
-              <span className="text-[10px] text-gray-400 font-medium">PNG, JPG, or SVG &middot; 500x500 recommended</span>
-            </button>
+            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Logo URL (optional)</h2>
+            <input
+              type="url"
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              placeholder="https://yoursite.com/logo.png"
+              className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base"
+            />
+            {logoUrl && (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <img src={logoUrl} alt="Logo preview" className="w-12 h-12 rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <span className="text-xs text-gray-500 font-medium">Logo preview</span>
+              </div>
+            )}
           </div>
 
           {/* Submit */}
