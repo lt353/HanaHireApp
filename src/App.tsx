@@ -994,7 +994,7 @@ export default function App() {
                    </div>
                    <Button
                      type="submit"
-                     className="w-full h-20 rounded-[1.5rem] text-xl border-2 border-[#0077BE]/30 hover:border-[#0077BE] hover:border-4 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                     className="w-full h-20 rounded-[1.5rem] text-xl border-2 border-[#0077BE]/30 hover:border-[#0077BE] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200"
                    >
                      Log In to Hub
                    </Button>
