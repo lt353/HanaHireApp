@@ -81,13 +81,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
-              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl border-gray-200 bg-white whitespace-nowrap"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl border-gray-200 bg-white whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={() => onShowAuth("login")}
             >
               <LogIn size={20} /> Log In
             </Button>
             <Button
-              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 whitespace-nowrap"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={() => onShowAuth("signup")}
             >
               Get Started
@@ -131,13 +131,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
           <Button
-            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#0077BE]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#0077BE] hover:bg-[#0077BE]/90"
+            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#0077BE]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#0077BE] hover:bg-[#0077BE]/90 hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={onShowPostJob}
           >
             <Plus size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Post a Job
           </Button>
           <Button
-  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#FF6B6B]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 text-white"
+  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#FF6B6B]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
   onClick={() => onNavigate("candidates")}
 >
   <Users size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Candidates
@@ -145,7 +145,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           {isLoggedIn && (
             <Button
               variant="outline"
-              className="h-16 sm:h-20 md:h-24 px-6 sm:px-8 rounded-[2rem] border-gray-200 bg-white text-sm sm:text-base whitespace-nowrap"
+              className="h-16 sm:h-20 md:h-24 px-6 sm:px-8 rounded-[2rem] border-gray-200 bg-white text-sm sm:text-base whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={onLogout}
             >
               <LogOut size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" /> Log Out
@@ -169,7 +169,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           </div>
           <button
             onClick={() => { setFilterByJobId(null); setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}
-            className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden text-left hover:ring-2 ring-[#FF6B6B]/40 transition-all"
+            className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden text-left hover:ring-2 ring-[#FF6B6B]/40 transition-all hover:scale-105 active:scale-95 duration-200"
           >
             <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px] flex items-center gap-2">Applicants Received <ChevronDown size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" /></span>
             <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#FF6B6B] transition-colors">{mockApplicants.length}</p>
@@ -191,7 +191,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             </h3>
             <Button
               variant="outline"
-              className="h-10 sm:h-12 rounded-xl border-[#0077BE]/20 text-[#0077BE] font-black text-[10px] uppercase tracking-widest gap-2"
+              className="h-10 sm:h-12 rounded-xl border-[#0077BE]/20 text-[#0077BE] font-black text-[10px] uppercase tracking-widest gap-2 hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={onShowPostJob}
             >
               <Plus size={16} /> New Job
@@ -207,18 +207,18 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                     <h4 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-words">{j.title}</h4>
                     <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • LIVE • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
                   </div>
-                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-gray-50 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0">
+                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-gray-50 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200">
                     Manage
                   </Button>
                 </div>
                 <div className="flex gap-3 sm:gap-4">
-                  <Button variant="outline" className="flex-1 h-12 sm:h-14 md:h-16 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest" onClick={() => {
+                  <Button variant="outline" className="flex-1 h-12 sm:h-14 md:h-16 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
                     setFilterByJobId(j.id);
                     setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}>
                     View Applicants
                   </Button>
-                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-5 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest" onClick={() => onNavigate("candidates")}>
+                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-5 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("candidates")}>
                     Talent Pool
                   </Button>
                 </div>
@@ -237,7 +237,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             <div className="p-12 sm:p-16 md:p-20 bg-gray-50 rounded-[3rem] sm:rounded-[3.5rem] md:rounded-[4rem] border-4 border-dashed border-gray-100 text-center space-y-4 sm:space-y-6">
               <Users size={40} className="sm:w-11 sm:h-11 md:w-12 md:h-12 mx-auto text-gray-200" />
               <p className="text-gray-400 font-black uppercase tracking-widest text-xs sm:text-sm">No unlocked profiles yet</p>
-              <Button variant="outline" className="h-12 sm:h-14 px-6 sm:px-8 mx-auto" onClick={() => onNavigate("candidates")}>
+              <Button variant="outline" className="h-12 sm:h-14 px-6 sm:px-8 mx-auto hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("candidates")}>
                 Browse Candidates
               </Button>
             </div>
@@ -269,11 +269,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                   </div>
 
                   <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-50 flex gap-2 sm:gap-3">
-                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#0077BE]/5 text-[#0077BE] flex items-center justify-center gap-2 hover:bg-[#0077BE] hover:text-white transition-all">
+                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#0077BE]/5 text-[#0077BE] flex items-center justify-center gap-2 hover:bg-[#0077BE] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
                       <Phone size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Call</span>
                     </button>
-                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#2ECC71]/5 text-[#2ECC71] flex items-center justify-center gap-2 hover:bg-[#2ECC71] hover:text-white transition-all">
+                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#2ECC71]/5 text-[#2ECC71] flex items-center justify-center gap-2 hover:bg-[#2ECC71] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
                       <Mail size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Email</span>
                     </button>

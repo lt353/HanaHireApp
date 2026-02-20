@@ -312,7 +312,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
         <p className="text-base sm:text-lg md:text-xl text-gray-500 font-medium tracking-tight">Hire with speed and privacy</p>
       </div>
       <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-        <button onClick={handleManualEntry} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-gray-50 bg-white hover:border-[#0077BE]/20 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 group">
+        <button onClick={handleManualEntry} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-gray-50 bg-white hover:border-[#0077BE]/20 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 group hover:scale-105 active:scale-95 duration-200">
           <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#0077BE]/5 group-hover:text-[#0077BE]">
             <Pencil size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
           </div>
@@ -324,7 +324,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
             Start Now <ArrowRight size={14} className="sm:w-4 sm:h-4" />
           </div>
         </button>
-        <button onClick={() => setStep('ai-input')} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-[#0077BE]/10 bg-white hover:border-[#0077BE]/30 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 relative group">
+        <button onClick={() => setStep('ai-input')} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-[#0077BE]/10 bg-white hover:border-[#0077BE]/30 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 relative group hover:scale-105 active:scale-95 duration-200">
           <div className="absolute top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8"><span className="px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-[#2ECC71]/10 text-[#2ECC71] rounded-full text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-widest">Recommended</span></div>
           <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#0077BE]/5 flex items-center justify-center text-[#0077BE]"><Sparkles size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /></div>
           <div className="space-y-1 sm:space-y-2">
@@ -506,7 +506,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-12 flex flex-col lg:grid lg:grid-cols-[1fr_450px] gap-8 lg:gap-16 items-start">
         <div className="w-full space-y-8 sm:space-y-12 order-2 lg:order-1">
           <div className="flex items-center gap-3 sm:gap-4">
-            <button onClick={() => setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
+            <button onClick={() => setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors hover:scale-105 active:scale-95 transition-all duration-200">
               <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
             </button>
             <div className="space-y-0.5 sm:space-y-1">
@@ -592,7 +592,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Responsibilities (Public)</label>
-                        <button onClick={() => setFormData({...formData, responsibilities: [...formData.responsibilities, ""]})} className="text-[#0077BE] hover:text-[#005a91] transition-colors">
+                        <button onClick={() => setFormData({...formData, responsibilities: [...formData.responsibilities, ""]})} className="text-[#0077BE] hover:text-[#005a91] transition-colors hover:scale-105 active:scale-95 transition-all duration-200">
                           <Plus size={16} />
                         </button>
                       </div>
@@ -605,7 +605,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
                             <button onClick={() => {
                               const n = formData.responsibilities.filter((_:any, i:number) => i !== idx);
                               setFormData({...formData, responsibilities: n});
-                            }} className="text-gray-300 hover:text-red-400">
+                            }} className="text-gray-300 hover:text-red-400 hover:scale-105 active:scale-95 transition-all duration-200">
                               <X size={16} />
                             </button>
                           )}
@@ -615,7 +615,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Requirements (Public)</label>
-                        <button onClick={() => setFormData({...formData, requirements: [...formData.requirements, ""]})} className="text-[#0077BE] hover:text-[#005a91] transition-colors">
+                        <button onClick={() => setFormData({...formData, requirements: [...formData.requirements, ""]})} className="text-[#0077BE] hover:text-[#005a91] transition-colors hover:scale-105 active:scale-95 transition-all duration-200">
                           <Plus size={16} />
                         </button>
                       </div>
@@ -628,7 +628,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
                             <button onClick={() => {
                               const n = formData.requirements.filter((_:any, i:number) => i !== idx);
                               setFormData({...formData, requirements: n});
-                            }} className="text-gray-300 hover:text-red-400">
+                            }} className="text-gray-300 hover:text-red-400 hover:scale-105 active:scale-95 transition-all duration-200">
                               <X size={16} />
                             </button>
                           )}
@@ -658,7 +658,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
                           }} placeholder="e.g. Health Insurance" />
                         </div>
                       ))}
-                      <button onClick={() => setFormData({...formData, benefits: [...formData.benefits, ""]})} className="p-4 border-2 border-dashed border-gray-100 rounded-xl text-gray-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16} /> Add Benefit</button>
+                      <button onClick={() => setFormData({...formData, benefits: [...formData.benefits, ""]})} className="p-4 border-2 border-dashed border-gray-100 rounded-xl text-gray-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all duration-200"><Plus size={16} /> Add Benefit</button>
                     </div>
                   </div>
                </div>
@@ -699,8 +699,8 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
           </div>
 
           <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <button onClick={() => setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left">← Back</button>
-            <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#0077BE]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto" onClick={handlePostJob}>
+            <button onClick={() => setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left hover:scale-105 active:scale-95 transition-all duration-200">← Back</button>
+            <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#0077BE]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto hover:scale-105 active:scale-95 transition-all duration-200" onClick={handlePostJob}>
               {isSubmitting ? <Loader2 className="animate-spin" /> : <>Publish Listing <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
             </Button>
           </div>
@@ -709,8 +709,8 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
         <aside className="w-full lg:sticky lg:top-8 space-y-6 sm:space-y-8 order-1 lg:order-2">
            <div className="space-y-4 sm:space-y-6">
               <div className="flex bg-gray-100 p-1 rounded-xl sm:rounded-2xl">
-                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'public' ? 'bg-white text-[#0077BE] shadow-sm' : 'text-gray-400'}`}>Locked</button>
-                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'private' ? 'bg-white text-[#2ECC71] shadow-sm' : 'text-gray-400'}`}>Unlocked</button>
+                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200 ${previewMode === 'public' ? 'bg-white text-[#0077BE] shadow-sm' : 'text-gray-400'}`}>Locked</button>
+                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200 ${previewMode === 'private' ? 'bg-white text-[#2ECC71] shadow-sm' : 'text-gray-400'}`}>Unlocked</button>
               </div>
               <AnimatePresence mode="wait">
                  <motion.div key={previewMode} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
@@ -729,7 +729,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
   const renderAIInput = () => (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6 sm:space-y-8">
       <div className="flex items-center gap-3 sm:gap-4">
-        <button onClick={() => setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
+        <button onClick={() => setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors hover:scale-105 active:scale-95 transition-all duration-200">
           <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
         </button>
         <div className="space-y-0.5 sm:space-y-1">
@@ -746,11 +746,11 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
           <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Quick Templates</p>
           <div className="flex flex-wrap gap-2">
             {["Line cook, Waikiki, $22/hr, weekends", "Bartender, Lahaina, $18/hr + tips", "Electrician, Kona, 5+ years, $40/hr"].map(chip => (
-              <button key={chip} onClick={() => setPrompt(chip)} className="px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 bg-gray-100 hover:bg-gray-200 rounded-full text-[10px] sm:text-xs font-black text-gray-600 transition-colors">{chip}</button>
+              <button key={chip} onClick={() => setPrompt(chip)} className="px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 bg-gray-100 hover:bg-gray-200 rounded-full text-[10px] sm:text-xs font-black text-gray-600 transition-colors hover:scale-105 active:scale-95 transition-all duration-200">{chip}</button>
             ))}
           </div>
         </div>
-        <Button disabled={!prompt} className="w-full h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-[1.5rem] text-base sm:text-lg md:text-xl" onClick={handleGenerate}>
+        <Button disabled={!prompt} className="w-full h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-[1.5rem] text-base sm:text-lg md:text-xl hover:scale-105 active:scale-95 transition-all duration-200" onClick={handleGenerate}>
           Generate Listing <Sparkles size={20} className="ml-2 sm:w-6 sm:h-6" />
         </Button>
       </div>
@@ -766,7 +766,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">Job is Live!</h2>
         <p className="text-base sm:text-lg md:text-xl text-gray-500 font-medium tracking-tight px-4">Your listing is establishing matches in the marketplace.</p>
       </div>
-      <Button className="w-full h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl" onClick={() => onComplete(postedJob)}>
+      <Button className="w-full h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl text-base sm:text-lg md:text-xl hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onComplete(postedJob)}>
         Go to Dashboard
       </Button>
     </div>

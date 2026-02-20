@@ -93,7 +93,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         {/* Demo Fill Button */}
         <button
           onClick={handleDemoFill}
-          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all flex items-center justify-center gap-3 group"
+          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all flex items-center justify-center gap-3 group hover:scale-105 active:scale-95 duration-200"
         >
           <Zap size={18} className="text-[#2ECC71] group-hover:scale-110 transition-transform" />
           <span className="text-xs font-black uppercase tracking-widest text-[#2ECC71]">
@@ -243,7 +243,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
           <div className="pt-4 space-y-4">
             <Button
               onClick={handleSubmit}
-              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20 flex items-center justify-center gap-3"
+              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <Sparkles size={22} />
               Launch Business Profile

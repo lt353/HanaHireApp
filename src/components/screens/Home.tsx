@@ -42,13 +42,13 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center lg:justify-start pt-4 sm:pt-6">
             <button
               onClick={() => onSelectRole("seeker")}
-              className="flex-1 bg-[#0077BE] text-white py-4 px-6 sm:py-5 sm:px-8 rounded-[1.5rem] hover:scale-[1.02] transition-all shadow-xl shadow-[#0077BE]/20 font-black text-base sm:text-lg tracking-tight uppercase"
+              className="flex-1 bg-[#0077BE] text-white py-4 px-6 sm:py-5 sm:px-8 rounded-[1.5rem] hover:scale-105 active:scale-95 transition-all duration-200 shadow-xl shadow-[#0077BE]/20 font-black text-base sm:text-lg tracking-tight uppercase"
             >
               Looking for a job
             </button>
             <button
               onClick={() => onSelectRole("employer")}
-              className="flex-1 bg-[#2ECC71] text-white py-4 px-6 sm:py-5 sm:px-8 rounded-[1.5rem] hover:scale-[1.02] transition-all shadow-xl shadow-[#2ECC71]/20 font-black text-base sm:text-lg tracking-tight uppercase"
+              className="flex-1 bg-[#2ECC71] text-white py-4 px-6 sm:py-5 sm:px-8 rounded-[1.5rem] hover:scale-105 active:scale-95 transition-all duration-200 shadow-xl shadow-[#2ECC71]/20 font-black text-base sm:text-lg tracking-tight uppercase"
             >
               Looking to hire
             </button>
@@ -230,13 +230,13 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center pt-4 sm:pt-6">
             <button
               onClick={() => onSelectRole("seeker")}
-              className="bg-[#0077BE] text-white py-4 sm:py-6 px-8 sm:px-12 rounded-[1.5rem] hover:scale-[1.02] transition-all shadow-xl shadow-[#0077BE]/20 font-black text-base sm:text-xl tracking-tight uppercase"
+              className="bg-[#0077BE] text-white py-4 sm:py-6 px-8 sm:px-12 rounded-[1.5rem] hover:scale-105 active:scale-95 transition-all duration-200 shadow-xl shadow-[#0077BE]/20 font-black text-base sm:text-xl tracking-tight uppercase"
             >
               I'm Job Seeking
             </button>
             <button
               onClick={() => onSelectRole("employer")}
-              className="bg-[#2ECC71] text-white py-4 sm:py-6 px-8 sm:px-12 rounded-[1.5rem] hover:scale-[1.02] transition-all shadow-xl shadow-[#2ECC71]/20 font-black text-base sm:text-xl tracking-tight uppercase"
+              className="bg-[#2ECC71] text-white py-4 sm:py-6 px-8 sm:px-12 rounded-[1.5rem] hover:scale-105 active:scale-95 transition-all duration-200 shadow-xl shadow-[#2ECC71]/20 font-black text-base sm:text-xl tracking-tight uppercase"
             >
               I'm Hiring
             </button>

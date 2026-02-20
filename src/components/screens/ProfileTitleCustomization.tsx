@@ -129,9 +129,9 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
       <div className="max-w-[1200px] mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button 
+          <button
             onClick={onBack}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
           >
             <ArrowLeft size={24} />
           </button>
@@ -265,9 +265,9 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
 
             {/* Guidelines */}
             <div className="border border-gray-100 rounded-[2rem] overflow-hidden">
-              <button 
+              <button
                 onClick={() => setIsGuidelinesOpen(!isGuidelinesOpen)}
-                className="w-full p-6 flex justify-between items-center hover:bg-gray-50 transition-colors"
+                className="w-full p-6 flex justify-between items-center hover:bg-gray-50 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#2ECC71]/10 flex items-center justify-center text-[#2ECC71]">
@@ -354,14 +354,14 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
 
         {/* Fixed Action Bar for Mobile / Bottom Actions */}
         <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col gap-4 max-w-xl mx-auto lg:mx-0">
-          <Button 
+          <Button
             disabled={!isValid || isSaving}
-            className={`h-20 text-xl rounded-[1.5rem] shadow-2xl transition-all ${isValid ? 'shadow-[#0077BE]/30' : 'bg-gray-200 shadow-none'}`}
+            className={`h-20 text-xl rounded-[1.5rem] shadow-2xl transition-all hover:scale-105 active:scale-95 duration-200 ${isValid ? 'shadow-[#0077BE]/30' : 'bg-gray-200 shadow-none'}`}
             onClick={handleSave}
           >
             {isSaving ? "SAVING..." : "SAVE TITLE"}
           </Button>
-          <button 
+          <button
             onClick={() => {
               const suggested = initialData.suggestedTitle.split(" & ");
               setPrimarySkill(suggested[0]);
@@ -369,7 +369,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
               setDescriptor("(None)");
               toast.info("Suggested title applied");
             }}
-            className="py-4 text-sm font-black text-[#0077BE] uppercase tracking-[0.2em] hover:opacity-70 transition-opacity"
+            className="py-4 text-sm font-black text-[#0077BE] uppercase tracking-[0.2em] hover:opacity-70 transition-opacity hover:scale-105 active:scale-95 transition-all duration-200"
           >
             Use Suggested Title
           </button>

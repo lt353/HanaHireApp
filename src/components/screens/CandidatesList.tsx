@@ -264,7 +264,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
         <Button
           variant="outline"
-          className="h-16 px-8 bg-white rounded-lg"
+          className="h-16 px-8 bg-white rounded-lg hover:scale-105 active:scale-95 transition-all duration-200"
           onClick={onShowFilters}
         >
           <Filter size={20} /> Filters
@@ -391,7 +391,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       handlePass();
                       resetCard();
                     }}
-                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all"
+                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 duration-200"
                   >
                     Skip
                   </button>
@@ -402,7 +402,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       handleToggleBookmark(currentCandidate);
                       resetCard();
                     }}
-                    className="h-14 rounded-xl bg-[#0077BE] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#0077BE]/20 flex items-center justify-center gap-2"
+                    className="h-14 rounded-xl bg-[#0077BE] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#0077BE]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                   >
                     <svg 
                       className="w-5 h-5 transition-all"
@@ -429,7 +429,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       <button
                         type="button"
                         onClick={handleUndo}
-                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -442,7 +442,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowPassedBin(true)}
-                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#FF6B6B] hover:text-[#FF6B6B] hover:bg-red-50 transition-all flex items-center justify-center gap-2`}
+                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#FF6B6B] hover:text-[#FF6B6B] hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200`}
                     >
                       <Trash2 size={14} />
                       {passedCandidates.length} Passed
@@ -468,7 +468,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               <button
                 type="button"
                 onClick={() => onShowPayment({ type: 'employer', items: queue })}
-                className="flex items-center gap-2 px-6 py-4 bg-[#FF6B6B] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#FF6B6B]/40 hover:bg-[#e55a5a] transition-all"
+                className="flex items-center gap-2 px-6 py-4 bg-[#FF6B6B] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#FF6B6B]/40 hover:bg-[#e55a5a] transition-all hover:scale-105 active:scale-95 duration-200"
               >
                 <Lock size={16} />
                 Unlock Applicants ({queue.length})

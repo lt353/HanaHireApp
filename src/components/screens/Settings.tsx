@@ -49,7 +49,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 py-16 grid lg:grid-cols-4 gap-12">
       <aside className="lg:col-span-1 space-y-4">
         {["Account info", "Payment method", "Transaction history", "Support", "System"].map(tab => (
-          <button key={tab} className="w-full text-left p-6 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] border border-gray-50 bg-white hover:bg-gray-50 transition-all flex justify-between items-center group">
+          <button key={tab} className="w-full text-left p-6 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] border border-gray-50 bg-white hover:bg-gray-50 transition-all flex justify-between items-center group hover:scale-105 active:scale-95 duration-200">
             {tab} <ChevronRight size={16} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
           </button>
         ))}
@@ -72,7 +72,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
               <input type="tel" placeholder="+1 (808) 000-0000" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="flex items-end">
-              <Button className="h-16 px-10 rounded-2xl w-full" onClick={() => toast.success("Info Updated")}>Update Info</Button>
+              <Button className="h-16 px-10 rounded-2xl w-full hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => toast.success("Info Updated")}>Update Info</Button>
             </div>
           </div>
         </section>
@@ -84,9 +84,9 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
               <p className="font-black text-lg tracking-tight uppercase text-red-600">Factory Reset</p>
               <p className="text-sm text-gray-500 font-medium leading-relaxed">If images are missing or the marketplace data seems outdated, you can force a re-seed of the database. This will overwrite all current KV store data for jobs and candidates with fresh high-quality Unsplash URLs.</p>
             </div>
-            <Button 
-              variant="outline" 
-              className="h-14 px-8 border-red-200 text-red-600 hover:bg-red-50 rounded-2xl gap-3" 
+            <Button
+              variant="outline"
+              className="h-14 px-8 border-red-200 text-red-600 hover:bg-red-50 rounded-2xl gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={handleForceRefresh}
               disabled={isRefreshing}
             >
@@ -101,7 +101,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
           <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-6">
             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-200"><Plus size={32} /></div>
             <p className="text-gray-400 font-bold">Secure Stripe Connection</p>
-            <Button variant="outline" className="h-14 px-10 rounded-2xl bg-white" onClick={() => toast.info("Redirecting to Stripe...")}>Add Card</Button>
+            <Button variant="outline" className="h-14 px-10 rounded-2xl bg-white hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => toast.info("Redirecting to Stripe...")}>Add Card</Button>
           </div>
         </section>
 

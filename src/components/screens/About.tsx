@@ -68,16 +68,16 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
         <div className="space-y-4">
           <p className="text-2xl font-black tracking-tight">Ready to skip the resume pile?</p>
           <div className="flex gap-4">
-            <Button className="h-20 px-12 text-xl rounded-[1.5rem]" onClick={() => onSelectRole("seeker")}>Browse Jobs</Button>
-            <Button variant="outline" className="h-20 px-12 text-xl rounded-[1.5rem]" onClick={() => onSelectRole("employer")}>Find Talent</Button>
+            <Button className="h-20 px-12 text-xl rounded-[1.5rem] hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onSelectRole("seeker")}>Browse Jobs</Button>
+            <Button variant="outline" className="h-20 px-12 text-xl rounded-[1.5rem] hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onSelectRole("employer")}>Find Talent</Button>
           </div>
         </div>
         <div className="space-y-4">
           <p className="text-xl font-black uppercase tracking-widest text-gray-300">Questions?</p>
           <div className="flex flex-wrap justify-center gap-8 text-[11px] font-black uppercase tracking-widest text-gray-400">
-            <button className="hover:text-[#0077BE]" onClick={() => onNavigate("settings")}>Contact Us</button>
-            <button className="hover:text-[#0077BE]" onClick={() => onNavigate("about")}>How It Works</button>
-            <button className="hover:text-[#0077BE]">Pricing</button>
+            <button className="hover:text-[#0077BE] hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("settings")}>Contact Us</button>
+            <button className="hover:text-[#0077BE] hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("about")}>How It Works</button>
+            <button className="hover:text-[#0077BE] hover:scale-105 active:scale-95 transition-all duration-200">Pricing</button>
           </div>
         </div>
       </div>

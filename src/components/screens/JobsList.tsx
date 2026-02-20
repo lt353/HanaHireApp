@@ -253,7 +253,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 
         <button
           type="button"
-          className="h-16 px-8 bg-white rounded-lg border border-gray-200 font-black uppercase tracking-widest text-[10px] text-gray-700 inline-flex items-center justify-center gap-3"
+          className="h-16 px-8 bg-white rounded-lg border border-gray-200 font-black uppercase tracking-widest text-[10px] text-gray-700 inline-flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
           onClick={onShowFilters}
         >
           <Filter size={20} /> Filters
@@ -350,7 +350,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                       handlePass();
                       resetCard();
                     }}
-                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all"
+                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 duration-200"
                   >
                     Skip
                   </button>
@@ -361,7 +361,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                       handleToggleBookmark(currentJob);
                       resetCard();
                     }}
-                    className="h-14 rounded-xl bg-[#0077BE] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#0077BE]/20 flex items-center justify-center gap-2"
+                    className="h-14 rounded-xl bg-[#0077BE] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#0077BE]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                   >
                     <svg 
                       className="w-5 h-5 transition-all"
@@ -388,7 +388,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                       <button
                         type="button"
                         onClick={handleUndo}
-                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -401,7 +401,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowPassedBin(true)}
-                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#FF6B6B] hover:text-[#FF6B6B] hover:bg-red-50 transition-all flex items-center justify-center gap-2`}
+                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#FF6B6B] hover:text-[#FF6B6B] hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200`}
                     >
                       <Trash2 size={14} />
                       {passedJobs.length} Passed
@@ -427,7 +427,7 @@ export const JobsList: React.FC<JobsListProps> = ({
               <button
                 type="button"
                 onClick={() => onShowPayment({ type: 'seeker', items: queue })}
-                className="flex items-center gap-2 px-6 py-4 bg-[#0077BE] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#0077BE]/40 hover:bg-[#006aa8] transition-all"
+                className="flex items-center gap-2 px-6 py-4 bg-[#0077BE] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#0077BE]/40 hover:bg-[#006aa8] transition-all hover:scale-105 active:scale-95 duration-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                 Apply to Saved Jobs ({queue.length})
@@ -473,7 +473,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                     <button
                       type="button"
                       onClick={() => handleToggleBookmark(job)}
-                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all"
+                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 duration-200"
                       title={isInQueue(job.id) ? "Remove from saved" : "Save job"}
                     >
                       <svg
@@ -533,7 +533,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                   <button
                     type="button"
                     onClick={handleRecoverAll}
-                    className="text-[10px] font-black uppercase tracking-widest text-[#0077BE] hover:text-[#006aa8] transition-colors"
+                    className="text-[10px] font-black uppercase tracking-widest text-[#0077BE] hover:text-[#006aa8] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   >
                     Recover All
                   </button>
@@ -542,7 +542,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                   <button
                     type="button"
                     onClick={handleClearBin}
-                    className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors"
+                    className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   >
                     Clear All
                   </button>
@@ -550,7 +550,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPassedBin(false)}
-                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                 >
                   <X size={16} />
                 </button>
@@ -592,7 +592,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRecover(job)}
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0077BE] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors"
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0077BE] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                     >
                       <RotateCcw size={12} />
                       Recover

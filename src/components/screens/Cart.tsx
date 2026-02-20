@@ -39,7 +39,7 @@ export const Cart: React.FC<CartProps> = ({
           <FolderOpen size={48} className="sm:w-16 sm:h-16 text-gray-100 mx-auto" />
           <p className="text-gray-400 font-black text-lg sm:text-xl md:text-2xl uppercase tracking-widest">No saved items yet</p>
           <div className="flex justify-center">
-            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
+            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg bg-[#0077BE] hover:bg-[#0077BE]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
               Start Browsing
             </Button>
           </div>
@@ -94,7 +94,7 @@ export const Cart: React.FC<CartProps> = ({
                           e.stopPropagation();
                           onRemoveFromQueue(item.id);
                         }}
-                        className="p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-gray-50 text-gray-400 hover:bg-[#FF6B6B]/10 hover:text-[#FF6B6B] transition-all shrink-0"
+                        className="p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-gray-50 text-gray-400 hover:bg-[#FF6B6B]/10 hover:text-[#FF6B6B] transition-all shrink-0 hover:scale-105 active:scale-95 duration-200"
                         aria-label="Remove from queue"
                       >
                         <Trash2 size={16} className="sm:w-5 sm:h-5" />
@@ -256,8 +256,8 @@ export const Cart: React.FC<CartProps> = ({
                     <span className="text-5xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
                   </div>
                 </div>
-                <Button 
-                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+                <Button
+                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
                   onClick={() => onShowPayment({ type: role, items: queue })}
                 >
                   {role === 'seeker' ? 'Apply to All Jobs' : 'Unlock All Profiles'}
@@ -278,8 +278,8 @@ export const Cart: React.FC<CartProps> = ({
                     <span className="block text-3xl font-black text-[#0077BE] tracking-tighter">${total.toFixed(2)}</span>
                   </div>
                 </div>
-                <Button 
-                  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white" 
+                <Button
+                  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#0077BE]/20 bg-[#0077BE] hover:bg-[#0077BE]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
                   onClick={() => onShowPayment({ type: role, items: queue })}
                 >
                   {role === 'seeker' ? 'Apply to All Jobs' : 'Unlock All Profiles'}
