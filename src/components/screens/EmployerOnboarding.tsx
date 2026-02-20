@@ -17,14 +17,14 @@ interface EmployerOnboardingProps {
 }
 
 export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProfile, onComplete }) => {
-  const [bio, setBio] = useState("");
+  const [bio, setBio] = useState(userProfile?.bio || "");
   const [industry, setIndustry] = useState(userProfile?.industry || "");
-  const [companySize, setCompanySize] = useState("");
+  const [companySize, setCompanySize] = useState(userProfile?.companySize || "");
   const [location, setLocation] = useState(userProfile?.location || "");
   const [phone, setPhone] = useState(userProfile?.phone || "");
-  const [website, setWebsite] = useState("");
+  const [website, setWebsite] = useState(userProfile?.website || "");
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState(userProfile?.companyLogoUrl || "");
 
   const handleDemoFill = () => {
     const d = DEMO_PROFILES.employer;

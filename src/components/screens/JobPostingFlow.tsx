@@ -137,6 +137,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
   // Auto-populate business info from userProfile
   useEffect(() => {
     if (userProfile && userProfile.role === 'employer') {
+      console.log("Auto-populating job form with userProfile:", userProfile);
       setFormData((prev: any) => ({
         ...prev,
         company_name: userProfile.businessName || prev.company_name,
@@ -148,6 +149,8 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
         company_description: userProfile.bio || prev.company_description,
         image_url: userProfile.companyLogoUrl || prev.image_url
       }));
+    } else {
+      console.log("Skipping auto-populate - userProfile:", userProfile);
     }
   }, [userProfile]);
 
