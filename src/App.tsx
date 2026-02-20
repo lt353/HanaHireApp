@@ -50,6 +50,7 @@ import { SeekerOnboarding } from './components/screens/SeekerOnboarding';
 import { EmployerOnboarding } from './components/screens/EmployerOnboarding';
 import { JobPostingFlow } from './components/screens/JobPostingFlow';
 import { ProfileTitleCustomization } from './components/screens/ProfileTitleCustomization';
+import { ProfileEditor } from './components/screens/ProfileEditor';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
@@ -58,11 +59,11 @@ import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } 
 // Utils
 import { formatCandidateTitle } from "./utils/formatters";
 
-export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding";
+export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<"landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding">("landing");
+  const [currentView, setCurrentView] = useState<ViewType>("landing");
   const [jobs, setJobs] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,6 +88,7 @@ export default function App() {
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [isSignupLoading, setIsSignupLoading] = useState(false);
 
   // App State
   const [seekerQueue, setSeekerQueue] = useState<any[]>([]);
@@ -1132,9 +1134,13 @@ export default function App() {
                 <form onSubmit={async (e) => {
                   e.preventDefault();
 
-                  // If employer, insert into employers table first
-                  if (signupRole === 'employer') {
-                    try {
+                  setIsSignupLoading(true);
+
+                  try {
+                    // If employer, insert into employers table first
+                    if (signupRole === 'employer') {
+                      console.log("Starting employer signup...", signupFormData);
+
                       const { data: employerData, error: employerError } = await supabase
                         .from('employers')
                         .insert([{
@@ -1148,9 +1154,12 @@ export default function App() {
 
                       if (employerError) {
                         console.error("Error creating employer:", employerError);
-                        toast.error("Failed to create employer account. Please try again.");
+                        toast.error(`Failed to create employer account: ${employerError.message}`);
+                        setIsSignupLoading(false);
                         return;
                       }
+
+                      console.log("Employer created successfully:", employerData);
 
                       // Store employer with database ID
                       const profile: any = {
@@ -1163,15 +1172,14 @@ export default function App() {
                       setIsLoggedIn(true);
                       setShowAuthModal(false);
                       setSignupFormData({});
+                      setIsSignupLoading(false);
                       handleNavigate("employer-onboarding");
                       toast.success("Account created! Let's set up your profile.");
-                    } catch (err) {
-                      console.error("Unexpected error:", err);
-                      toast.error("An unexpected error occurred. Please try again.");
                     }
-                  } else {
-                    // Seeker signup - insert into candidates table
-                    try {
+                    else {
+                      // Seeker signup - insert into candidates table
+                      console.log("Starting seeker signup...", signupFormData);
+
                       const { data: candidateData, error: candidateError } = await supabase
                         .from('candidates')
                         .insert([{
@@ -1185,9 +1193,12 @@ export default function App() {
 
                       if (candidateError) {
                         console.error("Error creating candidate:", candidateError);
-                        toast.error("Failed to create candidate account. Please try again.");
+                        toast.error(`Failed to create candidate account: ${candidateError.message}`);
+                        setIsSignupLoading(false);
                         return;
                       }
+
+                      console.log("Candidate created successfully:", candidateData);
 
                       // Store candidate with database ID
                       const profile: any = {
@@ -1200,12 +1211,14 @@ export default function App() {
                       setIsLoggedIn(true);
                       setShowAuthModal(false);
                       setSignupFormData({});
+                      setIsSignupLoading(false);
                       handleNavigate("seeker-onboarding");
                       toast.success("Account created! Let's set up your profile.");
-                    } catch (err) {
-                      console.error("Unexpected error:", err);
-                      toast.error("An unexpected error occurred. Please try again.");
                     }
+                  } catch (err: any) {
+                    console.error("Unexpected error:", err);
+                    toast.error(`An unexpected error occurred: ${err?.message || 'Please try again'}`);
+                    setIsSignupLoading(false);
                   }
                 }} className="space-y-6">
                    {signupRole === 'seeker' ? (
@@ -1282,9 +1295,10 @@ export default function App() {
 
                    <Button
                      type="submit"
+                     disabled={isSignupLoading}
                      className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
                    >
-                     {signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account'}
+                     {isSignupLoading ? 'Creating Account...' : (signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account')}
                    </Button>
                 </form>
 
