@@ -924,8 +924,9 @@ export default function App() {
                   const formData = new FormData(e.currentTarget);
                   const email = formData.get('email') as string;
 
-                  // Fetch user record from database
+                  // Fetch user record and data in parallel
                   let userId = null;
+
                   if (userRole === 'seeker') {
                     const { data: candidate } = await supabase
                       .from('candidates')
@@ -935,7 +936,12 @@ export default function App() {
 
                     if (candidate) {
                       userId = candidate.id;
-                      await fetchApplications(candidate.id);
+                      // Load all data in parallel for faster login
+                      await Promise.all([
+                        fetchApplications(candidate.id),
+                        fetchUnlocks(email),
+                        fetchSavedItems(email, userRole)
+                      ]);
                     }
                   } else {
                     const { data: employer } = await supabase
@@ -946,12 +952,13 @@ export default function App() {
 
                     if (employer) {
                       userId = employer.id;
+                      // Load data in parallel for faster login
+                      await Promise.all([
+                        fetchUnlocks(email),
+                        fetchSavedItems(email, userRole)
+                      ]);
                     }
                   }
-
-                  // Load user's unlocks and saved items
-                  await fetchUnlocks(email);
-                  await fetchSavedItems(email, userRole);
 
                   setUserProfile({ email, role: userRole, id: userId });
                   setIsLoggedIn(true);
@@ -987,7 +994,7 @@ export default function App() {
                    </div>
                    <Button
                      type="submit"
-                     className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20 hover:shadow-2xl hover:shadow-[#0077BE]/30 active:scale-[0.98] transition-all duration-200"
+                     className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20 hover:shadow-2xl hover:shadow-[#0077BE]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 hover:bg-[#0066a8]"
                    >
                      Log In to Hub
                    </Button>
@@ -1004,11 +1011,11 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 hover:border-[#0077BE]/40 active:scale-95 transition-all duration-200 text-center space-y-2 group"
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/20 hover:border-[#0077BE] hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group shadow-sm hover:shadow-lg hover:shadow-[#0077BE]/20"
                     >
-                      <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
+                      <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-125 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE]">Job Seeker</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
+                      <span className="block text-[10px] text-gray-400 font-medium group-hover:text-gray-600">Demo Account</span>
                     </button>
                     <button
                       type="button"
@@ -1017,11 +1024,11 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 hover:border-[#2ECC71]/40 active:scale-95 transition-all duration-200 text-center space-y-2 group"
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/20 hover:border-[#2ECC71] hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group shadow-sm hover:shadow-lg hover:shadow-[#2ECC71]/20"
                     >
-                      <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
+                      <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-125 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71]">Employer</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
+                      <span className="block text-[10px] text-gray-400 font-medium group-hover:text-gray-600">Demo Account</span>
                     </button>
                   </div>
                 </div>
