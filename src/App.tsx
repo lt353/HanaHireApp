@@ -1065,7 +1065,7 @@ export default function App() {
 
                   <button
                     onClick={() => { setSignupRole('employer'); setSignupStep('form'); }}
-                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#2ECC71] bg-white hover:bg-[#2ECC71]/5 transition-all text-left space-y-3 group"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#2ECC71]/5 transition-all text-left space-y-3 group hover:scale-[1.10]"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#2ECC71]/10 flex items-center justify-center shrink-0">
