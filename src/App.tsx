@@ -180,9 +180,82 @@ export default function App() {
     }
   };
 
-  const fetchUnlocks = async (id: string) => {
-    // API disabled - unlocks stored in local state only
-    console.log("Unlocks loaded from local state for user:", id);
+  const fetchUnlocks = async (email: string) => {
+    if (!email) return;
+
+    try {
+      // Fetch unlocks from database
+      const { data: unlocks, error } = await supabase
+        .from('unlocks')
+        .select('target_type, target_id')
+        .eq('user_email', email)
+        .eq('payment_status', 'completed');
+
+      if (error) {
+        console.error("Error fetching unlocks:", error);
+        return;
+      }
+
+      if (unlocks && unlocks.length > 0) {
+        const jobUnlocks = unlocks.filter(u => u.target_type === 'job').map(u => u.target_id);
+        const candidateUnlocks = unlocks.filter(u => u.target_type === 'candidate').map(u => u.target_id);
+
+        setUnlockedJobIds(jobUnlocks);
+        setUnlockedCandidateIds(candidateUnlocks);
+
+        console.log(`Loaded ${jobUnlocks.length} job unlocks and ${candidateUnlocks.length} candidate unlocks`);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching unlocks:", err);
+    }
+  };
+
+  const fetchSavedItems = async (email: string, role: 'seeker' | 'employer') => {
+    if (!email) return;
+
+    try {
+      // Fetch saved items from database
+      const itemType = role === 'seeker' ? 'job' : 'candidate';
+      const { data: savedItems, error } = await supabase
+        .from('saved_items')
+        .select('item_id')
+        .eq('user_email', email)
+        .eq('item_type', itemType);
+
+      if (error) {
+        console.error("Error fetching saved items:", error);
+        return;
+      }
+
+      if (savedItems && savedItems.length > 0) {
+        const itemIds = savedItems.map(s => s.item_id);
+
+        // Fetch full item data
+        if (role === 'seeker') {
+          const { data: savedJobs, error: jobsError } = await supabase
+            .from('jobs')
+            .select('*')
+            .in('id', itemIds);
+
+          if (!jobsError && savedJobs) {
+            setSeekerQueue(savedJobs);
+            console.log(`Loaded ${savedJobs.length} saved jobs`);
+          }
+        } else {
+          const { data: savedCandidates, error: candidatesError } = await supabase
+            .from('candidates')
+            .select('*')
+            .in('id', itemIds);
+
+          if (!candidatesError && savedCandidates) {
+            setEmployerQueue(savedCandidates);
+            console.log(`Loaded ${savedCandidates.length} saved candidates`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching saved items:", err);
+    }
   };
 
   const handleNavigate = (view: ViewType) => {
@@ -215,19 +288,85 @@ export default function App() {
 
   const processPayment = async () => {
     if (!paymentTarget) return;
-    
+
     try {
       if (paymentItems.length === 0) return;
       // Process payment locally without API
       const itemIds = paymentItems.map((i: any) => i.id);
-      
+
       if (paymentTarget.type === 'seeker') {
+        // Save unlocks to database
+        if (userProfile?.email) {
+          const unlockRecords = itemIds.map(jobId => ({
+            user_email: userProfile.email,
+            user_role: 'seeker',
+            target_type: 'job',
+            target_id: jobId,
+            amount_paid: INTERACTION_FEE,
+            payment_method: 'card',
+            payment_status: 'completed'
+          }));
+
+          const { error: unlockError } = await supabase
+            .from('unlocks')
+            .insert(unlockRecords);
+
+          if (unlockError) {
+            console.error("Error saving unlock:", unlockError);
+          }
+
+          // Remove from saved_items after unlocking
+          const { error: deleteError } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'job')
+            .in('item_id', itemIds);
+
+          if (deleteError) {
+            console.error("Error removing from saved items:", deleteError);
+          }
+        }
+
         setUnlockedJobIds([...unlockedJobIds, ...itemIds]);
         setSeekerQueue(seekerQueue.filter(q => !itemIds.includes(q.id)));
         setShowPaymentModal(false);
         toast.success("Applied!", { description: "Business details now revealed in your jobs." });
         handleNavigate("seeker");
       } else {
+        // Save unlocks to database
+        if (userProfile?.email) {
+          const unlockRecords = itemIds.map(candidateId => ({
+            user_email: userProfile.email,
+            user_role: 'employer',
+            target_type: 'candidate',
+            target_id: candidateId,
+            amount_paid: INTERACTION_FEE,
+            payment_method: 'card',
+            payment_status: 'completed'
+          }));
+
+          const { error: unlockError } = await supabase
+            .from('unlocks')
+            .insert(unlockRecords);
+
+          if (unlockError) {
+            console.error("Error saving unlock:", unlockError);
+          }
+
+          // Remove from saved_items after unlocking
+          const { error: deleteError } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'candidate')
+            .in('item_id', itemIds);
+
+          if (deleteError) {
+            console.error("Error removing from saved items:", deleteError);
+          }
+        }
+
         setUnlockedCandidateIds([...unlockedCandidateIds, ...itemIds]);
         setEmployerQueue(employerQueue.filter(q => !itemIds.includes(q.id)));
         setShowPaymentModal(false);
@@ -362,12 +501,43 @@ export default function App() {
       filteredJobs={filteredJobs}
       unlockedJobIds={unlockedJobIds}
       seekerQueue={seekerQueue}
-      onAddToQueue={(j) => {
+      onAddToQueue={async (j) => {
         if (seekerQueue.find(q => q.id === j.id)) return;
+
+        // Save to database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .insert([{
+              user_email: userProfile.email,
+              user_role: 'seeker',
+              item_type: 'job',
+              item_id: j.id
+            }]);
+
+          if (error && error.code !== '23505') { // Ignore unique constraint violations
+            console.error("Error saving item:", error);
+          }
+        }
+
         setSeekerQueue([...seekerQueue, j]);
         toast.success("Added to Queue");
       }}
-      onRemoveFromQueue={(id) => {
+      onRemoveFromQueue={async (id) => {
+        // Remove from database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'job')
+            .eq('item_id', id);
+
+          if (error) {
+            console.error("Error removing saved item:", error);
+          }
+        }
+
         setSeekerQueue(seekerQueue.filter(q => q.id !== id));
         toast.success("Removed from saved");
       }}
@@ -385,12 +555,43 @@ export default function App() {
       filteredCandidates={filteredCandidates}
       unlockedCandidateIds={unlockedCandidateIds}
       employerQueue={employerQueue}
-      onAddToQueue={(c) => {
+      onAddToQueue={async (c) => {
         if (employerQueue.find(q => q.id === c.id)) return;
+
+        // Save to database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .insert([{
+              user_email: userProfile.email,
+              user_role: 'employer',
+              item_type: 'candidate',
+              item_id: c.id
+            }]);
+
+          if (error && error.code !== '23505') { // Ignore unique constraint violations
+            console.error("Error saving item:", error);
+          }
+        }
+
         setEmployerQueue([...employerQueue, c]);
         toast.success("Added to Queue");
       }}
-      onRemoveFromQueue={(id) => {
+      onRemoveFromQueue={async (id) => {
+        // Remove from database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'candidate')
+            .eq('item_id', id);
+
+          if (error) {
+            console.error("Error removing saved item:", error);
+          }
+        }
+
         setEmployerQueue(employerQueue.filter(q => q.id !== id));
         toast.success("Removed from saved");
       }}
@@ -405,9 +606,25 @@ export default function App() {
           <Cart 
             role={userRole}
             queue={userRole === 'seeker' ? seekerQueue : employerQueue}
-            onRemoveFromQueue={(id) => {
+            onRemoveFromQueue={async (id) => {
+              // Remove from database
+              if (userProfile?.email) {
+                const itemType = userRole === 'seeker' ? 'job' : 'candidate';
+                const { error } = await supabase
+                  .from('saved_items')
+                  .delete()
+                  .eq('user_email', userProfile.email)
+                  .eq('item_type', itemType)
+                  .eq('item_id', id);
+
+                if (error) {
+                  console.error("Error removing saved item:", error);
+                }
+              }
+
               if (userRole === 'seeker') setSeekerQueue(seekerQueue.filter(q => q.id !== id));
               else setEmployerQueue(employerQueue.filter(q => q.id !== id));
+              toast.success("Removed from saved");
             }}
             onNavigate={handleNavigate}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
@@ -610,11 +827,15 @@ export default function App() {
          <div className="space-y-8 pb-32 sm:pb-8">
             {authMode === 'login' ? (
               <>
-                <form onSubmit={(e) => {
+                <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
                   const email = formData.get('email') as string;
-                  fetchUnlocks(email);
+
+                  // Load user's unlocks and saved items
+                  await fetchUnlocks(email);
+                  await fetchSavedItems(email, userRole);
+
                   setUserProfile({ email, role: userRole });
                   setIsLoggedIn(true);
                   setShowAuthModal(false);
