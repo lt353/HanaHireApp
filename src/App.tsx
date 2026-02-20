@@ -259,15 +259,15 @@ export default function App() {
     }
   };
 
-  const fetchApplications = async (email: string) => {
-    if (!email) return;
+  const fetchApplications = async (candidateId: number) => {
+    if (!candidateId) return;
 
     try {
       // Fetch applications from database
       const { data: applications, error } = await supabase
         .from('applications')
         .select('job_id')
-        .eq('seeker_email', email);
+        .eq('candidate_id', candidateId);
 
       if (error) {
         console.error("Error fetching applications:", error);
@@ -342,19 +342,20 @@ export default function App() {
           }
 
           // Save applications to database
-          const applicationRecords = itemIds.map(jobId => ({
-            seeker_email: userProfile.email,
-            job_id: jobId,
-            application_status: 'submitted',
-            application_fee: INTERACTION_FEE
-          }));
+          if (userProfile?.id) {
+            const applicationRecords = itemIds.map(jobId => ({
+              candidate_id: userProfile.id,
+              job_id: jobId,
+              status: 'submitted'
+            }));
 
-          const { error: applicationError } = await supabase
-            .from('applications')
-            .insert(applicationRecords);
+            const { error: applicationError } = await supabase
+              .from('applications')
+              .insert(applicationRecords);
 
-          if (applicationError) {
-            console.error("Error saving application:", applicationError);
+            if (applicationError) {
+              console.error("Error saving application:", applicationError);
+            }
           }
 
           // Remove from saved_items after unlocking
@@ -876,16 +877,36 @@ export default function App() {
                   const formData = new FormData(e.currentTarget);
                   const email = formData.get('email') as string;
 
+                  // Fetch user record from database
+                  let userId = null;
+                  if (userRole === 'seeker') {
+                    const { data: candidate } = await supabase
+                      .from('candidates')
+                      .select('id, name, email')
+                      .eq('email', email)
+                      .single();
+
+                    if (candidate) {
+                      userId = candidate.id;
+                      await fetchApplications(candidate.id);
+                    }
+                  } else {
+                    const { data: employer } = await supabase
+                      .from('employers')
+                      .select('id, email, business_name')
+                      .eq('email', email)
+                      .single();
+
+                    if (employer) {
+                      userId = employer.id;
+                    }
+                  }
+
                   // Load user's unlocks and saved items
                   await fetchUnlocks(email);
                   await fetchSavedItems(email, userRole);
 
-                  // Load applications for seekers
-                  if (userRole === 'seeker') {
-                    await fetchApplications(email);
-                  }
-
-                  setUserProfile({ email, role: userRole });
+                  setUserProfile({ email, role: userRole, id: userId });
                   setIsLoggedIn(true);
                   setShowAuthModal(false);
                   if (userRole === 'employer') handleNavigate("employer");
