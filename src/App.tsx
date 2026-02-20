@@ -1011,11 +1011,11 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/20 hover:border-[#0077BE] hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group shadow-sm hover:shadow-lg hover:shadow-[#0077BE]/20"
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/30 bg-[#0077BE]/10 hover:bg-[#0077BE] hover:border-[#0077BE] hover:scale-110 active:scale-95 transition-all duration-200 text-center space-y-2 group shadow-md hover:shadow-2xl hover:shadow-[#0077BE]/50"
                     >
-                      <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-125 transition-transform" />
-                      <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE]">Job Seeker</span>
-                      <span className="block text-[10px] text-gray-400 font-medium group-hover:text-gray-600">Demo Account</span>
+                      <User size={24} className="mx-auto text-[#0077BE] group-hover:text-white group-hover:scale-150 transition-all" />
+                      <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE] group-hover:text-white transition-colors">Job Seeker</span>
+                      <span className="block text-[10px] text-gray-500 font-medium group-hover:text-white/90 group-hover:font-bold transition-all">Demo Account</span>
                     </button>
                     <button
                       type="button"
@@ -1024,11 +1024,11 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/20 hover:border-[#2ECC71] hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group shadow-sm hover:shadow-lg hover:shadow-[#2ECC71]/20"
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/30 bg-[#2ECC71]/10 hover:bg-[#2ECC71] hover:border-[#2ECC71] hover:scale-110 active:scale-95 transition-all duration-200 text-center space-y-2 group shadow-md hover:shadow-2xl hover:shadow-[#2ECC71]/50"
                     >
-                      <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-125 transition-transform" />
-                      <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71]">Employer</span>
-                      <span className="block text-[10px] text-gray-400 font-medium group-hover:text-gray-600">Demo Account</span>
+                      <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:text-white group-hover:scale-150 transition-all" />
+                      <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71] group-hover:text-white transition-colors">Employer</span>
+                      <span className="block text-[10px] text-gray-500 font-medium group-hover:text-white/90 group-hover:font-bold transition-all">Demo Account</span>
                     </button>
                   </div>
                 </div>
