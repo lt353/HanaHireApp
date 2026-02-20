@@ -1702,10 +1702,10 @@ export default function App() {
 
                 <CollapsibleFilter title="Target Pay">
                   {CANDIDATE_CATEGORIES.targetPayRanges.map(p => (
-                    <button 
-                      key={p} 
-                      onClick={() => toggleFilter('payRanges', p)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                    <button
+                      key={p}
+                      onClick={() => toggleFilter('payRanges', p)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {p}
                     </button>
