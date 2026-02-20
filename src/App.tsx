@@ -825,14 +825,51 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-  const handleDemoLogin = (role: 'seeker' | 'employer') => {
-    const profile = role === 'seeker' ? DEMO_PROFILES.seeker : DEMO_PROFILES.employer;
-    setUserProfile({ ...profile, role });
-    setUserRole(role);
-    setIsLoggedIn(true);
-    setShowAuthModal(false);
-    handleNavigate(role === 'seeker' ? 'seeker' : 'employer');
-    toast.success(`Demo ${role === 'seeker' ? 'Job Seeker' : 'Employer'} logged in!`);
+  const handleDemoLogin = async (role: 'seeker' | 'employer') => {
+    const demoEmail = role === 'seeker' ? 'demo.seeker@hanahire.com' : 'demo.employer@hanahire.com';
+
+    try {
+      // Fetch demo account from database
+      let userId = null;
+      if (role === 'seeker') {
+        const { data: candidate } = await supabase
+          .from('candidates')
+          .select('id, name, email')
+          .eq('email', demoEmail)
+          .single();
+
+        if (candidate) {
+          userId = candidate.id;
+          await fetchApplications(candidate.id);
+        }
+      } else {
+        const { data: employer } = await supabase
+          .from('employers')
+          .select('id, email, business_name')
+          .eq('email', demoEmail)
+          .single();
+
+        if (employer) {
+          userId = employer.id;
+        }
+      }
+
+      // Load unlocks and saved items
+      await fetchUnlocks(demoEmail);
+      await fetchSavedItems(demoEmail, role);
+
+      // Use demo profile data but include database ID
+      const profile = role === 'seeker' ? DEMO_PROFILES.seeker : DEMO_PROFILES.employer;
+      setUserProfile({ ...profile, email: demoEmail, role, id: userId });
+      setUserRole(role);
+      setIsLoggedIn(true);
+      setShowAuthModal(false);
+      handleNavigate(role === 'seeker' ? 'seeker' : 'employer');
+      toast.success(`Demo ${role === 'seeker' ? 'Job Seeker' : 'Employer'} logged in!`);
+    } catch (error) {
+      console.error('Demo login error:', error);
+      toast.error('Demo login failed. Make sure migration has been run!');
+    }
   };
 
   const handleLogout = () => {
