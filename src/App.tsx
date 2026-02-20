@@ -89,6 +89,7 @@ export default function App() {
   const [employerQueue, setEmployerQueue] = useState<any[]>([]);
   const [unlockedJobIds, setUnlockedJobIds] = useState<any[]>([]);
   const [unlockedCandidateIds, setUnlockedCandidateIds] = useState<any[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<any[]>([]);
   const [paymentTarget, setPaymentTarget] = useState<any>(null);
   const [paymentItems, setPaymentItems] = useState<any[]>([]);
   const [expandedPaymentItemId, setExpandedPaymentItemId] = useState<any>(null);
@@ -258,6 +259,31 @@ export default function App() {
     }
   };
 
+  const fetchApplications = async (email: string) => {
+    if (!email) return;
+
+    try {
+      // Fetch applications from database
+      const { data: applications, error } = await supabase
+        .from('applications')
+        .select('job_id')
+        .eq('seeker_email', email);
+
+      if (error) {
+        console.error("Error fetching applications:", error);
+        return;
+      }
+
+      if (applications && applications.length > 0) {
+        const jobIds = applications.map(a => a.job_id);
+        setAppliedJobIds(jobIds);
+        console.log(`Loaded ${jobIds.length} job applications`);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching applications:", err);
+    }
+  };
+
   const handleNavigate = (view: ViewType) => {
   setCurrentView(view);
   window.scrollTo(0, 0);
@@ -295,7 +321,7 @@ export default function App() {
       const itemIds = paymentItems.map((i: any) => i.id);
 
       if (paymentTarget.type === 'seeker') {
-        // Save unlocks to database
+        // Save unlocks and applications to database
         if (userProfile?.email) {
           const unlockRecords = itemIds.map(jobId => ({
             user_email: userProfile.email,
@@ -315,6 +341,22 @@ export default function App() {
             console.error("Error saving unlock:", unlockError);
           }
 
+          // Save applications to database
+          const applicationRecords = itemIds.map(jobId => ({
+            seeker_email: userProfile.email,
+            job_id: jobId,
+            application_status: 'submitted',
+            application_fee: INTERACTION_FEE
+          }));
+
+          const { error: applicationError } = await supabase
+            .from('applications')
+            .insert(applicationRecords);
+
+          if (applicationError) {
+            console.error("Error saving application:", applicationError);
+          }
+
           // Remove from saved_items after unlocking
           const { error: deleteError } = await supabase
             .from('saved_items')
@@ -329,6 +371,7 @@ export default function App() {
         }
 
         setUnlockedJobIds([...unlockedJobIds, ...itemIds]);
+        setAppliedJobIds([...appliedJobIds, ...itemIds]);
         setSeekerQueue(seekerQueue.filter(q => !itemIds.includes(q.id)));
         setShowPaymentModal(false);
         toast.success("Applied!", { description: "Business details now revealed in your jobs." });
@@ -495,11 +538,12 @@ export default function App() {
         return <Settings onRefreshData={fetchInitialData} />;
       case "jobs":
   return (
-    <JobsList 
+    <JobsList
       searchQuery={searchQuery}
       setSearchQuery={setSearchQuery}
       filteredJobs={filteredJobs}
       unlockedJobIds={unlockedJobIds}
+      appliedJobIds={appliedJobIds}
       seekerQueue={seekerQueue}
       onAddToQueue={async (j) => {
         if (seekerQueue.find(q => q.id === j.id)) return;
@@ -835,6 +879,11 @@ export default function App() {
                   // Load user's unlocks and saved items
                   await fetchUnlocks(email);
                   await fetchSavedItems(email, userRole);
+
+                  // Load applications for seekers
+                  if (userRole === 'seeker') {
+                    await fetchApplications(email);
+                  }
 
                   setUserProfile({ email, role: userRole });
                   setIsLoggedIn(true);

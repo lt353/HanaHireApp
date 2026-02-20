@@ -21,6 +21,7 @@ interface JobsListProps {
   setSearchQuery: (query: string) => void;
   filteredJobs: any;
   unlockedJobIds: any;
+  appliedJobIds: any;
   seekerQueue: any;
   onAddToQueue: (job: any) => void;
   onRemoveFromQueue: (id: number) => void;
@@ -58,6 +59,7 @@ export const JobsList: React.FC<JobsListProps> = ({
   setSearchQuery,
   filteredJobs,
   unlockedJobIds,
+  appliedJobIds,
   seekerQueue,
   onAddToQueue,
   onRemoveFromQueue,
@@ -70,6 +72,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 
   const jobs: any[] = Array.isArray(filteredJobs) ? filteredJobs : [];
   const unlockedIds: any[] = Array.isArray(unlockedJobIds) ? unlockedJobIds : [];
+  const appliedIds: any[] = Array.isArray(appliedJobIds) ? appliedJobIds : [];
   const queue: any[] = Array.isArray(seekerQueue) ? seekerQueue : [];
 
   // Mobile swipe index
@@ -114,6 +117,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 
   const isInQueue = (id: any) => queue.some((q) => q?.id === id);
   const isUnlocked = (id: any) => unlockedIds.includes(id);
+  const isApplied = (id: any) => appliedIds.includes(id);
 
   // Toggle bookmark - add or remove from queue
   const handleToggleBookmark = (job: any) => {
@@ -325,7 +329,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                   </span>
 
                   <span className="flex items-center gap-2 shrink-0">
-                    <Lock size={14} /> {isUnlocked(currentJob.id) ? "Unlocked" : "Locked"}
+                    <Lock size={14} /> {isApplied(currentJob.id) ? "Applied" : isUnlocked(currentJob.id) ? "Unlocked" : "Locked"}
                   </span>
                 </div>
               </div>
