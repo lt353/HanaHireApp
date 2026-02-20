@@ -83,7 +83,11 @@ export default function App() {
   const [showPostJobModal, setShowPostJobModal] = useState(false);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
-  
+
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
   // App State
   const [seekerQueue, setSeekerQueue] = useState<any[]>([]);
   const [employerQueue, setEmployerQueue] = useState<any[]>([]);
@@ -822,6 +826,8 @@ export default function App() {
     setSignupStep('role-select');
     setSignupRole(null);
     setSignupFormData({});
+    setLoginEmail("");
+    setLoginPassword("");
     setShowAuthModal(true);
   };
 
@@ -905,7 +911,11 @@ export default function App() {
 
       {/* --- Modals --- */}
       
-      <Modal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} title={authMode === 'login' ? "Access My Hub" : (signupStep === 'role-select' ? "Get Started" : (signupRole === 'employer' ? "Employer Sign Up" : "Job Seeker Sign Up"))}>
+      <Modal isOpen={showAuthModal} onClose={() => {
+        setShowAuthModal(false);
+        setLoginEmail("");
+        setLoginPassword("");
+      }} title={authMode === 'login' ? "Access My Hub" : (signupStep === 'role-select' ? "Get Started" : (signupRole === 'employer' ? "Employer Sign Up" : "Job Seeker Sign Up"))}>
          <div className="space-y-8 pb-32 sm:pb-8">
             {authMode === 'login' ? (
               <>
@@ -953,14 +963,34 @@ export default function App() {
                    <div className="space-y-6">
                       <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email Identity</label>
-                         <input required name="email" type="email" placeholder="name@region.com" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tight" />
+                         <input
+                           required
+                           name="email"
+                           type="email"
+                           placeholder="name@region.com"
+                           value={loginEmail}
+                           onChange={(e) => setLoginEmail(e.target.value)}
+                           className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tight transition-all"
+                         />
                       </div>
                       <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Access Key</label>
-                         <input required type="password" placeholder="••••••••" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tighter" />
+                         <input
+                           required
+                           type="password"
+                           placeholder="••••••••"
+                           value={loginPassword}
+                           onChange={(e) => setLoginPassword(e.target.value)}
+                           className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tighter transition-all"
+                         />
                       </div>
                    </div>
-                   <Button type="submit" className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20">Log In to Hub</Button>
+                   <Button
+                     type="submit"
+                     className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20 hover:shadow-2xl hover:shadow-[#0077BE]/30 active:scale-[0.98] transition-all duration-200"
+                   >
+                     Log In to Hub
+                   </Button>
                 </form>
 
                 {/* Demo Login Shortcuts */}
@@ -968,20 +998,30 @@ export default function App() {
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      onClick={() => handleDemoLogin('seeker')}
-                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 transition-all text-center space-y-2 group"
+                      type="button"
+                      onClick={() => {
+                        setLoginEmail('demo.seeker@hanahire.com');
+                        setLoginPassword('demo123');
+                        toast.success("Demo credentials filled! Click 'Log In to Hub'");
+                      }}
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 hover:border-[#0077BE]/40 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE]">Job Seeker</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Keanu Mahalo</span>
+                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
                     </button>
                     <button
-                      onClick={() => handleDemoLogin('employer')}
-                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all text-center space-y-2 group"
+                      type="button"
+                      onClick={() => {
+                        setLoginEmail('demo.employer@hanahire.com');
+                        setLoginPassword('demo123');
+                        toast.success("Demo credentials filled! Click 'Log In to Hub'");
+                      }}
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 hover:border-[#2ECC71]/40 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71]">Employer</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Aloha Bistro</span>
+                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
                     </button>
                   </div>
                 </div>
