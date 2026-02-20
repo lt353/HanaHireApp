@@ -106,8 +106,8 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                   <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200" onClick={onShowMedia}>
                     <Video size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0077BE]" /> Update Video
                   </Button>
-                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("profile-title-customization")}>
-                    <Edit3 size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0077BE]" /> Profile Title
+                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("profile-editor")}>
+                    <Edit3 size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0077BE]" /> Edit Profile
                   </Button>
                   <Button variant="ghost" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl text-gray-400 font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all duration-200" onClick={onShowVisibility}>
                     <SettingsIcon size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" /> Visibility

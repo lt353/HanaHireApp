@@ -818,6 +818,42 @@ export default function App() {
             } : undefined}
           />
         );
+      case "profile-editor":
+        return (
+          <ProfileEditor
+            onBack={() => handleNavigate("seeker")}
+            onSave={async (profileData) => {
+              // Update candidates table with new data
+              if (profileData.candidateId) {
+                try {
+                  const { error } = await supabase
+                    .from('candidates')
+                    .update({
+                      name: profileData.name,
+                      email: profileData.email,
+                      phone: profileData.phone || null,
+                      location: profileData.location || null,
+                    })
+                    .eq('id', profileData.candidateId);
+
+                  if (error) {
+                    console.error("Error updating candidate:", error);
+                    toast.error("Failed to save profile changes");
+                    return;
+                  }
+                } catch (err) {
+                  console.error("Unexpected error:", err);
+                  toast.error("Failed to save profile changes");
+                  return;
+                }
+              }
+
+              setUserProfile(profileData);
+              handleNavigate("seeker");
+            }}
+            userProfile={userProfile}
+          />
+        );
       default:
         return <Home onSelectRole={selectRole} />;
     }
