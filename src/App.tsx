@@ -1110,6 +1110,7 @@ export default function App() {
 
                 {/* Demo Auto-Fill Button */}
                 <button
+                  type="button"
                   onClick={() => {
                     if (signupRole === 'seeker') {
                       const d = DEMO_PROFILES.seeker;
