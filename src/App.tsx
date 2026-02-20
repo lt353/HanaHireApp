@@ -924,26 +924,28 @@ export default function App() {
                   const formData = new FormData(e.currentTarget);
                   const email = formData.get('email') as string;
 
-                  // Fetch user record and data in parallel
+                  // Detect user role by checking which table has this email
                   let userId = null;
+                  let detectedRole: 'seeker' | 'employer' = 'seeker';
 
-                  if (userRole === 'seeker') {
-                    const { data: candidate } = await supabase
-                      .from('candidates')
-                      .select('id, name, email')
-                      .eq('email', email)
-                      .single();
+                  // First check candidates table
+                  const { data: candidate } = await supabase
+                    .from('candidates')
+                    .select('id, name, email')
+                    .eq('email', email)
+                    .single();
 
-                    if (candidate) {
-                      userId = candidate.id;
-                      // Load all data in parallel for faster login
-                      await Promise.all([
-                        fetchApplications(candidate.id),
-                        fetchUnlocks(email),
-                        fetchSavedItems(email, userRole)
-                      ]);
-                    }
+                  if (candidate) {
+                    userId = candidate.id;
+                    detectedRole = 'seeker';
+                    // Load all data in parallel for faster login
+                    await Promise.all([
+                      fetchApplications(candidate.id),
+                      fetchUnlocks(email),
+                      fetchSavedItems(email, 'seeker')
+                    ]);
                   } else {
+                    // If not a candidate, check employers table
                     const { data: employer } = await supabase
                       .from('employers')
                       .select('id, email, business_name')
@@ -952,18 +954,20 @@ export default function App() {
 
                     if (employer) {
                       userId = employer.id;
+                      detectedRole = 'employer';
                       // Load data in parallel for faster login
                       await Promise.all([
                         fetchUnlocks(email),
-                        fetchSavedItems(email, userRole)
+                        fetchSavedItems(email, 'employer')
                       ]);
                     }
                   }
 
-                  setUserProfile({ email, role: userRole, id: userId });
+                  setUserRole(detectedRole);
+                  setUserProfile({ email, role: detectedRole, id: userId });
                   setIsLoggedIn(true);
                   setShowAuthModal(false);
-                  if (userRole === 'employer') handleNavigate("employer");
+                  if (detectedRole === 'employer') handleNavigate("employer");
                   else handleNavigate("seeker");
                   toast.success("Welcome back!");
                 }} className="space-y-8">
@@ -1011,7 +1015,7 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:border-[#0077BE] hover:border-4 hover:scale-110 active:scale-95 transition-all duration-200 text-center space-y-2 group"
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:border-[#0077BE] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE]">Job Seeker</span>
@@ -1024,7 +1028,7 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:border-[#2ECC71] hover:border-4 hover:scale-110 active:scale-95 transition-all duration-200 text-center space-y-2 group"
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:border-[#2ECC71] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71]">Employer</span>
@@ -1045,7 +1049,7 @@ export default function App() {
                 <div className="space-y-4">
                   <button
                     onClick={() => { setSignupRole('seeker'); setSignupStep('form'); }}
-                    className="w-full p-6 rounded-[2rem] border-2 border-[#0077BE]/20 hover:border-[#0077BE] bg-white hover:bg-[#0077BE]/5 transition-all text-left space-y-3 group"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#0077BE]/20 hover:border-[#0077BE] bg-white hover:bg-[#0077BE]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#0077BE]/10 flex items-center justify-center shrink-0">
@@ -1065,7 +1069,7 @@ export default function App() {
 
                   <button
                     onClick={() => { setSignupRole('employer'); setSignupStep('form'); }}
-                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#2ECC71]/5 transition-all text-left space-y-3 group hover:scale-[1.10]"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#2ECC71]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#2ECC71]/10 flex items-center justify-center shrink-0">
@@ -1116,7 +1120,7 @@ export default function App() {
                     }
                     toast.success("Demo data filled! Review and submit.");
                   }}
-                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} transition-all flex items-center justify-center gap-3 group`}
+                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group`}
                 >
                   <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'} group-hover:scale-110 transition-transform`} />
                   <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'}`}>
@@ -1277,7 +1281,7 @@ export default function App() {
 
                    <Button
                      type="submit"
-                     className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
+                     className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
                    >
                      {signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account'}
                    </Button>
@@ -1493,11 +1497,11 @@ export default function App() {
     {/* Pay Button */}
     {paymentItems.length > 0 && (
       <Button
-        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white"
+        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
         onClick={processPayment}
       >
         <Lock size={18} className="mr-2" />
-        {paymentTarget?.type === 'seeker' ? `Apply & Reveal` : `Unlock ${paymentItems.length > 1 ? `${paymentItems.length} Profiles` : 'Profile'}`} — ${(paymentItems.length * INTERACTION_FEE).toFixed(2)}
+        {paymentTarget?.type === 'seeker' ? `Apply & Reveal` : `Unlock ${paymentItems.length > 1 ? `${paymentItems.length} Profiles` : 'Profile'}`}
         <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
       </Button>
     )}
@@ -1559,25 +1563,25 @@ export default function App() {
                      <span className="font-black text-[10px]">VOICE ONLY</span>
                   </button>
                </div>
-               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-300 hover:text-[#0077BE] hover:border-[#0077BE] transition-all">
+               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-300 hover:text-[#0077BE] hover:border-[#0077BE] hover:scale-105 active:scale-95 transition-all duration-200">
                   {mediaType === 'video' ? <Camera size={32} /> : <Mic size={32} />}
                   <span className="font-black text-[10px] uppercase">Record Job Intro</span>
                </button>
             </div>
 
             <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Overview</label><textarea required name="description" rows={4} className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 font-medium text-lg" /></div>
-            <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#0077BE]/20">Go Live ($0 Post Fee)</Button>
+            <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#0077BE]/20 hover:scale-105 active:scale-95 transition-all duration-200">Go Live ($0 Post Fee)</Button>
          </form>
       </Modal>
 
       <Modal isOpen={showVisibilityModal} onClose={() => setShowVisibilityModal(false)} title="Visibility Preferences">
          <div className="space-y-12">
             <div className="space-y-6">
-               <button onClick={() => { setUserVisibility("broader"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left transition-all flex gap-10 items-center ${userVisibility === "broader" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
+               <button onClick={() => { setUserVisibility("broader"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "broader" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
                   <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "broader" ? "border-[#0077BE]" : "border-gray-200"}`}>{userVisibility === "broader" && <div className="w-6 h-6 rounded-full bg-[#0077BE]" />}</div>
                   <div className="space-y-2"><span className="font-black text-3xl text-gray-900 block tracking-tighter leading-none uppercase">Public Discovery</span><p className="text-lg text-gray-500 font-medium leading-tight">Businesses can find you in the pool.</p></div>
                </button>
-               <button onClick={() => { setUserVisibility("limited"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left transition-all flex gap-10 items-center ${userVisibility === "limited" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
+               <button onClick={() => { setUserVisibility("limited"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "limited" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
                    <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "limited" ? "border-[#0077BE]" : "border-gray-200"}`}>{userVisibility === "limited" && <div className="w-6 h-6 rounded-full bg-[#0077BE]" />}</div>
                   <div className="space-y-2"><span className="font-black text-3xl text-gray-900 block tracking-tighter leading-none uppercase">Direct Only</span><p className="text-lg text-gray-500 font-medium leading-tight">Only jobs you apply to see your profile.</p></div>
                </button>
@@ -1589,11 +1593,11 @@ export default function App() {
          <div className="space-y-10">
             <p className="text-center text-gray-500 font-medium">Choose how you want to show your personality.</p>
             <div className="grid grid-cols-2 gap-6">
-               <button onClick={() => { setMediaType("video"); toast.info("Starting Video Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 transition-all">
+               <button onClick={() => { setMediaType("video"); toast.info("Starting Video Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 hover:scale-105 active:scale-95 transition-all duration-200">
                   <Video size={48} className="text-[#0077BE]" />
                   <span className="font-black text-xs uppercase tracking-widest">VIDEO INTRO</span>
                </button>
-               <button onClick={() => { setMediaType("voice"); toast.info("Starting Voice Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 transition-all">
+               <button onClick={() => { setMediaType("voice"); toast.info("Starting Voice Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 hover:scale-105 active:scale-95 transition-all duration-200">
                   <Mic size={48} className="text-[#0077BE]" />
                   <span className="font-black text-xs uppercase tracking-widest">VOICE ONLY</span>
                </button>
@@ -1711,7 +1715,7 @@ export default function App() {
             )}
 
             <div className="pt-6">
-              <Button className="w-full h-16 rounded-2xl text-lg" onClick={() => setShowFilterModal(false)}>
+              <Button className="w-full h-16 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => setShowFilterModal(false)}>
                 Show {userRole === 'seeker' ? filteredJobs.length : filteredCandidates.length} Results
               </Button>
             </div>
@@ -1828,8 +1832,8 @@ export default function App() {
 
             {/* CTA */}
             {!unlockedJobIds.includes(selectedJob.id) && (
-              <Button className="w-full h-20 text-xl rounded-3xl shadow-2xl shadow-[#0077BE]/20" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
-                Apply & Reveal Business — ${INTERACTION_FEE.toFixed(2)}
+              <Button className="w-full h-20 text-xl rounded-3xl shadow-2xl shadow-[#0077BE]/20 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
+                Apply & Reveal Business
               </Button>
             )}
           </div>
@@ -2031,7 +2035,7 @@ export default function App() {
             </div>
 
             {!unlockedCandidateIds.includes(selectedCandidate.id) && (
-              <Button className="w-full h-16 sm:h-20 md:h-24 text-base sm:text-xl md:text-2xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-[#FF6B6B]/20 bg-[#FF6B6B] hover:bg-[#FF6B6B]/90" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
+              <Button className="w-full h-16 sm:h-20 md:h-24 text-base sm:text-xl md:text-2xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-[#FF6B6B]/20 bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
                 Unlock Full Video & Contact ${INTERACTION_FEE.toFixed(2)}
               </Button>
             )}
