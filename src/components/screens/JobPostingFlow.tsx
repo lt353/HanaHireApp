@@ -162,11 +162,12 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
     if (existingJob) {
       // Editing mode - pre-fill with existing job data
+      // NOTE: Company info comes from userProfile (employers table), not from existingJob
       console.log("✏️ Pre-filling form with existing job:", existingJob);
       const payMatch = existingJob.pay_range?.match(/\$(\d+)-(\d+)\/(hr|yr)/);
       setFormData({
         title: existingJob.title || "",
-        industry: existingJob.company_industry || "Food & Beverage",
+        industry: userProfile?.industry || "Food & Beverage",  // From employers table via userProfile
         custom_industry: "",
         location: existingJob.location || "Honolulu, HI",
         pay_min: payMatch ? payMatch[1] : "20",
@@ -178,14 +179,14 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         requirements: Array.isArray(existingJob.requirements) ? existingJob.requirements : ["", ""],
         benefits: Array.isArray(existingJob.benefits) ? existingJob.benefits : ["", ""],
         start_date: existingJob.start_date || "",
-        company_size: existingJob.company_size || "Small (1-10)",
+        company_size: userProfile?.companySize || "Small (1-10)",  // From employers table via userProfile
         is_anonymous: existingJob.is_anonymous !== false,
-        company_name: existingJob.company_name || "",
-        contact_email: existingJob.contact_email || "",
-        contact_phone: existingJob.contact_phone || "",
-        company_description: existingJob.company_description || "",
+        company_name: userProfile?.businessName || "",  // From employers table via userProfile
+        contact_email: userProfile?.email || "",  // From employers table via userProfile
+        contact_phone: userProfile?.phone || "",  // From employers table via userProfile
+        company_description: userProfile?.bio || "",  // From employers table via userProfile
         video_url: existingJob.video_url || "",
-        image_url: existingJob.company_logo_url || ""
+        image_url: userProfile?.companyLogoUrl || ""  // From employers table via userProfile
       });
       setStep('review'); // Skip to review screen when editing
     } else if (userProfile && userProfile.role === 'employer') {
@@ -327,11 +328,11 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         : `$${formData.pay_min}-${formData.pay_max}/yr`;
 
       // Prepare job data for Supabase
-      // NOTE: Company info (name, email, phone, description) is stored in employers table
+      // NOTE: Company info (name, email, phone, description, industry) is stored in employers table
       // Jobs table only stores job-specific information and links to employer via employer_id
+      // Industry is NOT stored in jobs table - it comes from the employers table via JOIN
       const jobData = {
         title: formData.title,
-        company_industry: formData.industry === "Other" ? formData.custom_industry : formData.industry,
         location: formData.location,
         pay_range: payRangeStr,
         job_type: formData.job_type,
