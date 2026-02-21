@@ -229,7 +229,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.experienceLevels.map(level => (
+                {CANDIDATE_CATEGORIES.experience.map(level => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
@@ -246,7 +246,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.educationLevels.map(level => (
+                {CANDIDATE_CATEGORIES.education.map(level => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
