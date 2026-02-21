@@ -42,10 +42,10 @@ export const CANDIDATE_CATEGORIES = {
     'Medical', 'Dental', 'First Aid/CPR', 'Lifeguard', 'Teaching', 'Childcare', 
     'Tour Guide', 'Ocean Safety'
   ],
-  experienceLevels: [
+  experience: [
     '0-2 years', '2-5 years', '5-10 years', '10+ years'
   ],
-  educationLevels: [
+  education: [
     'High School', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Vocational Training'
   ],
   targetPayRanges: [
@@ -68,10 +68,10 @@ export const CANDIDATE_CATEGORIES = {
   locations: JOB_CATEGORIES.locations
 };
 
-// Demo profiles for quick login/signup shortcuts
+// Demo profiles for quick form-fill shortcuts (NOT for database insertion - change email before submitting!)
 export const DEMO_PROFILES = {
   seeker: {
-    email: 'keanu.mahalo@demo.com',
+    email: 'yourname@example.com',  // Placeholder - user must change this
     password: 'demo1234',
     name: 'Keanu Mahalo',
     phone: '(808) 555-1234',
@@ -85,7 +85,7 @@ export const DEMO_PROFILES = {
     industries: ['Food & Beverage', 'Tourism', 'Hospitality'],
   },
   employer: {
-    email: 'hiring@alohabistro.demo',
+    email: 'hiring@yourcompany.com',  // Placeholder - user must change this
     password: 'demo1234',
     businessName: 'Aloha Bistro & Bar',
     contactName: 'Lani Nakamura',

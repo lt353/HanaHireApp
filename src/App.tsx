@@ -1157,7 +1157,7 @@ export default function App() {
                       const d = DEMO_PROFILES.employer;
                       setSignupFormData({ businessName: d.businessName, contactName: d.contactName, email: d.email, password: d.password, phone: d.phone, industry: d.industry, businessLicense: d.businessLicense });
                     }
-                    toast.success("Demo data filled! Review and submit.");
+                    toast.info("Demo data filled! ⚠️ Change the email to your own before submitting.");
                   }}
                   className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group`}
                 >
@@ -1170,12 +1170,32 @@ export default function App() {
                 <form onSubmit={async (e) => {
                   e.preventDefault();
 
+                  // Validate email is not a placeholder
+                  const email = signupFormData.email?.toLowerCase() || '';
+                  if (email.includes('example.com') || email.includes('yourname@') || email.includes('yourcompany@')) {
+                    toast.error("Please use your real email address, not the placeholder!");
+                    return;
+                  }
+
                   setIsSignupLoading(true);
 
                   try {
                     // If employer, insert into employers table first
                     if (signupRole === 'employer') {
                       console.log("Starting employer signup...", signupFormData);
+
+                      // Check if email already exists
+                      const { data: existingEmployer } = await supabase
+                        .from('employers')
+                        .select('id')
+                        .eq('email', signupFormData.email)
+                        .single();
+
+                      if (existingEmployer) {
+                        toast.error("An account with this email already exists. Please sign in instead.");
+                        setIsSignupLoading(false);
+                        return;
+                      }
 
                       const { data: employerData, error: employerError } = await supabase
                         .from('employers')
@@ -1215,6 +1235,19 @@ export default function App() {
                     else {
                       // Seeker signup - insert into candidates table
                       console.log("Starting seeker signup...", signupFormData);
+
+                      // Check if email already exists
+                      const { data: existingCandidate } = await supabase
+                        .from('candidates')
+                        .select('id')
+                        .eq('email', signupFormData.email)
+                        .single();
+
+                      if (existingCandidate) {
+                        toast.error("An account with this email already exists. Please sign in instead.");
+                        setIsSignupLoading(false);
+                        return;
+                      }
 
                       const { data: candidateData, error: candidateError } = await supabase
                         .from('candidates')
