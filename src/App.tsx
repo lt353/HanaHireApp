@@ -1201,7 +1201,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => {
-                        setLoginEmail('demo.seeker@hanahire.com');
+                        setLoginEmail(DEMO_ACCOUNTS.candidate);
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
@@ -1214,7 +1214,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => {
-                        setLoginEmail('demo.employer@hanahire.com');
+                        setLoginEmail(DEMO_ACCOUNTS.employer);
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
