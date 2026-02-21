@@ -1218,17 +1218,27 @@ export default function App() {
                       console.log("Starting employer signup...", signupFormData);
 
                       // Check if email already exists
-                      const { data: existingEmployer } = await supabase
+                      console.log("Checking for existing employer with email:", signupFormData.email);
+                      const { data: existingEmployer, error: checkError } = await supabase
                         .from('employers')
                         .select('id')
                         .eq('email', signupFormData.email)
                         .single();
+
+                      console.log("Duplicate check result:", { existingEmployer, checkError });
 
                       if (existingEmployer) {
                         toast.error("An account with this email already exists. Please sign in instead.");
                         setIsSignupLoading(false);
                         return;
                       }
+
+                      console.log("Attempting to insert employer:", {
+                        email: signupFormData.email,
+                        phone: signupFormData.phone || null,
+                        business_name: signupFormData.businessName,
+                        industry: signupFormData.industry || null,
+                      });
 
                       const { data: employerData, error: employerError } = await supabase
                         .from('employers')
@@ -1240,6 +1250,8 @@ export default function App() {
                         }])
                         .select()
                         .single();
+
+                      console.log("Insert result:", { employerData, employerError });
 
                       if (employerError) {
                         console.error("Error creating employer:", employerError);
@@ -1270,17 +1282,27 @@ export default function App() {
                       console.log("Starting seeker signup...", signupFormData);
 
                       // Check if email already exists
-                      const { data: existingCandidate } = await supabase
+                      console.log("Checking for existing candidate with email:", signupFormData.email);
+                      const { data: existingCandidate, error: checkError } = await supabase
                         .from('candidates')
                         .select('id')
                         .eq('email', signupFormData.email)
                         .single();
+
+                      console.log("Duplicate check result:", { existingCandidate, checkError });
 
                       if (existingCandidate) {
                         toast.error("An account with this email already exists. Please sign in instead.");
                         setIsSignupLoading(false);
                         return;
                       }
+
+                      console.log("Attempting to insert candidate:", {
+                        name: signupFormData.name,
+                        email: signupFormData.email,
+                        phone: signupFormData.phone || null,
+                        location: signupFormData.location || null,
+                      });
 
                       const { data: candidateData, error: candidateError } = await supabase
                         .from('candidates')
@@ -1292,6 +1314,8 @@ export default function App() {
                         }])
                         .select()
                         .single();
+
+                      console.log("Insert result:", { candidateData, candidateError });
 
                       if (candidateError) {
                         console.error("Error creating candidate:", candidateError);
