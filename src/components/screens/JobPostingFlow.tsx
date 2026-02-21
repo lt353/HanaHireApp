@@ -265,13 +265,9 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
   const validateForm = () => {
     if (!formData.title) return "Job title is required";
-    if (formData.industry === "Other" && !formData.custom_industry) return "Please specify your industry";
-    if (!formData.industry) return "Industry is required";
     if (!formData.location) return "Location is required";
     if (formData.description.length < 20) return "Description is too short";
-    if (!formData.company_name) return "Legal company name is required (private)";
-    if (!formData.contact_email) return "Contact email is required";
-    if (!formData.contact_phone) return "Hiring phone is required";
+    if (!userProfile?.employerId) return "You must be logged in as an employer to post jobs";
     return null;
   };
 
@@ -289,10 +285,10 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         : `$${formData.pay_min}-${formData.pay_max}/yr`;
 
       // Prepare job data for Supabase
+      // NOTE: Company info (name, email, phone, etc.) now comes from employers table
+      // Only employer_id is needed to link the job to the employer
       const jobData: any = {
         title: formData.title,
-        company_name: formData.company_name,
-        company_industry: formData.industry === "Other" ? formData.custom_industry : formData.industry,
         location: formData.location,
         pay_range: payRangeStr,
         job_type: formData.job_type,
@@ -300,20 +296,20 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         description: formData.description,
         responsibilities: formData.responsibilities.filter((r:string) => r),
         benefits: formData.benefits.filter((b:string) => b),
-        company_size: formData.company_size,
-        company_description: formData.company_description,
-        contact_email: formData.contact_email,
-        contact_phone: formData.contact_phone,
         is_anonymous: true,
         status: 'active',
-        applicant_count: 0
+        applicant_count: 0,
+        employer_id: userProfile?.employerId  // REQUIRED: Links job to employer
       };
 
+      // Validate employer_id is present
+      if (!jobData.employer_id) {
+        throw new Error("Employer ID is required to post a job");
+      }
+
       // Add optional fields
-      if (formData.image_url) jobData.company_logo_url = formData.image_url;
       if (formData.video_url) jobData.video_url = formData.video_url;
       if (formData.start_date) jobData.start_date = formData.start_date;
-      if (userProfile?.employerId) jobData.employer_id = userProfile.employerId;
 
       let data;
       if (existingJob?.id) {

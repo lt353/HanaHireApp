@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
+import { mergeJobsWithEmployers } from "./utils/jobHelpers";
 import { projectId, publicAnonKey } from './utils/supabase/info';
 import { supabase } from './utils/supabase/client';
 
@@ -72,6 +73,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>("landing");
   const [jobs, setJobs] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [employers, setEmployers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasSeeded, setHasSeeded] = useState(false);
   const [userRole, setUserRole] = useState<'seeker' | 'employer'>('seeker');
@@ -175,20 +177,29 @@ export default function App() {
         });
         
         const newData = await newResponse.json();
-        setJobs(newData.jobs || []);
+        // Store employers separately
+        setEmployers(newData.employers || []);
+        // Merge jobs with employer data
+        const mergedJobs = mergeJobsWithEmployers(newData.jobs || [], newData.employers || []);
+        setJobs(mergedJobs);
         setCandidates(newData.candidates || []);
-        console.log(`Successfully seeded and loaded ${newData.jobs?.length || 0} jobs and ${newData.candidates?.length || 0} candidates from KV store`);
+        console.log(`Successfully seeded and loaded ${mergedJobs.length} jobs and ${newData.candidates?.length || 0} candidates from KV store`);
         toast.success('Marketplace initialized!');
       } else {
-        setJobs(data.jobs);
+        // Store employers separately
+        setEmployers(data.employers || []);
+        // Merge jobs with employer data
+        const mergedJobs = mergeJobsWithEmployers(data.jobs || [], data.employers || []);
+        setJobs(mergedJobs);
         setCandidates(data.candidates);
-        console.log(`Loaded ${data.jobs.length} jobs and ${data.candidates.length} candidates from Supabase KV store (kv_store_9b95b3f5 table)`);
+        console.log(`Loaded ${mergedJobs.length} jobs and ${data.candidates.length} candidates from Supabase`);
       }
     } catch (err) {
       console.error("Error loading data:", err);
       toast.error("Failed to load marketplace data");
       setJobs([]);
       setCandidates([]);
+      setEmployers([]);
     } finally {
       setIsLoading(false);
     }
@@ -252,8 +263,10 @@ export default function App() {
             .in('id', itemIds);
 
           if (!jobsError && savedJobs) {
-            setSeekerQueue(savedJobs);
-            console.log(`Loaded ${savedJobs.length} saved jobs`);
+            // Merge saved jobs with employer data
+            const mergedSavedJobs = mergeJobsWithEmployers(savedJobs, employers);
+            setSeekerQueue(mergedSavedJobs);
+            console.log(`Loaded ${mergedSavedJobs.length} saved jobs`);
           }
         } else {
           const { data: savedCandidates, error: candidatesError } = await supabase
@@ -733,12 +746,15 @@ export default function App() {
               handleNavigate("employer");
             }}
             onComplete={(updatedJob) => {
+              // Merge the new/updated job with employer data
+              const mergedJob = mergeJobsWithEmployers([updatedJob], employers)[0];
+
               if (editingJob?.id) {
                 // Update existing job in the list
-                setJobs(jobs.map(j => j.id === updatedJob.id ? updatedJob : j));
+                setJobs(jobs.map(j => j.id === updatedJob.id ? mergedJob : j));
               } else {
                 // Add new job to the list
-                setJobs([updatedJob, ...jobs]);
+                setJobs([mergedJob, ...jobs]);
               }
               setEditingJob(null);
               handleNavigate("employer");
