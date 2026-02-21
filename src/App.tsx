@@ -950,7 +950,7 @@ export default function App() {
   };
 
   const handleDemoLogin = async (role: 'seeker' | 'employer') => {
-    const demoEmail = role === 'seeker' ? 'demo.seeker@hanahire.com' : 'demo.employer@hanahire.com';
+    const demoEmail = role === 'seeker' ? DEMO_ACCOUNTS.candidate : DEMO_ACCOUNTS.employer;
 
     try {
       // Fetch demo account from database with ALL fields
