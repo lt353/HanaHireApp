@@ -105,6 +105,8 @@ const INDUSTRIES = [
 ];
 
 export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }: JobPostingFlowProps) {
+  console.log("🔷 JobPostingFlow MOUNTED/RENDERED with userProfile:", userProfile);
+
   const [step, setStep] = useState<FlowStep>('selection');
   const [prompt, setPrompt] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,11 +137,31 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
     image_url: ""
   });
 
+  console.log("🔷 Current formData state:", formData);
+
+  // Debug: Log formData changes
+  useEffect(() => {
+    console.log("📊 formData changed:", {
+      company_name: formData.company_name,
+      contact_email: formData.contact_email,
+      contact_phone: formData.contact_phone,
+      company_description: formData.company_description
+    });
+  }, [formData]);
+
   // Auto-populate from existing job OR business info from userProfile
   useEffect(() => {
+    console.log("🔄 useEffect triggered - userProfile:", userProfile, "existingJob:", existingJob);
+    console.log("🔄 Condition check:", {
+      hasUserProfile: !!userProfile,
+      userProfileRole: userProfile?.role,
+      isEmployer: userProfile?.role === 'employer',
+      hasExistingJob: !!existingJob
+    });
+
     if (existingJob) {
       // Editing mode - pre-fill with existing job data
-      console.log("Pre-filling form with existing job:", existingJob);
+      console.log("✏️ Pre-filling form with existing job:", existingJob);
       const payMatch = existingJob.pay_range?.match(/\$(\d+)-(\d+)\/(hr|yr)/);
       setFormData({
         title: existingJob.title || "",
@@ -167,20 +189,34 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       setStep('review'); // Skip to review screen when editing
     } else if (userProfile && userProfile.role === 'employer') {
       // New job - auto-populate business info from userProfile
-      console.log("Auto-populating job form with userProfile:", userProfile);
-      setFormData((prev: any) => ({
-        ...prev,
-        company_name: userProfile.businessName || prev.company_name,
-        contact_email: userProfile.email || prev.contact_email,
-        contact_phone: userProfile.phone || prev.contact_phone,
-        industry: userProfile.industry || prev.industry,
-        company_size: userProfile.companySize || prev.company_size,
-        location: userProfile.location || prev.location,
-        company_description: userProfile.bio || prev.company_description,
-        image_url: userProfile.companyLogoUrl || prev.image_url
-      }));
+      console.log("🔵 Auto-populating job form with userProfile:", userProfile);
+      console.log("🔵 Available fields:", {
+        businessName: userProfile.businessName,
+        email: userProfile.email,
+        phone: userProfile.phone,
+        industry: userProfile.industry,
+        companySize: userProfile.companySize,
+        location: userProfile.location,
+        bio: userProfile.bio,
+        companyLogoUrl: userProfile.companyLogoUrl
+      });
+      setFormData((prev: any) => {
+        const updated = {
+          ...prev,
+          company_name: userProfile.businessName || prev.company_name || "",
+          contact_email: userProfile.email || prev.contact_email || "",
+          contact_phone: userProfile.phone || prev.contact_phone || "",
+          industry: userProfile.industry || prev.industry,
+          company_size: userProfile.companySize || prev.company_size,
+          location: userProfile.location || prev.location,
+          company_description: userProfile.bio || prev.company_description || "",
+          image_url: userProfile.companyLogoUrl || prev.image_url || ""
+        };
+        console.log("🟢 Updated formData with:", updated);
+        return updated;
+      });
     } else {
-      console.log("Skipping auto-populate - userProfile:", userProfile);
+      console.log("⚠️ Skipping auto-populate - userProfile:", userProfile);
     }
   }, [userProfile, existingJob]);
 
@@ -242,9 +278,11 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
   };
 
   const handleGenerate = () => {
+    console.log("🔵 handleGenerate called, current formData:", formData);
     setStep('loading');
     setTimeout(() => {
       const generatedData = parsePrompt(prompt);
+      console.log("🟢 Generated data from AI:", generatedData);
       setFormData(generatedData);
       setStep('review');
     }, 2000);
