@@ -106,6 +106,7 @@ export default function App() {
   const [paymentItems, setPaymentItems] = useState<any[]>([]);
   const [expandedPaymentItemId, setExpandedPaymentItemId] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [editingJob, setEditingJob] = useState<any>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
@@ -726,17 +727,20 @@ export default function App() {
         return (
           <JobPostingFlow
             userProfile={userProfile}
-            existingJob={selectedJob}
-            onBack={() => { setSelectedJob(null); handleNavigate("employer"); }}
+            existingJob={editingJob}
+            onBack={() => {
+              setEditingJob(null);
+              handleNavigate("employer");
+            }}
             onComplete={(updatedJob) => {
-              if (selectedJob?.id) {
+              if (editingJob?.id) {
                 // Update existing job in the list
                 setJobs(jobs.map(j => j.id === updatedJob.id ? updatedJob : j));
               } else {
                 // Add new job to the list
                 setJobs([updatedJob, ...jobs]);
               }
-              setSelectedJob(null);
+              setEditingJob(null);
               handleNavigate("employer");
             }}
           />
@@ -2058,7 +2062,7 @@ export default function App() {
 )}
 
       {/* --- Detail Modals --- */}
-      <Modal isOpen={!!selectedJob && screen !== 'job-posting'} onClose={() => setSelectedJob(null)} title="Job Details">
+      <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Job Details">
         {selectedJob && (
           <div className="space-y-8 pb-4">
             {/* Title + core tags */}
@@ -2152,7 +2156,11 @@ export default function App() {
               /* Employer actions */
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { handleNavigate('job-posting'); }}>
+                  <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
+                    setEditingJob(selectedJob);
+                    setSelectedJob(null);
+                    handleNavigate('job-posting');
+                  }}>
                     Edit Job
                   </Button>
                   <Button className="h-16 rounded-2xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
