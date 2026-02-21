@@ -102,12 +102,12 @@ export default function App() {
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ 
-    industries: [] as string[], 
+  const [filters, setFilters] = useState({
+    industries: [] as string[],
     locations: [] as string[],
     payRanges: [] as string[],
-    experienceLevels: [] as string[],
-    educationLevels: [] as string[],
+    experience: [] as string[],
+    education: [] as string[],
     skills: [] as string[]
   });
   const [userVisibility, setUserVisibility] = useState("broader");
@@ -494,15 +494,15 @@ export default function App() {
     )
   );
 
-  const filteredCandidates = candidates.filter(c => 
+  const filteredCandidates = candidates.filter(c =>
     (filters.locations.length === 0 || filters.locations.includes(c.location)) &&
     (filters.payRanges.length === 0 || filters.payRanges.includes(c.preferred_pay_range) || filters.payRanges.includes(c.target_pay)) &&
     (filters.skills.length === 0 || filters.skills.some(s => c.skills?.includes(s))) &&
     (filters.industries.length === 0 || (c.industries_interested && c.industries_interested.some((ind: string) => filters.industries.includes(ind)))) &&
-    matchesExperience(c.years_experience, filters.experienceLevels) &&
-    matchesEducation(c.education, filters.educationLevels) &&
-    (searchQuery === "" || 
-      (c.location?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || 
+    matchesExperience(c.years_experience, filters.experience) &&
+    matchesEducation(c.education, filters.education) &&
+    (searchQuery === "" ||
+      (c.location?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
       (c.skills?.some((s: string) => s.toLowerCase().includes(searchQuery.toLowerCase())) ?? false)
     )
   );
@@ -523,8 +523,8 @@ export default function App() {
       industries: [],
       locations: [],
       payRanges: [],
-      experienceLevels: [],
-      educationLevels: [],
+      experience: [],
+      education: [],
       skills: [],
     });
   };
@@ -1749,11 +1749,11 @@ export default function App() {
             ) : (
               <>
                 <CollapsibleFilter title="Experience Level" isOpen={true}>
-                  {CANDIDATE_CATEGORIES.experienceLevels.map(e => (
+                  {CANDIDATE_CATEGORIES.experience.map(e => (
                     <button
                       key={e}
-                      onClick={() => toggleFilter('experienceLevels', e)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experienceLevels.includes(e) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      onClick={() => toggleFilter('experience', e)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {e}
                     </button>
@@ -1773,11 +1773,11 @@ export default function App() {
                 </CollapsibleFilter>
 
                 <CollapsibleFilter title="Education">
-                  {CANDIDATE_CATEGORIES.educationLevels.map(edu => (
+                  {CANDIDATE_CATEGORIES.education.map(edu => (
                     <button
                       key={edu}
-                      onClick={() => toggleFilter('educationLevels', edu)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.educationLevels.includes(edu) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      onClick={() => toggleFilter('education', edu)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {edu}
                     </button>
