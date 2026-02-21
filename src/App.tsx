@@ -1195,7 +1195,7 @@ export default function App() {
                 }} className="space-y-8">
                    <div className="space-y-6">
                       <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email Identity</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Email Identity</label>
                          <input
                            required
                            name="email"
@@ -1207,7 +1207,7 @@ export default function App() {
                          />
                       </div>
                       <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Access Key</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Access Key</label>
                          <input
                            required
                            type="password"
@@ -1228,7 +1228,7 @@ export default function App() {
 
                 {/* Demo Login Shortcuts */}
                 <div className="pt-6 border-t border-gray-100 space-y-4">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
+                  <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -1241,7 +1241,7 @@ export default function App() {
                     >
                       <User size={24} className="mx-auto text-[#1A7A84] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#1A7A84]">Job Seeker</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
+                      <span className="block text-[10px] text-gray-600 font-medium">Demo Account</span>
                     </button>
                     <button
                       type="button"
@@ -1254,19 +1254,19 @@ export default function App() {
                     >
                       <Building2 size={24} className="mx-auto text-[#D25B3A] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#D25B3A]">Employer</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
+                      <span className="block text-[10px] text-gray-600 font-medium">Demo Account</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Create Account</button></p>
+                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Create Account</button></p>
                 </div>
               </>
             ) : signupStep === 'role-select' ? (
               /* Signup Step 1: Role Selection */
               <div className="space-y-8">
-                <p className="text-center text-gray-500 font-medium text-lg">What brings you to HanaHire?</p>
+                <p className="text-center text-gray-700 font-medium text-lg">What brings you to HanaHire?</p>
 
                 <div className="space-y-4">
                   <button
@@ -1279,13 +1279,13 @@ export default function App() {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-black tracking-tight group-hover:text-[#1A7A84] transition-colors">I'm Looking for a Job</h3>
-                        <p className="text-sm text-gray-500 font-medium mt-1">Browse and apply to opportunities</p>
+                        <p className="text-sm text-gray-600 font-medium mt-1">Browse and apply to opportunities</p>
                       </div>
                     </div>
                     <div className="pl-[4.5rem] space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Save your intro video and profile for future applications</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Track profile views, applications, and unlocked jobs</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Come back anytime without re-entering your info</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Save your intro video and profile for future applications</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Track profile views, applications, and unlocked jobs</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Come back anytime without re-entering your info</div>
                     </div>
                   </button>
 
@@ -1299,25 +1299,25 @@ export default function App() {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-black tracking-tight group-hover:text-[#D25B3A] transition-colors">I'm Looking to Hire</h3>
-                        <p className="text-sm text-gray-500 font-medium mt-1">Post jobs and find talent</p>
+                        <p className="text-sm text-gray-600 font-medium mt-1">Post jobs and find talent</p>
                       </div>
                     </div>
                     <div className="pl-[4.5rem] space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Post jobs and browse candidate video profiles</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Track candidates unlocked, profile views, and applicants</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Verify your business for trusted hiring</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Post jobs and browse candidate video profiles</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Track candidates unlocked, profile views, and applicants</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Verify your business for trusted hiring</div>
                     </div>
                   </button>
                 </div>
 
                 <div className="p-4 bg-[#F9EBDA]/30 rounded-2xl">
-                  <p className="text-xs text-gray-500 text-center font-medium">
+                  <p className="text-xs text-gray-700 text-center font-medium">
                     <span className="font-black text-gray-700">No account needed to browse.</span> Sign up to save your info, track activity, and come back easily.
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
+                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             ) : (
@@ -1325,7 +1325,7 @@ export default function App() {
               <div className="space-y-8">
                 <button
                   onClick={() => { setSignupStep('role-select'); setSignupRole(null); setSignupFormData({}); }}
-                  className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-[#1A7A84] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="text-xs font-black text-gray-600 uppercase tracking-widest hover:text-[#1A7A84] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                 >
                   &larr; Back to role selection
                 </button>
@@ -1547,24 +1547,24 @@ export default function App() {
                      /* Seeker Signup Form */
                      <div className="space-y-5">
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Full Name</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Full Name</label>
                          <input required type="text" value={signupFormData.name || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Your full name" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Email</label>
                          <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="name@email.com" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Password</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Password</label>
                          <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tighter" />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Phone</label>
+                           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
                            <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Location</label>
+                           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Location</label>
                            <select value={signupFormData.location || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, location: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base">
                              <option value="">Select...</option>
                              {JOB_CATEGORIES.locations.map(l => <option key={l} value={l}>{l}</option>)}
@@ -1576,24 +1576,24 @@ export default function App() {
                      /* Employer Signup Form */
                      <div className="space-y-5">
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Name</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Business Name</label>
                          <input required type="text" value={signupFormData.businessName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessName: e.target.value }))} placeholder="Your business name" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Email</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Business Email</label>
                          <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="hiring@business.com" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Password</label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Password</label>
                          <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-lg tracking-tighter" />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Phone</label>
+                           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
                            <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
-                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Industry</label>
+                           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Industry</label>
                            <select value={signupFormData.industry || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, industry: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base">
                              <option value="">Select...</option>
                              {JOB_CATEGORIES.industries.map(i => <option key={i} value={i}>{i}</option>)}
@@ -1601,7 +1601,7 @@ export default function App() {
                          </div>
                        </div>
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business License # <span className="text-gray-300">(optional)</span></label>
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Business License # <span className="text-gray-300">(optional)</span></label>
 <input type="text" value={signupFormData.businessLicense || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessLicense: e.target.value }))} placeholder="HI-BIZ-XXXX-XXXXX" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base tracking-widest" />
 <div className="p-4 bg-[#2ECC71]/5 rounded-2xl border border-[#2ECC71]/10 flex items-start gap-3">
   <Shield size={20} className="text-[#2ECC71] shrink-0 mt-0.5" />
@@ -1623,7 +1623,7 @@ export default function App() {
                 </form>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
+                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             )}
@@ -1657,7 +1657,7 @@ export default function App() {
     <div className="bg-[#F9EBDA]/30 rounded-[2rem] border border-gray-100 overflow-hidden">
       <div className="p-5 sm:p-6 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
+          <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">
             {paymentTarget?.type === 'seeker' ? 'Application Summary' : 'Unlock Summary'}
           </span>
           <span className="text-[10px] font-black text-[#D25B3A] uppercase tracking-widest">
@@ -1726,7 +1726,7 @@ export default function App() {
               <div className="mt-3 ml-13 pl-1 space-y-2 border-l-2 border-gray-100">
                 {paymentTarget?.type === 'employer' ? (
                   <div className="ml-2 space-y-2">
-                    {item.bio && <p className="text-xs text-gray-500 leading-relaxed">{item.bio}</p>}
+                    {item.bio && <p className="text-xs text-gray-700 leading-relaxed">{item.bio}</p>}
                     <div className="flex flex-wrap gap-1.5">
                       {item.years_experience && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.years_experience} yrs exp</span>}
                       {item.availability && <span className="px-2 py-1 bg-[#D25B3A]/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#D25B3A]">{item.availability}</span>}
@@ -1751,7 +1751,7 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="ml-2 space-y-2">
-                    {item.description && <p className="text-xs text-gray-500 leading-relaxed">{item.description}</p>}
+                    {item.description && <p className="text-xs text-gray-700 leading-relaxed">{item.description}</p>}
                     <div className="flex flex-wrap gap-1.5">
                       {item.job_type && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.job_type}</span>}
                       {item.company_industry && <span className="px-2 py-1 bg-[#1A7A84]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#1A7A84]">{item.company_industry}</span>}
@@ -1794,19 +1794,19 @@ export default function App() {
     {paymentItems.length > 0 && (
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Payment Details</span>
+          <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Payment Details</span>
           <div className="flex items-center gap-1.5 text-xs font-black text-gray-500 uppercase tracking-widest">
             <Lock size={10} className="text-[#1A7A84]" /> SSL Encrypted
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Name on Card</label>
+          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Name on Card</label>
           <input type="text" placeholder="Full name as shown on card" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base transition-colors" />
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Card Number</label>
+          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Card Number</label>
           <div className="relative">
             <CreditCard size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#1A7A84]/40" />
             <input type="text" placeholder="1234  5678  1234  5678" className="w-full p-4 sm:p-5 pl-14 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base tracking-widest transition-colors" />
@@ -1815,11 +1815,11 @@ export default function App() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Expiry</label>
+            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Expiry</label>
             <input type="text" placeholder="MM / YY" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Security Code</label>
+            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Security Code</label>
             <div className="relative">
               <input type="text" placeholder="CVC" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
               <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A7A84]/30" />
