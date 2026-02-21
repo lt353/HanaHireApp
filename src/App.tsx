@@ -62,6 +62,12 @@ import { formatCandidateTitle } from "./utils/formatters";
 export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
+// Demo account emails for demo flow (go through onboarding but don't create new records)
+const DEMO_ACCOUNTS = {
+  employer: 'demo@koabeachbistro.com',
+  candidate: 'luca.kahananui@email.com'
+};
+
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>("landing");
   const [jobs, setJobs] = useState<any[]>([]);
@@ -731,7 +737,47 @@ export default function App() {
           <SeekerOnboarding
             userProfile={userProfile}
             onComplete={async (profileData) => {
-              // Update candidates table with onboarding data
+              // Check if this is a demo account
+              if (profileData.isDemoAccount) {
+                // Demo account: fetch existing profile instead of updating
+                const { data: existingCandidate } = await supabase
+                  .from('candidates')
+                  .select('*')
+                  .eq('id', profileData.candidateId)
+                  .single();
+
+                if (existingCandidate) {
+                  await Promise.all([
+                    fetchApplications(existingCandidate.id),
+                    fetchUnlocks(existingCandidate.email),
+                    fetchSavedItems(existingCandidate.email, 'seeker')
+                  ]);
+                  setUserProfile({
+                    role: 'seeker',
+                    email: existingCandidate.email,
+                    name: existingCandidate.name,
+                    phone: existingCandidate.phone,
+                    location: existingCandidate.location,
+                    bio: existingCandidate.bio,
+                    skills: existingCandidate.skills || [],
+                    experience: existingCandidate.years_experience,
+                    education: existingCandidate.education,
+                    availability: existingCandidate.availability,
+                    targetPay: existingCandidate.preferred_pay_range || existingCandidate.target_pay,
+                    industries: existingCandidate.industries_interested || [],
+                    workStyles: existingCandidate.work_style?.split(', ') || [],
+                    jobTypesSeeking: existingCandidate.job_types_seeking || [],
+                    displayTitle: existingCandidate.display_title,
+                    candidateId: existingCandidate.id,
+                    id: existingCandidate.id
+                  });
+                  handleNavigate("seeker");
+                  toast.success("Demo complete! Welcome to your dashboard.");
+                }
+                return;
+              }
+
+              // Regular account: update candidates table with onboarding data
               if (profileData.candidateId) {
                 try {
                   const { error: updateError } = await supabase
@@ -771,7 +817,41 @@ export default function App() {
           <EmployerOnboarding
             userProfile={userProfile}
             onComplete={async (profileData) => {
-              // Update employers table with onboarding data
+              // Check if this is a demo account
+              if (profileData.isDemoAccount) {
+                // Demo account: fetch existing profile instead of updating
+                const { data: existingEmployer } = await supabase
+                  .from('employers')
+                  .select('*')
+                  .eq('id', profileData.employerId)
+                  .single();
+
+                if (existingEmployer) {
+                  await Promise.all([
+                    fetchUnlocks(existingEmployer.email),
+                    fetchSavedItems(existingEmployer.email, 'employer')
+                  ]);
+                  setUserProfile({
+                    role: 'employer',
+                    email: existingEmployer.email,
+                    businessName: existingEmployer.business_name,
+                    phone: existingEmployer.phone,
+                    location: existingEmployer.location,
+                    industry: existingEmployer.industry,
+                    companySize: existingEmployer.company_size,
+                    bio: existingEmployer.company_description,
+                    companyLogoUrl: existingEmployer.company_logo_url,
+                    businessVerified: existingEmployer.business_verified,
+                    employerId: existingEmployer.id,
+                    id: existingEmployer.id
+                  });
+                  handleNavigate("employer");
+                  toast.success("Demo complete! Welcome to your dashboard.");
+                }
+                return;
+              }
+
+              // Regular account: update employers table with onboarding data
               if (profileData.employerId) {
                 try {
                   const { error: updateError } = await supabase
@@ -1246,6 +1326,27 @@ export default function App() {
                   try {
                     // If employer, insert into employers table first
                     if (signupRole === 'employer') {
+                      const isDemoAccount = signupFormData.email === DEMO_ACCOUNTS.employer;
+
+                      if (isDemoAccount) {
+                        // Demo account: skip DB insert, go straight to onboarding
+                        const profile: any = {
+                          role: signupRole,
+                          ...signupFormData,
+                          isDemoAccount: true, // Flag for onboarding handler
+                          employerId: 72 // Demo employer ID
+                        };
+                        setUserProfile(profile);
+                        setUserRole(signupRole!);
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
+                        setIsSignupLoading(false);
+                        handleNavigate("employer-onboarding");
+                        toast.success("Demo account detected! Let's go through the onboarding.");
+                        return;
+                      }
+
                       // Check if email already exists — if so, just log them in
                       const { data: existingEmployer } = await supabase
                         .from('employers')
@@ -1314,6 +1415,26 @@ export default function App() {
                     }
                     else {
                       // Seeker signup - insert into candidates table
+                      const isDemoAccount = signupFormData.email === DEMO_ACCOUNTS.candidate;
+
+                      if (isDemoAccount) {
+                        // Demo account: skip DB insert, go straight to onboarding
+                        const profile: any = {
+                          role: signupRole,
+                          ...signupFormData,
+                          isDemoAccount: true, // Flag for onboarding handler
+                          candidateId: 71 // Demo candidate ID
+                        };
+                        setUserProfile(profile);
+                        setUserRole(signupRole!);
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
+                        setIsSignupLoading(false);
+                        handleNavigate("seeker-onboarding");
+                        toast.success("Demo account detected! Let's go through the onboarding.");
+                        return;
+                      }
 
                       // Check if email already exists — if so, just log them in
                       const { data: existingCandidate } = await supabase
