@@ -247,7 +247,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             type="text"
             placeholder="Search jobs by title, location..."
-            className="w-full pl-14 pr-5 py-5 rounded-lg bg-white border border-gray-100 shadow-sm focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg"
+            className="w-full pl-14 pr-5 py-5 rounded-lg bg-white border border-gray-100 shadow-sm focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg"
           />
         </div>
 
@@ -274,7 +274,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 
           {/* Recovered-item indicator */}
           {recoveredQueue.length > 0 && (
-            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#0077BE]">
+            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#1A7A84]">
               <RotateCcw size={12} />
               Reviewing recovered job
             </div>
@@ -297,14 +297,14 @@ export const JobsList: React.FC<JobsListProps> = ({
               {/* Swipe badges */}
               <motion.div
                 style={{ opacity: passOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#D25B3A] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
                 Skip
               </motion.div>
 
               <motion.div
                 style={{ opacity: saveOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#0077BE] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#1A7A84] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
                 Save
               </motion.div>
@@ -350,7 +350,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                       handlePass();
                       resetCard();
                     }}
-                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 duration-200"
+                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-[#F9EBDA]/30 transition-all hover:scale-105 active:scale-95 duration-200"
                   >
                     Skip
                   </button>
@@ -361,12 +361,12 @@ export const JobsList: React.FC<JobsListProps> = ({
                       handleToggleBookmark(currentJob);
                       resetCard();
                     }}
-                    className="h-14 rounded-xl bg-[#0077BE] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#0077BE]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
+                    className="h-14 rounded-xl bg-[#1A7A84] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#1A7A84]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                   >
                     <svg 
                       className="w-5 h-5 transition-all"
                       style={{
-                        fill: isInQueue(currentJob.id) ? '#2ECC71' : 'none',
+                        fill: isInQueue(currentJob.id) ? '#D25B3A' : 'none',
                         stroke: 'white',
                         strokeWidth: '2.5'
                       }}
@@ -388,7 +388,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                       <button
                         type="button"
                         onClick={handleUndo}
-                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
+                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#1A7A84] hover:text-[#1A7A84] hover:bg-[#F9EBDA]/30 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -401,7 +401,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowPassedBin(true)}
-                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#FF6B6B] hover:text-[#FF6B6B] hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200`}
+                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#D25B3A] hover:text-[#D25B3A] hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200`}
                     >
                       <Trash2 size={14} />
                       {passedJobs.length} Passed
@@ -427,7 +427,7 @@ export const JobsList: React.FC<JobsListProps> = ({
               <button
                 type="button"
                 onClick={() => onShowPayment({ type: 'seeker', items: queue })}
-                className="flex items-center gap-2 px-6 py-4 bg-[#0077BE] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#0077BE]/40 hover:bg-[#006aa8] transition-all hover:scale-105 active:scale-95 duration-200"
+                className="flex items-center gap-2 px-6 py-4 bg-[#1A7A84] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#1A7A84]/40 hover:bg-[#006aa8] transition-all hover:scale-105 active:scale-95 duration-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                 Apply to Saved Jobs ({queue.length})
@@ -451,21 +451,25 @@ export const JobsList: React.FC<JobsListProps> = ({
                     className="flex-1 min-w-0 cursor-pointer space-y-3"
                     onClick={() => onSelectJob(job)}
                   >
-                    <h3 className="text-xl font-black tracking-tight leading-tight">{job.title}</h3>
+                   <h3 className="text-2xl font-black tracking-tight leading-tight">{job.title}</h3>
 
-                    <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wider">
-                      <span className="flex items-center gap-1.5 text-gray-500"><MapPin size={13} /> {job.location}</span>
-                      <span className="flex items-center gap-1.5 text-[#2ECC71]"><DollarSign size={13} /> {job.pay_range}</span>
-                      <span className="flex items-center gap-1.5 text-gray-500"><Briefcase size={13} /> {job.job_type}</span>
-                      {job.company_industry && <span className="px-2.5 py-1 bg-[#0077BE]/5 text-[#0077BE] rounded-lg">{job.company_industry}</span>}
-                      {job.company_size && <span className="px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg border border-gray-100">{job.company_size}</span>}
-                    </div>
+<div className="flex flex-wrap gap-2 text-sm font-bold uppercase tracking-wider">
+  <span className="flex items-center gap-1.5 text-gray-500"><MapPin size={14} /> {job.location}</span>
+  <span className="flex items-center gap-1.5 text-[#1A7A84]"><DollarSign size={14} /> {job.pay_range}</span>
+  <span className="flex items-center gap-1.5 text-gray-500"><Briefcase size={14} /> {job.job_type}</span>
+  {job.company_industry && (
+    <span className="inline-flex items-center px-3 py-1 bg-[#1A7A84]/8 text-[#1A7A84] rounded-lg whitespace-nowrap">{job.company_industry}</span>
+  )}
+  {job.company_size && (
+    <span className="inline-flex items-center px-3 py-1 bg-gray-50 text-gray-500 rounded-lg border border-gray-100 whitespace-nowrap">{job.company_size}</span>
+  )}
+</div>
 
-                    {job.description && (
-                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">{job.description}</p>
-                    )}
+{job.description && (
+  <p className="text-base text-gray-600 leading-relaxed line-clamp-2">{job.description}</p>
+)}
 
-                    <p className="text-[10px] font-black text-[#0077BE] uppercase tracking-widest">Tap to see full details →</p>
+<p className="text-xs font-black text-[#1A7A84] uppercase tracking-widest">Tap to see full details →</p>
                   </div>
 
                   {/* Bookmark button */}
@@ -473,14 +477,14 @@ export const JobsList: React.FC<JobsListProps> = ({
                     <button
                       type="button"
                       onClick={() => handleToggleBookmark(job)}
-                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 duration-200"
+                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-[#F9EBDA]/30 transition-all hover:scale-105 active:scale-95 duration-200"
                       title={isInQueue(job.id) ? "Remove from saved" : "Save job"}
                     >
                       <svg
                         className="w-6 h-6 transition-all"
                         style={{
-                          fill: isInQueue(job.id) ? '#2ECC71' : 'none',
-                          stroke: isInQueue(job.id) ? '#2ECC71' : '#9CA3AF',
+                          fill: isInQueue(job.id) ? '#D25B3A' : 'none',
+                          stroke: isInQueue(job.id) ? '#D25B3A' : '#9CA3AF',
                           strokeWidth: '2'
                         }}
                         viewBox="0 0 24 24"
@@ -491,7 +495,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                       </svg>
                       <span
                         className="text-xs font-bold uppercase tracking-wide transition-all"
-                        style={{ color: isInQueue(job.id) ? '#2ECC71' : '#6B7280' }}
+                        style={{ color: isInQueue(job.id) ? '#D25B3A' : '#6B7280' }}
                       >
                         {isInQueue(job.id) ? 'Saved' : 'Save'}
                       </span>
@@ -533,7 +537,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                   <button
                     type="button"
                     onClick={handleRecoverAll}
-                    className="text-[10px] font-black uppercase tracking-widest text-[#0077BE] hover:text-[#006aa8] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+                    className="text-[10px] font-black uppercase tracking-widest text-[#1A7A84] hover:text-[#006aa8] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   >
                     Recover All
                   </button>
@@ -570,7 +574,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                 [...passedJobs].reverse().map((job) => (
                   <div
                     key={job.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl"
+                    className="flex items-center gap-3 p-3 bg-[#F9EBDA]/30 rounded-2xl"
                   >
                     {/* Job icon placeholder */}
                     <div className="w-12 h-12 rounded-xl bg-gray-200 shrink-0 flex items-center justify-center">
@@ -592,7 +596,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRecover(job)}
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0077BE] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1A7A84] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                     >
                       <RotateCcw size={12} />
                       Recover

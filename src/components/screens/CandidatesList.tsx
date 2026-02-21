@@ -258,7 +258,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             type="text"
             placeholder="Search candidates by skills, location..."
-            className="w-full pl-14 pr-5 py-5 rounded-lg bg-white border border-gray-100 shadow-sm focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg"
+            className="w-full pl-14 pr-5 py-5 rounded-lg bg-white border border-gray-100 shadow-sm focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg"
           />
         </div>
 
@@ -285,7 +285,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
           {/* Recovered-item indicator */}
           {recoveredQueue.length > 0 && (
-            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#0077BE]">
+            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#1A7A84]">
               <RotateCcw size={12} />
               Reviewing recovered candidate
             </div>
@@ -308,14 +308,14 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               {/* Swipe badges */}
               <motion.div
                 style={{ opacity: passOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#FF6B6B] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#D25B3A] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
                 Skip
               </motion.div>
 
               <motion.div
                 style={{ opacity: saveOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#0077BE] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#1A7A84] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
               >
                 Save
               </motion.div>
@@ -357,7 +357,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   </span>
 
                   {/* Schedule Preferences / Availability */}
-                  <span className="flex items-center gap-2 shrink-0 text-[#2ECC71]">
+                  <span className="flex items-center gap-2 shrink-0 text-[#D25B3A]">
                     <span className="truncate">{currentCandidate.availability || currentCandidate.schedule_preference || 'Immediate'}</span>
                   </span>
 
@@ -372,7 +372,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     {currentCandidate.skills.slice(0, 4).map((s: string, i: number) => (
                       <span
                         key={`${s}-${i}`}
-                        className="px-3 py-2 bg-gray-50 text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-100"
+                        className="px-3 py-2 bg-[#F9EBDA]/30 text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-100"
                       >
                         {s}
                       </span>
@@ -391,7 +391,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       handlePass();
                       resetCard();
                     }}
-                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all hover:scale-105 active:scale-95 duration-200"
+                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-[#F9EBDA]/30 transition-all hover:scale-105 active:scale-95 duration-200"
                   >
                     Skip
                   </button>
@@ -402,12 +402,12 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       handleToggleBookmark(currentCandidate);
                       resetCard();
                     }}
-                    className="h-14 rounded-xl bg-[#0077BE] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#0077BE]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
+                    className="h-14 rounded-xl bg-[#1A7A84] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#1A7A84]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                   >
                     <svg 
                       className="w-5 h-5 transition-all"
                       style={{
-                        fill: isInQueue(currentCandidate.id) ? '#2ECC71' : 'none',
+                        fill: isInQueue(currentCandidate.id) ? '#D25B3A' : 'none',
                         stroke: 'white',
                         strokeWidth: '2.5'
                       }}
@@ -429,7 +429,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       <button
                         type="button"
                         onClick={handleUndo}
-                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#0077BE] hover:text-[#0077BE] hover:bg-gray-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
+                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#1A7A84] hover:text-[#1A7A84] hover:bg-[#F9EBDA]/30 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -442,7 +442,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowPassedBin(true)}
-                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#FF6B6B] hover:text-[#FF6B6B] hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200`}
+                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#D25B3A] hover:text-[#D25B3A] hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200`}
                     >
                       <Trash2 size={14} />
                       {passedCandidates.length} Passed
@@ -468,7 +468,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               <button
                 type="button"
                 onClick={() => onShowPayment({ type: 'employer', items: queue })}
-                className="flex items-center gap-2 px-6 py-4 bg-[#FF6B6B] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#FF6B6B]/40 hover:bg-[#e55a5a] transition-all hover:scale-105 active:scale-95 duration-200"
+                className="flex items-center gap-2 px-6 py-4 bg-[#D25B3A] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#D25B3A]/40 hover:bg-[#e55a5a] transition-all hover:scale-105 active:scale-95 duration-200"
               >
                 <Lock size={16} />
                 Unlock Applicants ({queue.length})
@@ -488,7 +488,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col lg:flex-row items-center gap-6 lg:gap-8 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
               >
                 {/* Blurred video thumbnail */}
-                <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-gray-50 group-hover:scale-[1.02] transition-transform duration-500">
+                <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-[#F9EBDA]/30 group-hover:scale-[1.02] transition-transform duration-500">
                   <ImageWithFallback
                     src={c.thumbnail || c.video_thumbnail_url || "/api/placeholder/800/450"}
                     className={`w-full h-full object-cover transition-all duration-1000 ${isUnlocked(c.id) ? 'blur-0 scale-100' : 'blur-[7px] scale-105 opacity-85'}`}
@@ -508,26 +508,26 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 {/* Candidate info */}
                 <div className="flex-1 space-y-3 text-center lg:text-left min-w-0 w-full lg:w-auto">
                   <div className="space-y-1">
-                    <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#0077BE] transition-colors truncate">
+                    <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#1A7A84] transition-colors truncate">
                       {c.display_title || "Verified Talent"}
                     </h3>
                     <div className="flex flex-wrap justify-center lg:justify-start gap-3 lg:gap-5 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
                       <span className="flex items-center gap-2"><MapPin size={16} /> {c.location}</span>
                       <span className="flex items-center gap-2"><Briefcase size={16} /> {c.years_experience} yrs exp</span>
-                      <span className="text-[#2ECC71]">{c.availability || 'Immediate'}</span>
-                      {c.preferred_pay_range && <span className="text-[#2ECC71]">{c.preferred_pay_range}</span>}
+                      <span className="text-[#D25B3A]">{c.availability || 'Immediate'}</span>
+                      {c.preferred_pay_range && <span className="text-[#D25B3A]">{c.preferred_pay_range}</span>}
                     </div>
                   </div>
 
                   {Array.isArray(c.skills) && c.skills.length > 0 && (
                     <div className="flex flex-wrap justify-center lg:justify-start gap-2">
                       {c.skills.slice(0, 6).map((s: string, i: number) => (
-                        <span key={`${s}-${i}`} className="px-3 lg:px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100">{s}</span>
+                        <span key={`${s}-${i}`} className="px-3 lg:px-4 py-2 bg-[#F9EBDA]/30 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100">{s}</span>
                       ))}
                     </div>
                   )}
 
-                  <p className="text-[10px] font-black text-[#0077BE] uppercase tracking-widest">Tap to see full profile details →</p>
+                  <p className="text-[10px] font-black text-[#1A7A84] uppercase tracking-widest">Tap to see full profile details →</p>
                 </div>
 
                 {/* Bookmark button */}
@@ -535,17 +535,17 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggleBookmark(c)}
-                    className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all"
+                    className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-[#F9EBDA]/30 transition-all"
                     aria-label={isInQueue(c.id) ? "Remove from saved" : "Save candidate"}
                   >
                     <svg
                       className="w-6 h-6 transition-all"
-                      style={{ fill: isInQueue(c.id) ? '#2ECC71' : 'none', stroke: isInQueue(c.id) ? '#2ECC71' : '#9CA3AF', strokeWidth: '2' }}
+                      style={{ fill: isInQueue(c.id) ? '#D25B3A' : 'none', stroke: isInQueue(c.id) ? '#D25B3A' : '#9CA3AF', strokeWidth: '2' }}
                       viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"
                     >
                       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                     </svg>
-                    <span className="text-xs font-bold uppercase tracking-wide transition-all" style={{ color: isInQueue(c.id) ? '#2ECC71' : '#6B7280' }}>
+                    <span className="text-xs font-bold uppercase tracking-wide transition-all" style={{ color: isInQueue(c.id) ? '#D25B3A' : '#6B7280' }}>
                       {isInQueue(c.id) ? 'Saved' : 'Save'}
                     </span>
                   </button>
@@ -585,7 +585,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   <button
                     type="button"
                     onClick={handleRecoverAll}
-                    className="text-[10px] font-black uppercase tracking-widest text-[#0077BE] hover:text-[#006aa8] transition-colors"
+                    className="text-[10px] font-black uppercase tracking-widest text-[#1A7A84] hover:text-[#006aa8] transition-colors"
                   >
                     Recover All
                   </button>
@@ -622,7 +622,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 [...passedCandidates].reverse().map((candidate) => (
                   <div
                     key={candidate.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl"
+                    className="flex items-center gap-3 p-3 bg-[#F9EBDA]/30 rounded-2xl"
                   >
                     {/* Blurred thumbnail */}
                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-200 shrink-0 relative">
@@ -655,7 +655,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRecover(candidate)}
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0077BE] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors"
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1A7A84] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors"
                     >
                       <RotateCcw size={12} />
                       Recover
