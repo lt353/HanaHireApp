@@ -2058,7 +2058,7 @@ export default function App() {
 )}
 
       {/* --- Detail Modals --- */}
-      <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Job Details">
+      <Modal isOpen={!!selectedJob && screen !== 'job-posting'} onClose={() => setSelectedJob(null)} title="Job Details">
         {selectedJob && (
           <div className="space-y-8 pb-4">
             {/* Title + core tags */}
