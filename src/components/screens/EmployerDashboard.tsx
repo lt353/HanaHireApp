@@ -132,7 +132,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           <h2 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none">Employer Hub</h2>
           <p className="text-lg sm:text-xl md:text-2xl text-gray-500 font-medium">
             {isLoggedIn
-              ? `Welcome${userProfile?.contactName ? `, ${userProfile.contactName}` : ''}. Post jobs and manage your talent pipeline.`
+              ? "Post jobs and manage your talent pipeline."
               : "Browse candidates and get started when ready."}
           </p>
         </div>

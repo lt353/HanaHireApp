@@ -865,7 +865,6 @@ export default function App() {
                     role: 'employer',
                     email: existingEmployer.email,
                     businessName: existingEmployer.business_name,
-                    contactName: existingEmployer.contact_name,
                     phone: existingEmployer.phone,
                     location: existingEmployer.location,
                     industry: existingEmployer.industry,
@@ -1043,7 +1042,6 @@ export default function App() {
           role: 'employer',
           email: employer.email,
           businessName: employer.business_name,
-          contactName: employer.contact_name,
           phone: employer.phone,
           location: employer.location,
           industry: employer.industry,
@@ -1169,7 +1167,6 @@ export default function App() {
                         role: 'employer',
                         email: employer.email,
                         businessName: employer.business_name,
-                        contactName: employer.contact_name,
                         phone: employer.phone,
                         location: employer.location,
                         industry: employer.industry,
@@ -1342,7 +1339,7 @@ export default function App() {
                       setSignupFormData({ name: d.name, email: d.email, password: d.password, phone: d.phone, location: d.location });
                     } else {
                       const d = DEMO_PROFILES.employer;
-                      setSignupFormData({ businessName: d.businessName, contactName: d.contactName, email: d.email, password: d.password, phone: d.phone, industry: d.industry, businessLicense: d.businessLicense });
+                      setSignupFormData({ businessName: d.businessName, email: d.email, password: d.password, phone: d.phone, industry: d.industry, businessLicense: d.businessLicense });
                     }
                     toast.success("Demo data filled! Click the button below to create your account.");
                   }}
@@ -1395,7 +1392,6 @@ export default function App() {
                           role: 'employer',
                           email: existingEmployer.email,
                           businessName: existingEmployer.business_name,
-                          contactName: existingEmployer.contact_name,
                           phone: existingEmployer.phone,
                           location: existingEmployer.location,
                           industry: existingEmployer.industry,
@@ -1420,7 +1416,6 @@ export default function App() {
                         .from('employers')
                         .insert([{
                           email: signupFormData.email,
-                          contact_name: signupFormData.contactName || null,
                           phone: signupFormData.phone || null,
                           business_name: signupFormData.businessName,
                           industry: signupFormData.industry || null,
@@ -1583,10 +1578,6 @@ export default function App() {
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Name</label>
                          <input required type="text" value={signupFormData.businessName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessName: e.target.value }))} placeholder="Your business name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
-                       </div>
-                       <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Contact Name</label>
-                         <input required type="text" value={signupFormData.contactName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, contactName: e.target.value }))} placeholder="Your name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Email</label>
