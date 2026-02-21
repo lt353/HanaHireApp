@@ -397,7 +397,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       </div>
       <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
         <button onClick={handleManualEntry} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-gray-50 bg-white hover:border-[#1A7A84]/20 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 group">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 flex items-center justify-center text-gray-400 group-hover:bg-[#1A7A84]/5 group-hover:text-[#1A7A84]">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 flex items-center justify-center text-gray-600 group-hover:bg-[#1A7A84]/5 group-hover:text-[#1A7A84]">
             <Pencil size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
           </div>
           <div className="space-y-1 sm:space-y-2">
@@ -446,8 +446,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
           </div>
           <div className="space-y-6">
              <div className="p-6 bg-[#F9EBDA]/30 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center gap-3">
-                <Building2 size={24} className="text-gray-300" />
-                <span className="text-xs font-black text-gray-300 uppercase tracking-widest italic">Business Identity Blurred</span>
+                <Building2 size={24} className="text-gray-600" />
+                <span className="text-xs font-black text-gray-600 uppercase tracking-widest italic">Business Identity Blurred</span>
              </div>
              <div className="space-y-4">
                 <div className="space-y-1">
@@ -689,7 +689,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             <button onClick={() => {
                               const n = formData.responsibilities.filter((_:any, i:number) => i !== idx);
                               setFormData({...formData, responsibilities: n});
-                            }} className="text-gray-300 hover:text-red-400">
+                            }} className="text-gray-500 hover:text-red-400">
                               <X size={16} />
                             </button>
                           )}
@@ -712,7 +712,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             <button onClick={() => {
                               const n = formData.requirements.filter((_:any, i:number) => i !== idx);
                               setFormData({...formData, requirements: n});
-                            }} className="text-gray-300 hover:text-red-400">
+                            }} className="text-gray-500 hover:text-red-400">
                               <X size={16} />
                             </button>
                           )}
@@ -793,8 +793,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         <aside className="w-full lg:sticky lg:top-8 space-y-6 sm:space-y-8 order-1 lg:order-2">
            <div className="space-y-4 sm:space-y-6">
               <div className="flex bg-gray-100 p-1 rounded-xl sm:rounded-2xl">
-                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'public' ? 'bg-white text-[#1A7A84] shadow-sm' : 'text-gray-400'}`}>Locked</button>
-                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'private' ? 'bg-white text-[#D25B3A] shadow-sm' : 'text-gray-400'}`}>Unlocked</button>
+                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'public' ? 'bg-white text-[#1A7A84] shadow-sm' : 'text-gray-700'}`}>Locked</button>
+                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'private' ? 'bg-white text-[#D25B3A] shadow-sm' : 'text-gray-700'}`}>Unlocked</button>
               </div>
               <AnimatePresence mode="wait">
                  <motion.div key={previewMode} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
@@ -824,7 +824,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       <div className="space-y-4 sm:space-y-6">
         <div className="relative">
           <textarea rows={6} className="w-full p-4 sm:p-6 md:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#F9EBDA]/30 outline-none font-medium text-base sm:text-lg md:text-xl resize-none text-gray-900" placeholder="e.g. Experienced line cook for Waikiki resort. $22/hr, must work weekends." value={prompt} onChange={(e) => setPrompt(e.target.value.slice(0, 500))} />
-          <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 flex items-center gap-4"><Mic size={18} className="sm:w-5 sm:h-5 text-gray-300" /></div>
+          <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 flex items-center gap-4"><Mic size={18} className="sm:w-5 sm:h-5 text-gray-600" /></div>
         </div>
         <div className="space-y-2 sm:space-y-3">
           <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Quick Templates</p>

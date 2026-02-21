@@ -94,7 +94,7 @@ export const Cart: React.FC<CartProps> = ({
                           e.stopPropagation();
                           onRemoveFromQueue(item.id);
                         }}
-                        className="p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 text-gray-400 hover:bg-[#D25B3A]/10 hover:text-[#D25B3A] transition-all shrink-0 hover:scale-105 active:scale-95 duration-200"
+                        className="p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 text-gray-600 hover:bg-[#D25B3A]/10 hover:text-[#D25B3A] transition-all shrink-0 hover:scale-105 active:scale-95 duration-200"
                         aria-label="Remove from queue"
                       >
                         <Trash2 size={16} className="sm:w-5 sm:h-5" />

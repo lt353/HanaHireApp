@@ -121,7 +121,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
             <div className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
                     Full Name <span className="text-[#D25B3A]">*</span>
                   </label>
                   <input
@@ -134,7 +134,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
                     Email <span className="text-[#D25B3A]">*</span>
                   </label>
                   <input
@@ -149,7 +149,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Phone</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
                   <input
                     type="tel"
                     value={phone}
@@ -160,7 +160,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Location</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Location</label>
                   <select
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
@@ -183,7 +183,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
             <div className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 space-y-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
                   Profile Title
                 </label>
                 <input
@@ -198,7 +198,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Bio</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Bio</label>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
@@ -209,7 +209,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Skills</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Skills</label>
                 <div className="flex flex-wrap gap-2">
                   {CANDIDATE_CATEGORIES.skills.map(skill => (
                     <button
@@ -230,7 +230,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Experience</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Experience</label>
                   <select
                     value={experience}
                     onChange={(e) => setExperience(e.target.value)}
@@ -242,7 +242,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Education</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Education</label>
                   <select
                     value={education}
                     onChange={(e) => setEducation(e.target.value)}
@@ -265,7 +265,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
             <div className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 space-y-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Interested Industries</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Interested Industries</label>
                 <div className="flex flex-wrap gap-2">
                   {JOB_CATEGORIES.industries.map(industry => (
                     <button
@@ -285,7 +285,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Work Styles</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Work Styles</label>
                 <div className="flex flex-wrap gap-2">
                   {CANDIDATE_CATEGORIES.workStyles.map(style => (
                     <button
@@ -305,7 +305,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Job Types Seeking</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Job Types Seeking</label>
                 <div className="flex flex-wrap gap-2">
                   {JOB_CATEGORIES.jobTypes.map(type => (
                     <button
@@ -326,7 +326,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Availability</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Availability</label>
                   <select
                     value={availability}
                     onChange={(e) => setAvailability(e.target.value)}
@@ -338,7 +338,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Target Pay</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Target Pay</label>
                   <input
                     type="text"
                     value={targetPay}

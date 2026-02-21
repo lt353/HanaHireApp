@@ -565,7 +565,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             <div className="overflow-y-auto flex-1 px-6 py-4 space-y-3 pb-20">
               {passedJobs.length === 0 ? (
                 <div className="py-12 text-center">
-                  <Trash2 size={32} className="mx-auto text-gray-200 mb-3" />
+                  <Trash2 size={32} className="mx-auto text-gray-400 mb-3" />
                   <p className="text-gray-400 font-black text-sm uppercase tracking-widest">
                     Bin is empty
                   </p>

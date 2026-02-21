@@ -157,7 +157,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
             <div className="p-4 bg-[#F9EBDA]/30 rounded-xl border border-gray-100 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">System Generated</span>
-                <div className="flex items-center gap-1 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+                <div className="flex items-center gap-1 text-[9px] font-black text-gray-600 uppercase tracking-widest">
                   <Lock size={10} /> Employer view
                 </div>
               </div>
@@ -186,8 +186,8 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                   className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base"
                 />
                 <div className="flex justify-between items-center px-1">
-                  <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest">No names or contact info allowed</p>
-                  <p className={`text-[9px] font-black uppercase tracking-widest ${customTitle.length > 45 ? 'text-[#D25B3A]' : 'text-gray-300'}`}>{customTitle.length}/50</p>
+                  <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">No names or contact info allowed</p>
+                  <p className={`text-[9px] font-black uppercase tracking-widest ${customTitle.length > 45 ? 'text-[#D25B3A]' : 'text-gray-600'}`}>{customTitle.length}/50</p>
                 </div>
               </div>
             )}
@@ -358,7 +358,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
             <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Video Intro (optional)</h2>
             <button
               onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-300 hover:text-[#1A7A84] hover:border-[#1A7A84]/30 transition-all"
+              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#1A7A84] hover:border-[#1A7A84]/30 transition-all"
             >
               <Camera size={36} />
               <span className="font-black text-xs uppercase tracking-widest">Record Your 30-Second Intro</span>

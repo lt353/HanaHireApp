@@ -167,7 +167,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
               <div className="flex flex-col md:flex-row gap-4 items-center">
                 {/* Descriptor */}
                 <div className="w-full md:flex-1 space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Descriptor</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-600 ml-2">Descriptor</label>
                   <div className="relative">
                     <select 
                       value={descriptor}
@@ -182,7 +182,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
 
                 {/* Primary Skill */}
                 <div className="w-full md:flex-[1.5] space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 flex items-center gap-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-600 ml-2 flex items-center gap-1">
                     Primary Skill <span className="text-[#D25B3A]">*</span>
                   </label>
                   <div className="relative">
@@ -202,16 +202,16 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                   </div>
                 </div>
 
-                <div className="hidden md:flex text-gray-300">
+                <div className="hidden md:flex text-gray-600">
                   <Plus size={20} />
                 </div>
-                <div className="md:hidden text-gray-300 py-2">
+                <div className="md:hidden text-gray-600 py-2">
                   <Plus size={24} />
                 </div>
 
                 {/* Secondary Skill */}
                 <div className="w-full md:flex-1 space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Secondary Skill</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-600 ml-2">Secondary Skill</label>
                   <div className="relative">
                     <select 
                       value={secondarySkill}
@@ -235,7 +235,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
               {/* Live Preview of Title */}
               <div className="pt-6 border-t border-gray-50 space-y-4">
                 <div className="flex justify-between items-end">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Live Preview</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-600 ml-2">Live Preview</h3>
                   <span className={`text-[10px] font-black uppercase tracking-widest ${isTooLong ? 'text-[#D25B3A]' : 'text-gray-300'}`}>
                     {charCount}/50 characters
                   </span>
@@ -275,7 +275,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                   </div>
                   <span className="font-black text-sm uppercase tracking-widest">Guidelines</span>
                 </div>
-                {isGuidelinesOpen ? <ChevronUp size={20} className="text-gray-300" /> : <ChevronDown size={20} className="text-gray-300" />}
+                {isGuidelinesOpen ? <ChevronUp size={20} className="text-gray-600" /> : <ChevronDown size={20} className="text-gray-600" />}
               </button>
               <AnimatePresence>
                 {isGuidelinesOpen && (

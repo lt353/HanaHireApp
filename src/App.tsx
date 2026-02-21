@@ -1888,35 +1888,35 @@ export default function App() {
             setShowPostJobModal(false);
             toast.success("Job Live!");
          }} className="space-y-8">
-            <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Job Title</label><input required name="title" type="text" placeholder="e.g. Server" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-black text-xl" /></div>
+            <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Job Title</label><input required name="title" type="text" placeholder="e.g. Server" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-black text-xl" /></div>
             <div className="grid grid-cols-2 gap-8">
-               <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Type</label><select name="type" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-bold">
+               <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Type</label><select name="type" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-bold">
                   {JOB_CATEGORIES.industries.map(ind => <option key={ind}>{ind}</option>)}
                </select></div>
-               <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Pay Range</label><select name="pay" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-bold">
+               <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Pay Range</label><select name="pay" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-bold">
                   {JOB_CATEGORIES.payRanges.map(pay => <option key={pay}>{pay}</option>)}
                </select></div>
             </div>
             
             <div className="space-y-4">
-               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Job Intro Format</label>
+               <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Job Intro Format</label>
                <div className="flex gap-4">
-                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#1A7A84] bg-[#1A7A84]/5 text-[#1A7A84]' : 'border-gray-50 text-gray-400'} hover:scale-105 active:scale-95 duration-200`}>
+                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#1A7A84] bg-[#1A7A84]/5 text-[#1A7A84]' : 'border-gray-200 text-gray-700'} hover:scale-105 active:scale-95 duration-200`}>
                      <Video size={24} />
                      <span className="font-black text-[10px]">VIDEO INTRO</span>
                   </button>
-                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#1A7A84] bg-[#1A7A84]/5 text-[#1A7A84]' : 'border-gray-50 text-gray-400'} hover:scale-105 active:scale-95 duration-200`}>
+                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#1A7A84] bg-[#1A7A84]/5 text-[#1A7A84]' : 'border-gray-200 text-gray-700'} hover:scale-105 active:scale-95 duration-200`}>
                      <Mic size={24} />
                      <span className="font-black text-[10px]">VOICE ONLY</span>
                   </button>
                </div>
-               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-300 hover:text-[#1A7A84] hover:border-[#1A7A84] hover:scale-105 active:scale-95 transition-all duration-200">
+               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-600 hover:text-[#1A7A84] hover:border-[#1A7A84] hover:scale-105 active:scale-95 transition-all duration-200">
                   {mediaType === 'video' ? <Camera size={32} /> : <Mic size={32} />}
                   <span className="font-black text-[10px] uppercase">Record Job Intro</span>
                </button>
             </div>
 
-            <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Overview</label><textarea required name="description" rows={4} className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-medium text-lg" /></div>
+            <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Overview</label><textarea required name="description" rows={4} className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-medium text-lg" /></div>
             <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#1A7A84]/20 hover:scale-105 active:scale-95 transition-all duration-200">Go Live ($0 Post Fee)</Button>
          </form>
       </Modal>
@@ -1959,7 +1959,7 @@ export default function App() {
       <Modal isOpen={showFilterModal} onClose={() => setShowFilterModal(false)} title="Refine Results">
          <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
             <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
                 {userRole === 'seeker' ? 'Job Filters' : 'Talent Filters'}
               </span>
               <button
@@ -1976,7 +1976,7 @@ export default function App() {
                 <button
                   key={t}
                   onClick={() => toggleFilter('industries', t)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {t}
                 </button>
@@ -1989,7 +1989,7 @@ export default function App() {
                 <button
                   key={l}
                   onClick={() => toggleFilter('locations', l)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {l}
                 </button>
@@ -2003,7 +2003,7 @@ export default function App() {
                   <button
                     key={p}
                     onClick={() => toggleFilter('payRanges', p)}
-                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                   >
                     {p}
                   </button>
@@ -2016,7 +2016,7 @@ export default function App() {
                     <button
                       key={e}
                       onClick={() => toggleFilter('experience', e)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {e}
                     </button>
@@ -2028,7 +2028,7 @@ export default function App() {
                     <button
                       key={s}
                       onClick={() => toggleFilter('skills', s)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {s}
                     </button>
@@ -2040,7 +2040,7 @@ export default function App() {
                     <button
                       key={edu}
                       onClick={() => toggleFilter('education', edu)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {edu}
                     </button>
@@ -2052,7 +2052,7 @@ export default function App() {
                     <button
                       key={p}
                       onClick={() => toggleFilter('payRanges', p)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {p}
                     </button>
@@ -2076,11 +2076,11 @@ export default function App() {
        <Eye size={24} />
        <span className="text-xs font-black uppercase tracking-widest">EXPLORE</span>
      </button>
-     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#1A7A84]' : 'text-gray-300'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#1A7A84]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <Briefcase size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
      </button>
-     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#1A7A84]' : 'text-gray-300'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#1A7A84]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <User size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
      </button>
@@ -2123,7 +2123,7 @@ export default function App() {
             {/* Business identity (locked until applied) */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-5 bg-[#F9EBDA]/30 rounded-2xl space-y-1">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Business</span>
+                <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Business</span>
                 <p className="font-black text-base tracking-tight">
                   {(selectedJob.is_anonymous && !unlockedJobIds.includes(selectedJob.id))
                     ? `[${selectedJob.company_industry || 'Local'} Business]`
@@ -2132,7 +2132,7 @@ export default function App() {
               </div>
               {selectedJob.applicant_count !== undefined && (
                 <div className="p-5 bg-[#F9EBDA]/30 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Applicants</span>
+                  <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Applicants</span>
                   <p className="font-black text-base tracking-tight">{selectedJob.applicant_count}</p>
                 </div>
               )}
@@ -2297,21 +2297,21 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-4 sm:gap-y-6 border-y border-gray-100 py-6 sm:py-8">
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center gap-2">
-                    <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Education Background</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest">Education Background</span>
                     <span className="text-[10px] sm:text-xs font-black text-gray-900 uppercase text-right">{selectedCandidate.education}</span>
                   </div>
                   <div className="flex justify-between items-center gap-2">
-                    <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Employment Status</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest">Employment Status</span>
                     <span className="text-[10px] sm:text-xs font-black text-gray-900 uppercase text-right">{selectedCandidate.current_employment_status || 'Open'}</span>
                   </div>
                 </div>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center gap-2">
-                    <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Availability</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest">Availability</span>
                     <span className="text-[10px] sm:text-xs font-black text-[#D25B3A] uppercase text-right">{selectedCandidate.availability}</span>
                   </div>
                   <div className="flex justify-between items-center gap-2">
-                    <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Experience</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest">Experience</span>
                     <span className="text-[10px] sm:text-xs font-black text-gray-900 uppercase text-right">{selectedCandidate.years_experience} Years</span>
                   </div>
                 </div>
@@ -2332,7 +2332,7 @@ export default function App() {
               {/* Work Style */}
               {selectedCandidate.work_style && (
                 <div className="flex items-center justify-between gap-2 border-t border-gray-50 pt-4 sm:pt-5">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Work Style</span>
+                  <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Work Style</span>
                   <span className="text-xs font-black text-gray-900 uppercase">{selectedCandidate.work_style}</span>
                 </div>
               )}
@@ -2364,7 +2364,7 @@ export default function App() {
               {/* Financial & Contact Info - Privacy Layer */}
               <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                  <div className="p-6 sm:p-8 bg-[#F9EBDA]/30 rounded-[1.5rem] sm:rounded-[2rem] space-y-2">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Expectation</span>
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Expectation</span>
                     <p className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">{selectedCandidate.preferred_pay_range}</p>
                  </div>
                  

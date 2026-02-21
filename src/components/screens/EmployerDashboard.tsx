@@ -242,7 +242,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
           {unlockedCandidates.length === 0 ? (
             <div className="p-12 sm:p-16 md:p-20 bg-[#F9EBDA]/30 rounded-[3rem] sm:rounded-[3.5rem] md:rounded-[4rem] border-4 border-dashed border-gray-100 text-center space-y-4 sm:space-y-6">
-              <Users size={40} className="sm:w-11 sm:h-11 md:w-12 md:h-12 mx-auto text-gray-200" />
+              <Users size={40} className="sm:w-11 sm:h-11 md:w-12 md:h-12 mx-auto text-gray-600" />
               <p className="text-gray-400 font-black uppercase tracking-widest text-xs sm:text-sm">No unlocked profiles yet</p>
               <Button variant="outline" className="h-12 sm:h-14 px-6 sm:px-8 mx-auto hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("candidates")}>
                 Browse Candidates
@@ -501,13 +501,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             {applicant.skills.slice(0, 4).map((s: string, idx: number) => (
               <span 
                 key={idx} 
-                className="px-3 py-1.5 bg-[#F9EBDA]/30 text-gray-400 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
+                className="px-3 py-1.5 bg-[#F9EBDA]/30 text-gray-700 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
               >
                 {s}
               </span>
             ))}
             {applicant.skills.length > 4 && (
-              <span className="px-3 py-1.5 text-gray-300 text-[10px] font-bold tracking-wide">
+              <span className="px-3 py-1.5 text-gray-600 text-[10px] font-bold tracking-wide">
                 +{applicant.skills.length - 4}
               </span>
             )}

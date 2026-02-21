@@ -208,7 +208,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
               {businessLicense.length > 0 && <CheckCircle size={18} className="text-[#D25B3A]" />}
               <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
                 Business License Verification
-                <span className="ml-2 normal-case font-medium tracking-normal text-gray-300">(optional)</span>
+                <span className="ml-2 normal-case font-medium tracking-normal text-gray-600">(optional)</span>
               </h2>
             </div>
             <input
@@ -265,7 +265,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
             <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Logo (optional)</h2>
             <button
               onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-300 hover:text-[#D25B3A] hover:border-[#D25B3A]/30 transition-all"
+              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#D25B3A] hover:border-[#D25B3A]/30 transition-all"
             >
               <Upload size={36} />
               <span className="font-black text-xs uppercase tracking-widest">Upload Your Logo</span>

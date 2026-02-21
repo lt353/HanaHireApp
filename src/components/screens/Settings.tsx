@@ -50,7 +50,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
       <aside className="lg:col-span-1 space-y-4">
         {["Account info", "Payment method", "Transaction history", "Support", "System"].map(tab => (
           <button key={tab} className="w-full text-left p-6 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] border border-gray-50 bg-white hover:bg-[#F9EBDA]/30 transition-all flex justify-between items-center group">
-            {tab} <ChevronRight size={16} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+            {tab} <ChevronRight size={16} className="text-gray-600 group-hover:translate-x-1 transition-transform" />
           </button>
         ))}
       </aside>
@@ -60,15 +60,15 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
           <h2 className="text-4xl font-black tracking-tighter">Account Settings</h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name</label>
+              <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Full Name</label>
               <input type="text" placeholder="Identity Name" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</label>
+              <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Email Address</label>
               <input type="email" placeholder="contact@domain.com" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone Number</label>
+              <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Phone Number</label>
               <input type="tel" placeholder="+1 (808) 000-0000" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="flex items-end">
@@ -99,7 +99,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
         <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
           <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><CreditCard className="text-[#1A7A84]" /> Payment Setup</h2>
           <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-[#F9EBDA]/30 flex items-center justify-center text-gray-200"><Plus size={32} /></div>
+            <div className="w-16 h-16 rounded-full bg-[#F9EBDA]/30 flex items-center justify-center text-gray-600"><Plus size={32} /></div>
             <p className="text-gray-400 font-bold">Secure Stripe Connection</p>
             <Button variant="outline" className="h-14 px-10 rounded-2xl bg-white" onClick={() => toast.info("Redirecting to Stripe...")}>Add Card</Button>
           </div>

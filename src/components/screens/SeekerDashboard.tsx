@@ -209,7 +209,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                         <span>{job.company_name || 'Company Name Hidden'}</span>
                       </div>
                     </div>
-                    <ExternalLink size={24} className="text-gray-300 group-hover:text-[#1A7A84] transition-colors shrink-0" />
+                    <ExternalLink size={24} className="text-gray-600 group-hover:text-[#1A7A84] transition-colors shrink-0" />
                   </div>
 
                   {/* Job Details Grid */}

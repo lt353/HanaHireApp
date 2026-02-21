@@ -55,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
           <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tighter">{title}</h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors hover:scale-110 active:scale-95"
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-600 transition-colors hover:scale-110 active:scale-95"
             type="button"
           >
             <X size={20} className="sm:w-6 sm:h-6" />

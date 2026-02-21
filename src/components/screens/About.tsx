@@ -53,7 +53,7 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
           {TEAM_MEMBERS.map((m, i) => (
             <div key={i} className="space-y-4 text-center group">
               <div className="aspect-square rounded-[2rem] bg-gray-100 border border-gray-100 flex items-center justify-center grayscale group-hover:grayscale-0 transition-all">
-                <User size={64} className="text-gray-300" />
+                <User size={64} className="text-gray-600" />
               </div>
               <div>
                 <p className="font-black text-xl tracking-tight leading-none">{m.name}</p>
@@ -73,7 +73,7 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
           </div>
         </div>
         <div className="space-y-4">
-          <p className="text-xl font-black uppercase tracking-widest text-gray-300">Questions?</p>
+          <p className="text-xl font-black uppercase tracking-widest text-gray-600">Questions?</p>
           <div className="flex flex-wrap justify-center gap-8 text-[11px] font-black uppercase tracking-widest text-gray-400">
             <button className="hover:text-[#1A7A84]" onClick={() => onNavigate("settings")}>Contact Us</button>
             <button className="hover:text-[#1A7A84]" onClick={() => onNavigate("about")}>How It Works</button>
