@@ -726,9 +726,17 @@ export default function App() {
         return (
           <JobPostingFlow
             userProfile={userProfile}
-            onBack={() => handleNavigate("employer")}
-            onComplete={(newJob) => {
-              setJobs([newJob, ...jobs]);
+            existingJob={selectedJob}
+            onBack={() => { setSelectedJob(null); handleNavigate("employer"); }}
+            onComplete={(updatedJob) => {
+              if (selectedJob?.id) {
+                // Update existing job in the list
+                setJobs(jobs.map(j => j.id === updatedJob.id ? updatedJob : j));
+              } else {
+                // Add new job to the list
+                setJobs([updatedJob, ...jobs]);
+              }
+              setSelectedJob(null);
               handleNavigate("employer");
             }}
           />
@@ -2143,13 +2151,9 @@ export default function App() {
             {userRole === 'employer' ? (
               /* Employer actions */
               <div className="space-y-4">
-                <div className="p-6 bg-gradient-to-r from-[#2ECC71]/5 to-[#0077BE]/5 rounded-2xl border border-gray-100">
-                  <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-2">Job Management</p>
-                  <p className="text-base text-gray-600 font-medium">This is your posted job. Edit functionality coming soon. For now, view applicants from your dashboard.</p>
-                </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
-                    Back to Dashboard
+                  <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { handleNavigate('job-posting'); }}>
+                    Edit Job
                   </Button>
                   <Button className="h-16 rounded-2xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
                     View Applicants

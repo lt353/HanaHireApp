@@ -32,6 +32,7 @@ import { supabase } from '../../utils/supabase/client';
 
 interface JobPostingFlowProps {
   userProfile?: any;
+  existingJob?: any;
   onBack: () => void;
   onComplete: (job: any) => void;
 }
@@ -103,7 +104,7 @@ const INDUSTRIES = [
   "HVAC", "Electrical", "Plumbing", "Solar", "Logistics", "Agriculture", "Other"
 ];
 
-export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFlowProps) {
+export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }: JobPostingFlowProps) {
   const [step, setStep] = useState<FlowStep>('selection');
   const [prompt, setPrompt] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,9 +135,38 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
     image_url: ""
   });
 
-  // Auto-populate business info from userProfile
+  // Auto-populate from existing job OR business info from userProfile
   useEffect(() => {
-    if (userProfile && userProfile.role === 'employer') {
+    if (existingJob) {
+      // Editing mode - pre-fill with existing job data
+      console.log("Pre-filling form with existing job:", existingJob);
+      const payMatch = existingJob.pay_range?.match(/\$(\d+)-(\d+)\/(hr|yr)/);
+      setFormData({
+        title: existingJob.title || "",
+        industry: existingJob.company_industry || "Food & Beverage",
+        custom_industry: "",
+        location: existingJob.location || "Honolulu, HI",
+        pay_min: payMatch ? payMatch[1] : "20",
+        pay_max: payMatch ? payMatch[2] : "25",
+        pay_type: payMatch?.[3] === 'yr' ? 'Yearly' : 'Hourly',
+        job_type: existingJob.job_type || "Full-time",
+        description: existingJob.description || "",
+        responsibilities: Array.isArray(existingJob.responsibilities) ? existingJob.responsibilities : ["", "", ""],
+        requirements: Array.isArray(existingJob.requirements) ? existingJob.requirements : ["", ""],
+        benefits: Array.isArray(existingJob.benefits) ? existingJob.benefits : ["", ""],
+        start_date: existingJob.start_date || "",
+        company_size: existingJob.company_size || "Small (1-10)",
+        is_anonymous: existingJob.is_anonymous !== false,
+        company_name: existingJob.company_name || "",
+        contact_email: existingJob.contact_email || "",
+        contact_phone: existingJob.contact_phone || "",
+        company_description: existingJob.company_description || "",
+        video_url: existingJob.video_url || "",
+        image_url: existingJob.company_logo_url || ""
+      });
+      setStep('review'); // Skip to review screen when editing
+    } else if (userProfile && userProfile.role === 'employer') {
+      // New job - auto-populate business info from userProfile
       console.log("Auto-populating job form with userProfile:", userProfile);
       setFormData((prev: any) => ({
         ...prev,
@@ -152,7 +182,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
     } else {
       console.log("Skipping auto-populate - userProfile:", userProfile);
     }
-  }, [userProfile]);
+  }, [userProfile, existingJob]);
 
   const parsePrompt = (input: string) => {
     const text = input.toLowerCase();
@@ -285,21 +315,40 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
       if (formData.start_date) jobData.start_date = formData.start_date;
       if (userProfile?.employerId) jobData.employer_id = userProfile.employerId;
 
-      // Insert job into Supabase
-      const { data, error: insertError } = await supabase
-        .from('jobs')
-        .insert([jobData])
-        .select()
-        .single();
+      let data;
+      if (existingJob?.id) {
+        // Update existing job
+        const { data: updatedData, error: updateError } = await supabase
+          .from('jobs')
+          .update(jobData)
+          .eq('id', existingJob.id)
+          .select()
+          .single();
 
-      if (insertError) {
-        console.error("Supabase insert error:", insertError);
-        throw new Error(insertError.message || "Failed to save job to database");
+        if (updateError) {
+          console.error("Supabase update error:", updateError);
+          throw new Error(updateError.message || "Failed to update job in database");
+        }
+        data = updatedData;
+        toast.success("Listing updated successfully!");
+      } else {
+        // Insert new job
+        const { data: insertedData, error: insertError } = await supabase
+          .from('jobs')
+          .insert([jobData])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Supabase insert error:", insertError);
+          throw new Error(insertError.message || "Failed to save job to database");
+        }
+        data = insertedData;
+        toast.success("Listing published successfully!");
       }
 
       setPostedJob(data);
       setStep('confirmation');
-      toast.success("Listing published successfully!");
     } catch (err: any) {
       console.error("Error posting job:", err);
       toast.error(err.message || "Failed to post job.");
@@ -311,8 +360,8 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
   const renderSelection = () => (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8 sm:space-y-12">
       <div className="text-center space-y-3 sm:space-y-4">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">Post a Job</h1>
-        <p className="text-base sm:text-lg md:text-xl text-gray-500 font-medium tracking-tight">Hire with speed and privacy</p>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">{existingJob ? 'Edit Job' : 'Post a Job'}</h1>
+        <p className="text-base sm:text-lg md:text-xl text-gray-500 font-medium tracking-tight">{existingJob ? 'Update your job listing' : 'Hire with speed and privacy'}</p>
       </div>
       <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
         <button onClick={handleManualEntry} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-gray-50 bg-white hover:border-[#0077BE]/20 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 group hover:scale-105 active:scale-95 duration-200">
@@ -704,7 +753,7 @@ export function JobPostingFlow({ userProfile, onBack, onComplete }: JobPostingFl
           <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <button onClick={() => setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left hover:scale-105 active:scale-95 transition-all duration-200">← Back</button>
             <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#0077BE]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto hover:scale-105 active:scale-95 transition-all duration-200" onClick={handlePostJob}>
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <>Publish Listing <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <>{existingJob ? 'Update Listing' : 'Publish Listing'} <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
             </Button>
           </div>
         </div>
