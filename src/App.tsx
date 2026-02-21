@@ -865,6 +865,7 @@ export default function App() {
                     role: 'employer',
                     email: existingEmployer.email,
                     businessName: existingEmployer.business_name,
+                    contactName: existingEmployer.contact_name,
                     phone: existingEmployer.phone,
                     location: existingEmployer.location,
                     industry: existingEmployer.industry,
@@ -1042,6 +1043,7 @@ export default function App() {
           role: 'employer',
           email: employer.email,
           businessName: employer.business_name,
+          contactName: employer.contact_name,
           phone: employer.phone,
           location: employer.location,
           industry: employer.industry,
@@ -1167,6 +1169,7 @@ export default function App() {
                         role: 'employer',
                         email: employer.email,
                         businessName: employer.business_name,
+                        contactName: employer.contact_name,
                         phone: employer.phone,
                         location: employer.location,
                         industry: employer.industry,
@@ -1392,6 +1395,7 @@ export default function App() {
                           role: 'employer',
                           email: existingEmployer.email,
                           businessName: existingEmployer.business_name,
+                          contactName: existingEmployer.contact_name,
                           phone: existingEmployer.phone,
                           location: existingEmployer.location,
                           industry: existingEmployer.industry,
@@ -1416,6 +1420,7 @@ export default function App() {
                         .from('employers')
                         .insert([{
                           email: signupFormData.email,
+                          contact_name: signupFormData.contactName || null,
                           phone: signupFormData.phone || null,
                           business_name: signupFormData.businessName,
                           industry: signupFormData.industry || null,
@@ -2390,7 +2395,7 @@ export default function App() {
 
             {!unlockedCandidateIds.includes(selectedCandidate.id) && (
               <Button className="w-full h-16 sm:h-20 md:h-24 text-base sm:text-xl md:text-2xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-[#FF6B6B]/20 bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
-                Unlock Full Video & Contact ${INTERACTION_FEE.toFixed(2)}
+                Unlock Full Video & Contact
               </Button>
             )}
           </div>
