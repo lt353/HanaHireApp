@@ -49,18 +49,23 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const isVerified = isLoggedIn && userProfile?.businessLicense;
   const applicantsRef = useRef<HTMLDivElement>(null);
 
+  // Filter jobs to show only the employer's posted jobs
+  const myJobs = useMemo(() => {
+    if (!isLoggedIn || !userProfile?.employerId) return jobs.slice(0, 2);
+    return jobs.filter(j => j.employer_id === userProfile.employerId);
+  }, [isLoggedIn, userProfile, jobs]);
+
   // Build mock applicants from actual candidate data, assigned to the employer's posted jobs
   const mockApplicants = useMemo(() => {
-    if (!isLoggedIn || candidates.length === 0 || jobs.length === 0) return [];
-    const postedJobs = jobs.slice(0, 2);
+    if (!isLoggedIn || candidates.length === 0 || myJobs.length === 0) return [];
     const daysAgoLabels = ['2 hours ago', '5 hours ago', 'Yesterday', '2 days ago', '3 days ago', '4 days ago', '5 days ago', '1 week ago', '1 week ago'];
     return candidates.slice(2, 20).map((c, i) => ({
       ...c,
-      appliedToJob: postedJobs[i % postedJobs.length],
+      appliedToJob: myJobs[i % myJobs.length],
       status: APPLICANT_STATUSES[i % APPLICANT_STATUSES.length],
       appliedAgo: daysAgoLabels[i % daysAgoLabels.length],
     }));
-  }, [isLoggedIn, candidates, jobs]);
+  }, [isLoggedIn, candidates, myJobs]);
 
   const [filterByJobId, setFilterByJobId] = useState<number | null>(null);
 
@@ -161,7 +166,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
             <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Jobs Posted</span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#0077BE] transition-colors">{Math.min(jobs.length, 2)}</p>
+            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#0077BE] transition-colors">{myJobs.length}</p>
             <Briefcase className="absolute -right-4 -bottom-4 text-white/5" size={80} />
           </div>
           <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
@@ -200,7 +205,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             </Button>
           </div>
           <div className="space-y-4 sm:space-y-6">
-            {jobs.slice(0, 2).map(j => {
+            {myJobs.map(j => {
               const jobApplicantCount = mockApplicants.filter(a => a.appliedToJob?.id === j.id).length;
               return (
               <div key={j.id} className="p-6 sm:p-8 md:p-10 bg-white border border-gray-100 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] shadow-sm space-y-6 sm:space-y-8">
