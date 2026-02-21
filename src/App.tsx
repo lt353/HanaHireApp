@@ -759,6 +759,7 @@ export default function App() {
                     name: existingCandidate.name,
                     phone: existingCandidate.phone,
                     location: existingCandidate.location,
+                    videoThumbnailUrl: existingCandidate.video_thumbnail_url,
                     bio: existingCandidate.bio,
                     skills: existingCandidate.skills || [],
                     experience: existingCandidate.years_experience,
@@ -1116,6 +1117,7 @@ export default function App() {
                       availability: candidate.availability,
                       targetPay: candidate.preferred_pay_range || candidate.target_pay,
                       industries: candidate.industries_interested || [],
+                      videoThumbnailUrl: candidate.video_thumbnail_url,
                       candidateId: candidate.id,
                       id: candidate.id
                     };
@@ -1453,6 +1455,7 @@ export default function App() {
                           name: existingCandidate.name,
                           phone: existingCandidate.phone,
                           location: existingCandidate.location,
+                          videoThumbnailUrl: existingCandidate.video_thumbnail_url,
                           bio: existingCandidate.bio,
                           skills: existingCandidate.skills || [],
                           experience: existingCandidate.years_experience,
@@ -2137,7 +2140,24 @@ export default function App() {
             )}
 
             {/* CTA */}
-            {!unlockedJobIds.includes(selectedJob.id) && (
+            {userRole === 'employer' ? (
+              /* Employer actions */
+              <div className="space-y-4">
+                <div className="p-6 bg-gradient-to-r from-[#2ECC71]/5 to-[#0077BE]/5 rounded-2xl border border-gray-100">
+                  <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-2">Job Management</p>
+                  <p className="text-base text-gray-600 font-medium">This is your posted job. Edit functionality coming soon. For now, view applicants from your dashboard.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
+                    Back to Dashboard
+                  </Button>
+                  <Button className="h-16 rounded-2xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
+                    View Applicants
+                  </Button>
+                </div>
+              </div>
+            ) : !unlockedJobIds.includes(selectedJob.id) && (
+              /* Seeker actions */
               <Button className="w-full h-20 text-xl rounded-3xl shadow-2xl shadow-[#0077BE]/20 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
                 Apply & Reveal Business
               </Button>
