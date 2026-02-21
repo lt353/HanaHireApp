@@ -1004,46 +1004,77 @@ export default function App() {
                   const email = formData.get('email') as string;
 
                   // Detect user role by checking which table has this email
-                  let userId = null;
                   let detectedRole: 'seeker' | 'employer' = 'seeker';
+                  let fullProfile: any = null;
 
                   // First check candidates table
                   const { data: candidate } = await supabase
                     .from('candidates')
-                    .select('id, name, email')
+                    .select('*')
                     .eq('email', email)
                     .single();
 
                   if (candidate) {
-                    userId = candidate.id;
                     detectedRole = 'seeker';
-                    // Load all data in parallel for faster login
                     await Promise.all([
                       fetchApplications(candidate.id),
                       fetchUnlocks(email),
                       fetchSavedItems(email, 'seeker')
                     ]);
+                    fullProfile = {
+                      role: 'seeker',
+                      email: candidate.email,
+                      name: candidate.name,
+                      phone: candidate.phone,
+                      location: candidate.location,
+                      bio: candidate.bio,
+                      skills: candidate.skills || [],
+                      experience: candidate.years_experience,
+                      education: candidate.education,
+                      availability: candidate.availability,
+                      targetPay: candidate.preferred_pay_range || candidate.target_pay,
+                      industries: candidate.industries_interested || [],
+                      candidateId: candidate.id,
+                      id: candidate.id
+                    };
                   } else {
                     // If not a candidate, check employers table
                     const { data: employer } = await supabase
                       .from('employers')
-                      .select('id, email, business_name')
+                      .select('*')
                       .eq('email', email)
                       .single();
 
                     if (employer) {
-                      userId = employer.id;
                       detectedRole = 'employer';
-                      // Load data in parallel for faster login
                       await Promise.all([
                         fetchUnlocks(email),
                         fetchSavedItems(email, 'employer')
                       ]);
+                      fullProfile = {
+                        role: 'employer',
+                        email: employer.email,
+                        businessName: employer.business_name,
+                        phone: employer.phone,
+                        location: employer.location,
+                        industry: employer.industry,
+                        companySize: employer.company_size,
+                        bio: employer.company_description,
+                        companyLogoUrl: employer.company_logo_url,
+                        businessVerified: employer.business_verified,
+                        employerId: employer.id,
+                        id: employer.id
+                      };
                     }
                   }
 
+                  if (!fullProfile) {
+                    toast.error("No account found with that email. Please sign up first.");
+                    return;
+                  }
+
                   setUserRole(detectedRole);
-                  setUserProfile({ email, role: detectedRole, id: userId });
+                  setUserProfile(fullProfile);
                   setIsLoggedIn(true);
                   setShowAuthModal(false);
                   if (detectedRole === 'employer') handleNavigate("employer");
@@ -1198,7 +1229,7 @@ export default function App() {
                       const d = DEMO_PROFILES.employer;
                       setSignupFormData({ businessName: d.businessName, contactName: d.contactName, email: d.email, password: d.password, phone: d.phone, industry: d.industry, businessLicense: d.businessLicense });
                     }
-                    toast.info("Demo data filled! ⚠️ Change the email to your own before submitting.");
+                    toast.success("Demo data filled! Click the button below to create your account.");
                   }}
                   className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group`}
                 >
