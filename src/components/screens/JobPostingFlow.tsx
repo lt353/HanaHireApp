@@ -571,11 +571,11 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-12 flex flex-col lg:grid lg:grid-cols-[1fr_450px] gap-8 lg:gap-16 items-start">
         <div className="w-full space-y-8 sm:space-y-12 order-2 lg:order-1">
           <div className="flex items-center gap-3 sm:gap-4">
-            <button onClick={() => setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
+            <button onClick={() => existingJob ? onBack() : setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
               <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
             </button>
             <div className="space-y-0.5 sm:space-y-1">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">Review Job Listing</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">{existingJob ? 'Edit Job Listing' : 'Review Job Listing'}</h2>
               <p className="text-xs sm:text-sm md:text-base text-gray-500 font-medium">Mandatory anonymity — identity is private until unlocked.</p>
             </div>
           </div>
@@ -764,9 +764,9 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
           </div>
 
           <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <button onClick={() => setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left">← Back</button>
+            <button onClick={() => existingJob ? onBack() : setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left">← Back</button>
             <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#1A7A84]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto" onClick={handlePostJob}>
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <>Publish Listing <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <>{existingJob ? 'Update Listing' : 'Publish Listing'} <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
             </Button>
           </div>
         </div>
