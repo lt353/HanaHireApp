@@ -51,33 +51,54 @@ const CANDIDATE_IMAGES = [
   "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=1000"  // Business Woman
 ];
 
+// Generate mock employers (normalized schema)
+export const generateMockEmployers = () => {
+  const companies = [
+    { name: "Island Tech", industry: "Tech", size: "Medium (26-100)" },
+    { name: "Mauka Logistics", industry: "Logistics", size: "Large (100+)" },
+    { name: "Hana Services", industry: "Services", size: "Small Business (10-25)" },
+    { name: "Aloha Retail", industry: "Retail", size: "Medium (26-100)" },
+    { name: "Pacific Hospitality", industry: "Hospitality", size: "Large (100+)" }
+  ];
+
+  return companies.map((company, idx) => ({
+    id: `emp_${idx + 1}`,
+    email: `hiring@${company.name.toLowerCase().replace(/\s/g, '')}.com`,
+    business_name: company.name,
+    contact_name: "Hiring Manager",
+    phone: `(808) 555-${2000 + idx}`,
+    location: JOB_CATEGORIES.locations[idx % JOB_CATEGORIES.locations.length],
+    industry: company.industry,
+    company_size: company.size,
+    company_description: `${company.name} is an established firm in Hawaii dedicated to local excellence.`,
+    business_license: `HI-BIZ-2024-${10000 + idx}`,
+    business_verified: idx % 2 === 0
+  }));
+};
+
+// Generate mock jobs (normalized schema - links to employers via employer_id)
 export const generateMockJobs = () => {
   const jobs = [];
-  const companies = ["Island Tech", "Mauka Logistics", "Hana Services", "Aloha Retail", "Pacific Hospitality"];
-  
+  const employerIds = ["emp_1", "emp_2", "emp_3", "emp_4", "emp_5"];
+
   for (let i = 1; i <= 50; i++) {
     const ind = JOB_CATEGORIES.industries[i % JOB_CATEGORIES.industries.length];
-    const company = companies[i % companies.length];
-    
+    const employerId = employerIds[i % employerIds.length];
+
     jobs.push({
       id: `job_${i}`,
       title: `${ind} Professional`,
-      company_name: company,
-      company_industry: ind,
       location: JOB_CATEGORIES.locations[i % JOB_CATEGORIES.locations.length],
       pay_range: `$${18 + (i % 12)}-$${32 + (i % 15)}/hr`,
       job_type: ["Full-time", "Contract", "Part-time"][i % 3],
-      description: `Seeking a skilled ${ind.toLowerCase()} expert to handle high-volume operations at ${company}. Great growth potential in the Hawaii market.`,
+      description: `Seeking a skilled ${ind.toLowerCase()} expert to handle high-volume operations. Great growth potential in the Hawaii market.`,
       requirements: ["Local resident", "3+ years experience", "Strong communication skills"],
       responsibilities: ["Oversee daily operations", "Coordinate with local teams", "Maintain service quality"],
       benefits: ["Health insurance", "Paid time off", "Flexible scheduling"],
-      company_size: ["Small", "Medium", "Large"][i % 3],
-      company_description: `${company} is an established firm in Hawaii dedicated to local excellence.`,
-      contact_email: `hiring@${company.toLowerCase().replace(/\s/g, '')}.com`,
-      contact_phone: `(808) 555-${2000 + i}`,
       status: "active",
       applicant_count: Math.floor(Math.random() * 25),
-      is_anonymous: i % 3 === 0
+      is_anonymous: i % 3 === 0,
+      employer_id: employerId  // Foreign key to employers table
     });
   }
   return jobs;

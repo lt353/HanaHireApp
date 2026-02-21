@@ -1857,24 +1857,36 @@ export default function App() {
 </Modal>
 
       <Modal isOpen={showPostJobModal} onClose={() => setShowPostJobModal(false)} title="Post Job">
-         <form onSubmit={(e) => { 
-            e.preventDefault(); 
-            const formData = new FormData(e.currentTarget); 
-            const newJob = { 
-              id: Date.now(), 
-              title: formData.get("title") as string, 
-              company_name: "Your Business", 
-              company_industry: formData.get("type") as string, 
-              location: "Honolulu, HI", 
-              pay_range: formData.get("pay") as string, 
-              posted_at: new Date().toISOString(), 
-              description: formData.get("description") as string, 
+         <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            // NOTE: This quick post feature is legacy/unused. Use JobPostingFlow component instead.
+            // Creating a temporary job for local state only (not saved to database)
+            const newJob = {
+              id: Date.now(),
+              title: formData.get("title") as string,
+              location: "Honolulu, HI",
+              pay_range: formData.get("pay") as string,
+              posted_at: new Date().toISOString(),
+              description: formData.get("description") as string,
               is_anonymous: true,
-              company_size: "Small Business"
-            }; 
-            setJobs([newJob, ...jobs]); 
-            setShowPostJobModal(false); 
-            toast.success("Job Live!"); 
+              status: 'active',
+              applicant_count: 0,
+              job_type: 'Full-time',
+              requirements: [],
+              responsibilities: [],
+              benefits: [],
+              employer_id: userProfile?.employerId || 0,  // Link to current employer
+              // Company info comes from employer (for display in merged state)
+              company_name: userProfile?.businessName || "Your Business",
+              company_industry: formData.get("type") as string,
+              company_size: userProfile?.companySize || "Small Business",
+              contact_email: userProfile?.email || "",
+              contact_phone: userProfile?.phone || ""
+            };
+            setJobs([newJob, ...jobs]);
+            setShowPostJobModal(false);
+            toast.success("Job Live!");
          }} className="space-y-8">
             <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Job Title</label><input required name="title" type="text" placeholder="e.g. Server" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-black text-xl" /></div>
             <div className="grid grid-cols-2 gap-8">
