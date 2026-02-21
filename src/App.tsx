@@ -2104,6 +2104,22 @@ export default function App() {
               </div>
             </div>
 
+            {/* Employer action buttons - at top for easy access */}
+            {userRole === 'employer' && (
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
+                  setEditingJob(selectedJob);
+                  setSelectedJob(null);
+                  handleNavigate('job-posting');
+                }}>
+                  Edit Job
+                </Button>
+                <Button className="h-16 rounded-2xl bg-[#D25B3A] hover:bg-[#D25B3A]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
+                  View Applicants
+                </Button>
+              </div>
+            )}
+
             {/* Business identity (locked until applied) */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-5 bg-[#F9EBDA]/30 rounded-2xl space-y-1">
@@ -2177,25 +2193,8 @@ export default function App() {
               </div>
             )}
 
-            {/* CTA */}
-            {userRole === 'employer' ? (
-              /* Employer actions */
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
-                    setEditingJob(selectedJob);
-                    setSelectedJob(null);
-                    handleNavigate('job-posting');
-                  }}>
-                    Edit Job
-                  </Button>
-                  <Button className="h-16 rounded-2xl bg-[#D25B3A] hover:bg-[#D25B3A]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
-                    View Applicants
-                  </Button>
-                </div>
-              </div>
-            ) : !unlockedJobIds.includes(selectedJob.id) && (
-              /* Seeker actions */
+            {/* CTA - Seeker actions */}
+            {userRole !== 'employer' && !unlockedJobIds.includes(selectedJob.id) && (
               <Button className="w-full h-20 text-xl rounded-3xl bg-[#1A7A84] hover:bg-[#136068] text-white shadow-2xl shadow-[#1A7A84]/25 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
   Apply & Reveal Business
 </Button>
