@@ -1246,30 +1246,38 @@ export default function App() {
                   try {
                     // If employer, insert into employers table first
                     if (signupRole === 'employer') {
-                      console.log("Starting employer signup...", signupFormData);
-
-                      // Check if email already exists
-                      console.log("Checking for existing employer with email:", signupFormData.email);
-                      const { data: existingEmployer, error: checkError } = await supabase
+                      // Check if email already exists — if so, just log them in
+                      const { data: existingEmployer } = await supabase
                         .from('employers')
-                        .select('id')
+                        .select('*')
                         .eq('email', signupFormData.email)
                         .single();
 
-                      console.log("Duplicate check result:", { existingEmployer, checkError });
-
                       if (existingEmployer) {
-                        toast.error("An account with this email already exists. Please sign in instead.");
+                        await Promise.all([fetchUnlocks(signupFormData.email), fetchSavedItems(signupFormData.email, 'employer')]);
+                        setUserProfile({
+                          role: 'employer',
+                          email: existingEmployer.email,
+                          businessName: existingEmployer.business_name,
+                          phone: existingEmployer.phone,
+                          location: existingEmployer.location,
+                          industry: existingEmployer.industry,
+                          companySize: existingEmployer.company_size,
+                          bio: existingEmployer.company_description,
+                          companyLogoUrl: existingEmployer.company_logo_url,
+                          businessVerified: existingEmployer.business_verified,
+                          employerId: existingEmployer.id,
+                          id: existingEmployer.id
+                        });
+                        setUserRole('employer');
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
                         setIsSignupLoading(false);
+                        handleNavigate("employer");
+                        toast.success("Welcome back! Logged in to your existing account.");
                         return;
                       }
-
-                      console.log("Attempting to insert employer:", {
-                        email: signupFormData.email,
-                        phone: signupFormData.phone || null,
-                        business_name: signupFormData.businessName,
-                        industry: signupFormData.industry || null,
-                      });
 
                       const { data: employerData, error: employerError } = await supabase
                         .from('employers')
@@ -1282,16 +1290,12 @@ export default function App() {
                         .select()
                         .single();
 
-                      console.log("Insert result:", { employerData, employerError });
-
                       if (employerError) {
                         console.error("Error creating employer:", employerError);
                         toast.error(`Failed to create employer account: ${employerError.message}`);
                         setIsSignupLoading(false);
                         return;
                       }
-
-                      console.log("Employer created successfully:", employerData);
 
                       // Store employer with database ID
                       const profile: any = {
@@ -1310,30 +1314,41 @@ export default function App() {
                     }
                     else {
                       // Seeker signup - insert into candidates table
-                      console.log("Starting seeker signup...", signupFormData);
 
-                      // Check if email already exists
-                      console.log("Checking for existing candidate with email:", signupFormData.email);
-                      const { data: existingCandidate, error: checkError } = await supabase
+                      // Check if email already exists — if so, just log them in
+                      const { data: existingCandidate } = await supabase
                         .from('candidates')
-                        .select('id')
+                        .select('*')
                         .eq('email', signupFormData.email)
                         .single();
 
-                      console.log("Duplicate check result:", { existingCandidate, checkError });
-
                       if (existingCandidate) {
-                        toast.error("An account with this email already exists. Please sign in instead.");
+                        await Promise.all([fetchApplications(existingCandidate.id), fetchUnlocks(signupFormData.email), fetchSavedItems(signupFormData.email, 'seeker')]);
+                        setUserProfile({
+                          role: 'seeker',
+                          email: existingCandidate.email,
+                          name: existingCandidate.name,
+                          phone: existingCandidate.phone,
+                          location: existingCandidate.location,
+                          bio: existingCandidate.bio,
+                          skills: existingCandidate.skills || [],
+                          experience: existingCandidate.years_experience,
+                          education: existingCandidate.education,
+                          availability: existingCandidate.availability,
+                          targetPay: existingCandidate.preferred_pay_range || existingCandidate.target_pay,
+                          industries: existingCandidate.industries_interested || [],
+                          candidateId: existingCandidate.id,
+                          id: existingCandidate.id
+                        });
+                        setUserRole('seeker');
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
                         setIsSignupLoading(false);
+                        handleNavigate("seeker");
+                        toast.success("Welcome back! Logged in to your existing account.");
                         return;
                       }
-
-                      console.log("Attempting to insert candidate:", {
-                        name: signupFormData.name,
-                        email: signupFormData.email,
-                        phone: signupFormData.phone || null,
-                        location: signupFormData.location || null,
-                      });
 
                       const { data: candidateData, error: candidateError } = await supabase
                         .from('candidates')
@@ -1346,16 +1361,12 @@ export default function App() {
                         .select()
                         .single();
 
-                      console.log("Insert result:", { candidateData, candidateError });
-
                       if (candidateError) {
                         console.error("Error creating candidate:", candidateError);
                         toast.error(`Failed to create candidate account: ${candidateError.message}`);
                         setIsSignupLoading(false);
                         return;
                       }
-
-                      console.log("Candidate created successfully:", candidateData);
 
                       // Store candidate with database ID
                       const profile: any = {
