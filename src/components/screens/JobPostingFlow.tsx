@@ -344,24 +344,44 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         contact_phone: formData.contact_phone,
         is_anonymous: true,
         status: 'active',
-        applicant_count: 0
+        applicant_count: existingJob?.applicant_count || 0
       };
 
-      // Insert job into Supabase
-      const { data, error: insertError } = await supabase
-        .from('jobs')
-        .insert([jobData])
-        .select()
-        .single();
+      let data;
+      if (existingJob?.id) {
+        // Update existing job
+        const { data: updatedData, error: updateError } = await supabase
+          .from('jobs')
+          .update(jobData)
+          .eq('id', existingJob.id)
+          .select()
+          .single();
 
-      if (insertError) {
-        console.error("Supabase insert error:", insertError);
-        throw new Error(insertError.message || "Failed to save job to database");
+        if (updateError) {
+          console.error("Supabase update error:", updateError);
+          throw new Error(updateError.message || "Failed to update job in database");
+        }
+        data = updatedData;
+        toast.success("Job updated successfully!");
+        // Skip confirmation screen and go directly to dashboard
+        onComplete(data);
+      } else {
+        // Insert new job
+        const { data: insertedData, error: insertError } = await supabase
+          .from('jobs')
+          .insert([jobData])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Supabase insert error:", insertError);
+          throw new Error(insertError.message || "Failed to save job to database");
+        }
+        data = insertedData;
+        setPostedJob(data);
+        setStep('confirmation');
+        toast.success("Listing published successfully!");
       }
-
-      setPostedJob(data);
-      setStep('confirmation');
-      toast.success("Listing published successfully!");
     } catch (err: any) {
       console.error("Error posting job:", err);
       toast.error(err.message || "Failed to post job.");
