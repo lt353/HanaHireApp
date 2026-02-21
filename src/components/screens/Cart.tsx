@@ -110,7 +110,7 @@ export const Cart: React.FC<CartProps> = ({
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="border-t border-gray-100 p-4 sm:p-6 lg:p-10 bg-[#F9EBDA]/30/50 space-y-3 sm:space-y-4"
+                      className="border-t border-gray-100 p-4 sm:p-6 lg:p-10 bg-gray-50/50 space-y-3 sm:space-y-4"
                     >
                       {role === 'seeker' ? (
                         <>

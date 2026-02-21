@@ -1976,7 +1976,7 @@ export default function App() {
                 <button
                   key={t}
                   onClick={() => toggleFilter('industries', t)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-[#F9EBDA]/30/30'} hover:scale-105 active:scale-95 duration-200`}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {t}
                 </button>
@@ -1989,7 +1989,7 @@ export default function App() {
                 <button
                   key={l}
                   onClick={() => toggleFilter('locations', l)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-[#F9EBDA]/30/30'} hover:scale-105 active:scale-95 duration-200`}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {l}
                 </button>
@@ -2003,7 +2003,7 @@ export default function App() {
                   <button
                     key={p}
                     onClick={() => toggleFilter('payRanges', p)}
-                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-[#F9EBDA]/30/30'} hover:scale-105 active:scale-95 duration-200`}
+                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                   >
                     {p}
                   </button>
@@ -2016,7 +2016,7 @@ export default function App() {
                     <button
                       key={e}
                       onClick={() => toggleFilter('experience', e)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-[#F9EBDA]/30/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {e}
                     </button>
@@ -2028,7 +2028,7 @@ export default function App() {
                     <button
                       key={s}
                       onClick={() => toggleFilter('skills', s)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-[#F9EBDA]/30/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {s}
                     </button>
@@ -2040,7 +2040,7 @@ export default function App() {
                     <button
                       key={edu}
                       onClick={() => toggleFilter('education', edu)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-[#F9EBDA]/30/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {edu}
                     </button>
@@ -2052,7 +2052,7 @@ export default function App() {
                     <button
                       key={p}
                       onClick={() => toggleFilter('payRanges', p)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-[#F9EBDA]/30/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {p}
                     </button>
