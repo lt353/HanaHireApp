@@ -147,12 +147,12 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
           <div className="space-y-10 order-2 lg:order-1">
             
             {/* Suggestion Box */}
-            <div className="p-6 bg-[#0077BE]/5 border border-[#0077BE]/10 rounded-3xl flex gap-4 items-start">
-              <div className="p-2 bg-[#0077BE] rounded-xl text-white">
+            <div className="p-6 bg-[#1A7A84]/5 border border-[#1A7A84]/10 rounded-3xl flex gap-4 items-start">
+              <div className="p-2 bg-[#1A7A84] rounded-xl text-white">
                 <Info size={20} />
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-black text-[#0077BE] uppercase tracking-widest">Based on your skills, we suggest:</p>
+                <p className="text-xs font-black text-[#1A7A84] uppercase tracking-widest">Based on your skills, we suggest:</p>
                 <p className="font-black text-xl tracking-tight">"{initialData.suggestedTitle}"</p>
               </div>
             </div>
@@ -160,7 +160,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
             {/* Form Section */}
             <div className="space-y-8">
               <div className="flex items-center gap-2">
-                <Edit3 size={18} className="text-[#0077BE]" />
+                <Edit3 size={18} className="text-[#1A7A84]" />
                 <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Customize (optional)</h2>
               </div>
 
@@ -172,7 +172,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                     <select 
                       value={descriptor}
                       onChange={(e) => setDescriptor(e.target.value)}
-                      className="w-full appearance-none p-5 rounded-2xl bg-white border border-gray-200 font-bold focus:ring-4 ring-[#0077BE]/10 outline-none transition-all"
+                      className="w-full appearance-none p-5 rounded-2xl bg-white border border-gray-200 font-bold focus:ring-4 ring-[#1A7A84]/10 outline-none transition-all"
                     >
                       {DESCRIPTORS.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
@@ -183,13 +183,13 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                 {/* Primary Skill */}
                 <div className="w-full md:flex-[1.5] space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2 flex items-center gap-1">
-                    Primary Skill <span className="text-[#FF6B6B]">*</span>
+                    Primary Skill <span className="text-[#D25B3A]">*</span>
                   </label>
                   <div className="relative">
                     <select 
                       value={primarySkill}
                       onChange={(e) => setPrimarySkill(e.target.value)}
-                      className={`w-full appearance-none p-5 rounded-2xl bg-white border-2 font-black focus:ring-4 ring-[#0077BE]/10 outline-none transition-all ${noPrimarySkill ? 'border-[#FF6B6B]' : 'border-gray-200'}`}
+                      className={`w-full appearance-none p-5 rounded-2xl bg-white border-2 font-black focus:ring-4 ring-[#1A7A84]/10 outline-none transition-all ${noPrimarySkill ? 'border-[#D25B3A]' : 'border-gray-200'}`}
                     >
                       <option value="">Select primary skill</option>
                       {SKILL_CATEGORIES.map(cat => (
@@ -216,7 +216,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                     <select 
                       value={secondarySkill}
                       onChange={(e) => setSecondarySkill(e.target.value)}
-                      className="w-full appearance-none p-5 rounded-2xl bg-white border border-gray-200 font-bold focus:ring-4 ring-[#0077BE]/10 outline-none transition-all"
+                      className="w-full appearance-none p-5 rounded-2xl bg-white border border-gray-200 font-bold focus:ring-4 ring-[#1A7A84]/10 outline-none transition-all"
                     >
                       <option value="">Add skill (optional)</option>
                       {SKILL_CATEGORIES.map(cat => (
@@ -236,7 +236,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
               <div className="pt-6 border-t border-gray-50 space-y-4">
                 <div className="flex justify-between items-end">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Live Preview</h3>
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${isTooLong ? 'text-[#FF6B6B]' : 'text-gray-300'}`}>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${isTooLong ? 'text-[#D25B3A]' : 'text-gray-300'}`}>
                     {charCount}/50 characters
                   </span>
                 </div>
@@ -252,7 +252,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-5 bg-[#FF6B6B]/5 border border-[#FF6B6B]/10 rounded-2xl flex gap-3 items-center text-[#FF6B6B]"
+                    className="p-5 bg-[#D25B3A]/5 border border-[#D25B3A]/10 rounded-2xl flex gap-3 items-center text-[#D25B3A]"
                   >
                     <AlertCircle size={20} />
                     <p className="text-sm font-black uppercase tracking-tight">
@@ -267,10 +267,10 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
             <div className="border border-gray-100 rounded-[2rem] overflow-hidden">
               <button
                 onClick={() => setIsGuidelinesOpen(!isGuidelinesOpen)}
-                className="w-full p-6 flex justify-between items-center hover:bg-gray-50 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+                className="w-full p-6 flex justify-between items-center hover:bg-[#F9EBDA]/30 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#2ECC71]/10 flex items-center justify-center text-[#2ECC71]">
+                  <div className="w-8 h-8 rounded-full bg-[#D25B3A]/10 flex items-center justify-center text-[#D25B3A]">
                     <Check size={16} />
                   </div>
                   <span className="font-black text-sm uppercase tracking-widest">Guidelines</span>
@@ -285,11 +285,11 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                     exit={{ height: 0, opacity: 0 }}
                   >
                     <div className="p-8 pt-0 space-y-4 text-sm font-medium text-gray-500">
-                      <div className="flex gap-3"><span className="text-[#2ECC71]">✓</span> Choose skills that match jobs you want</div>
-                      <div className="flex gap-3"><span className="text-[#2ECC71]">✓</span> Be specific but not too narrow</div>
-                      <div className="flex gap-3"><span className="text-[#FF6B6B]">✗</span> Don't include your name</div>
-                      <div className="flex gap-3"><span className="text-[#FF6B6B]">✗</span> Don't include contact information</div>
-                      <div className="flex gap-3"><span className="text-[#FF6B6B]">✗</span> Don't include company names</div>
+                      <div className="flex gap-3"><span className="text-[#D25B3A]">✓</span> Choose skills that match jobs you want</div>
+                      <div className="flex gap-3"><span className="text-[#D25B3A]">✓</span> Be specific but not too narrow</div>
+                      <div className="flex gap-3"><span className="text-[#D25B3A]">✗</span> Don't include your name</div>
+                      <div className="flex gap-3"><span className="text-[#D25B3A]">✗</span> Don't include contact information</div>
+                      <div className="flex gap-3"><span className="text-[#D25B3A]">✗</span> Don't include company names</div>
                     </div>
                   </motion.div>
                 )}
@@ -303,9 +303,9 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
             
             <div className="relative group">
               {/* Actual Locked Card Preview */}
-              <div className="bg-white border border-gray-100 rounded-[3.5rem] overflow-hidden shadow-2xl p-1 shadow-[#0077BE]/10">
+              <div className="bg-white border border-gray-100 rounded-[3.5rem] overflow-hidden shadow-2xl p-1 shadow-[#1A7A84]/10">
                 <div className="aspect-video relative bg-gray-100">
-                  <div className="absolute inset-0 bg-[#0077BE]/20 flex items-center justify-center backdrop-blur-[60px]">
+                  <div className="absolute inset-0 bg-[#1A7A84]/20 flex items-center justify-center backdrop-blur-[60px]">
                     <div className="w-24 h-24 rounded-full bg-white/30 border-4 border-white/50 flex items-center justify-center">
                       <Lock size={40} className="text-white" />
                     </div>
@@ -326,26 +326,26 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
                       <span className="px-4 py-2 bg-gray-100 text-[10px] font-black text-gray-500 rounded-xl uppercase tracking-widest flex items-center gap-2">
                         <Lock size={12} className="opacity-50" /> {initialData.location}
                       </span>
-                      <span className="px-4 py-2 bg-[#0077BE]/5 text-[10px] font-black text-[#0077BE] rounded-xl uppercase tracking-widest flex items-center gap-2">
+                      <span className="px-4 py-2 bg-[#1A7A84]/5 text-[10px] font-black text-[#1A7A84] rounded-xl uppercase tracking-widest flex items-center gap-2">
                         <Lock size={12} className="opacity-50" /> {initialData.yearsExperience} EXP
                       </span>
                     </div>
                   </div>
 
                   <div className="pt-8 border-t border-gray-50 flex gap-4">
-                    <div className="h-16 w-16 bg-gray-50 rounded-2xl shrink-0" />
-                    <div className="flex-1 h-16 bg-[#0077BE] rounded-2xl shadow-xl shadow-[#0077BE]/20" />
+                    <div className="h-16 w-16 bg-[#F9EBDA]/30 rounded-2xl shrink-0" />
+                    <div className="flex-1 h-16 bg-[#1A7A84] rounded-2xl shadow-xl shadow-[#1A7A84]/20" />
                   </div>
                 </div>
               </div>
               
               {/* Floating Badge */}
-              <div className="absolute -top-4 -right-4 bg-[#FF6B6B] text-white px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl shadow-[#FF6B6B]/30 rotate-3 group-hover:rotate-0 transition-transform">
+              <div className="absolute -top-4 -right-4 bg-[#D25B3A] text-white px-6 py-2 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl shadow-[#D25B3A]/30 rotate-3 group-hover:rotate-0 transition-transform">
                 Live Preview
               </div>
             </div>
 
-            <div className="p-6 bg-gray-50 rounded-[2rem] text-center">
+            <div className="p-6 bg-[#F9EBDA]/30 rounded-[2rem] text-center">
               <p className="text-xs font-medium text-gray-400 italic">"First impressions happen in less than 3 seconds. Make your title count."</p>
             </div>
           </div>
@@ -356,7 +356,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
         <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col gap-4 max-w-xl mx-auto lg:mx-0">
           <Button
             disabled={!isValid || isSaving}
-            className={`h-20 text-xl rounded-[1.5rem] shadow-2xl transition-all hover:scale-105 active:scale-95 duration-200 ${isValid ? 'shadow-[#0077BE]/30' : 'bg-gray-200 shadow-none'}`}
+            className={`h-20 text-xl rounded-[1.5rem] shadow-2xl transition-all hover:scale-105 active:scale-95 duration-200 ${isValid ? 'shadow-[#1A7A84]/30' : 'bg-gray-200 shadow-none'}`}
             onClick={handleSave}
           >
             {isSaving ? "SAVING..." : "SAVE TITLE"}
@@ -369,7 +369,7 @@ export const ProfileTitleCustomization: React.FC<ProfileTitleCustomizationProps>
               setDescriptor("(None)");
               toast.info("Suggested title applied");
             }}
-            className="py-4 text-sm font-black text-[#0077BE] uppercase tracking-[0.2em] hover:opacity-70 transition-opacity hover:scale-105 active:scale-95 transition-all duration-200"
+            className="py-4 text-sm font-black text-[#1A7A84] uppercase tracking-[0.2em] hover:opacity-70 transition-opacity hover:scale-105 active:scale-95 transition-all duration-200"
           >
             Use Suggested Title
           </button>

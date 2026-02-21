@@ -114,7 +114,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
           {/* Basic Information */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <User size={20} className="text-[#0077BE]" />
+              <User size={20} className="text-[#1A7A84]" />
               <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Basic Information</h2>
             </div>
 
@@ -122,27 +122,27 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">
-                    Full Name <span className="text-[#FF6B6B]">*</span>
+                    Full Name <span className="text-[#D25B3A]">*</span>
                   </label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Your full name"
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tight"
                   />
                 </div>
 
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">
-                    Email <span className="text-[#FF6B6B]">*</span>
+                    Email <span className="text-[#D25B3A]">*</span>
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@email.com"
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tight"
                   />
                 </div>
               </div>
@@ -155,7 +155,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="(808) 555-1234"
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base"
                   />
                 </div>
 
@@ -164,7 +164,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   <select
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base focus:ring-4 ring-[#0077BE]/10 outline-none"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#1A7A84]/10 outline-none"
                   >
                     <option value="">Select location...</option>
                     {JOB_CATEGORIES.locations.map(l => <option key={l} value={l}>{l}</option>)}
@@ -177,7 +177,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
           {/* Professional Information */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <Briefcase size={20} className="text-[#0077BE]" />
+              <Briefcase size={20} className="text-[#1A7A84]" />
               <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Professional Information</h2>
             </div>
 
@@ -192,7 +192,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   onChange={(e) => setProfileTitle(e.target.value)}
                   placeholder="e.g., Experienced Bartender & Customer Service"
                   maxLength={60}
-                  className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-lg tracking-tight"
+                  className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tight"
                 />
                 <p className="text-xs text-gray-400 ml-2">{profileTitle.length}/60 characters - This is what employers see first</p>
               </div>
@@ -204,7 +204,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Tell employers about yourself, your experience, and what you're looking for..."
                   rows={4}
-                  className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-medium resize-none"
+                  className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-medium resize-none"
                 />
               </div>
 
@@ -218,7 +218,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                       onClick={() => toggleArrayItem(selectedSkills, setSelectedSkills, skill)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         selectedSkills.includes(skill)
-                          ? 'bg-[#0077BE] text-white'
+                          ? 'bg-[#1A7A84] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -234,7 +234,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   <select
                     value={experience}
                     onChange={(e) => setExperience(e.target.value)}
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base focus:ring-4 ring-[#0077BE]/10 outline-none"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#1A7A84]/10 outline-none"
                   >
                     <option value="">Select experience...</option>
                     {CANDIDATE_CATEGORIES.experience.map(exp => <option key={exp} value={exp}>{exp}</option>)}
@@ -246,7 +246,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   <select
                     value={education}
                     onChange={(e) => setEducation(e.target.value)}
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base focus:ring-4 ring-[#0077BE]/10 outline-none"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#1A7A84]/10 outline-none"
                   >
                     <option value="">Select education...</option>
                     {CANDIDATE_CATEGORIES.education.map(edu => <option key={edu} value={edu}>{edu}</option>)}
@@ -259,7 +259,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
           {/* Job Preferences */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <Target size={20} className="text-[#0077BE]" />
+              <Target size={20} className="text-[#1A7A84]" />
               <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Job Preferences</h2>
             </div>
 
@@ -274,7 +274,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                       onClick={() => toggleArrayItem(selectedIndustries, setSelectedIndustries, industry)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         selectedIndustries.includes(industry)
-                          ? 'bg-[#0077BE] text-white'
+                          ? 'bg-[#1A7A84] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -294,7 +294,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                       onClick={() => toggleArrayItem(selectedWorkStyles, setSelectedWorkStyles, style)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         selectedWorkStyles.includes(style)
-                          ? 'bg-[#0077BE] text-white'
+                          ? 'bg-[#1A7A84] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -314,7 +314,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                       onClick={() => toggleArrayItem(jobTypesSeeking, setJobTypesSeeking, type)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         jobTypesSeeking.includes(type)
-                          ? 'bg-[#0077BE] text-white'
+                          ? 'bg-[#1A7A84] text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -330,7 +330,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   <select
                     value={availability}
                     onChange={(e) => setAvailability(e.target.value)}
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 font-bold text-base focus:ring-4 ring-[#0077BE]/10 outline-none"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#1A7A84]/10 outline-none"
                   >
                     <option value="">Select availability...</option>
                     {CANDIDATE_CATEGORIES.availability.map(avail => <option key={avail} value={avail}>{avail}</option>)}
@@ -344,7 +344,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     value={targetPay}
                     onChange={(e) => setTargetPay(e.target.value)}
                     placeholder="e.g., $18-22/hr or $45k-55k/yr"
-                    className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-bold text-base"
+                    className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base"
                   />
                 </div>
               </div>
@@ -357,7 +357,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
         <div className="mt-12 flex flex-col sm:flex-row gap-4">
           <Button
             disabled={isSaving}
-            className="h-16 text-lg rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 transition-all hover:scale-105 active:scale-95 duration-200 flex-1"
+            className="h-16 text-lg rounded-[1.5rem] shadow-2xl shadow-[#1A7A84]/30 transition-all hover:scale-105 active:scale-95 duration-200 flex-1"
             onClick={handleSave}
           >
             {isSaving ? "SAVING..." : "SAVE CHANGES"}
