@@ -42,13 +42,13 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
-              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl border-gray-200 bg-white whitespace-nowrap"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl border-gray-200 bg-white whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={() => onShowAuth("login")}
             >
               <LogIn size={20} /> Log In
             </Button>
             <Button
-              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl whitespace-nowrap"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={() => onShowAuth("signup")}
             >
               Sign Up
@@ -68,7 +68,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
           <Button
-  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#2ECC71]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#2ECC71] hover:bg-[#2ECC71]/90 text-white"
+  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#2ECC71]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#2ECC71] hover:bg-[#2ECC71]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
   onClick={() => onNavigate("jobs")}
 >
   <Briefcase size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Jobs
@@ -76,7 +76,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           {isLoggedIn && (
             <Button
               variant="outline"
-              className="h-16 sm:h-20 md:h-24 px-6 sm:px-8 rounded-[2rem] border-gray-200 bg-white text-sm sm:text-base whitespace-nowrap"
+              className="h-16 sm:h-20 md:h-24 px-6 sm:px-8 rounded-[2rem] border-gray-200 bg-white text-sm sm:text-base whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={onLogout}
             >
               <LogOut size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" /> Log Out
@@ -90,7 +90,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           <div className="lg:col-span-2 space-y-8 sm:space-y-12">
             <div className="p-6 sm:p-10 md:p-12 bg-white rounded-[2.5rem] sm:rounded-[3.5rem] md:rounded-[4.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-16 group relative overflow-hidden">
               <div className="w-40 sm:w-48 md:w-52 aspect-[9/16] bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] overflow-hidden relative shadow-2xl shrink-0">
-                <ImageWithFallback src="https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-70" />
+                <ImageWithFallback src={userProfile?.videoThumbnailUrl || "https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800"} className="w-full h-full object-cover opacity-70" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-2xl flex items-center justify-center text-white border-2 border-white/40 shadow-2xl cursor-pointer hover:scale-110 transition-transform">
                     <Play fill="white" size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
@@ -103,13 +103,13 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                   <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px]">RECORDED IN SECONDS</p>
                 </div>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 md:gap-5 justify-center md:justify-start">
-                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100" onClick={onShowMedia}>
+                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200" onClick={onShowMedia}>
                     <Video size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0077BE]" /> Update Video
                   </Button>
-                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100" onClick={() => onNavigate("profile-title-customization")}>
-                    <Edit3 size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0077BE]" /> Profile Title
+                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("profile-editor")}>
+                    <Edit3 size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#0077BE]" /> Edit Profile
                   </Button>
-                  <Button variant="ghost" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl text-gray-400 font-black uppercase tracking-widest text-[10px]" onClick={onShowVisibility}>
+                  <Button variant="ghost" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl text-gray-400 font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all duration-200" onClick={onShowVisibility}>
                     <SettingsIcon size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" /> Visibility
                   </Button>
                 </div>

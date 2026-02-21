@@ -119,7 +119,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         {/* Demo Fill Button */}
         <button
           onClick={handleDemoFill}
-          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 transition-all flex items-center justify-center gap-3 group"
+          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 transition-all flex items-center justify-center gap-3 group hover:scale-105 active:scale-95 duration-200"
         >
           <Zap size={18} className="text-[#0077BE] group-hover:scale-110 transition-transform" />
           <span className="text-xs font-black uppercase tracking-widest text-[#0077BE]">
@@ -167,7 +167,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
             {/* Toggle custom */}
             <button
               onClick={() => setUseCustomTitle(!useCustomTitle)}
-              className={`w-full p-3 rounded-xl border-2 text-xs font-black uppercase tracking-widest transition-all ${
+              className={`w-full p-3 rounded-xl border-2 text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 ${
                 useCustomTitle
                   ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]'
                   : 'border-gray-100 text-gray-400 hover:border-gray-200'
@@ -204,7 +204,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <button
                   key={skill}
                   onClick={() => toggleItem(selectedSkills, setSelectedSkills, skill)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 ${
                     selectedSkills.includes(skill)
                       ? "bg-[#0077BE] text-white shadow-md"
                       : "bg-gray-50 text-gray-400 border border-gray-100 hover:border-[#0077BE]/30"
@@ -229,7 +229,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.experienceLevels.map(level => (
+                {CANDIDATE_CATEGORIES.experience.map(level => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
@@ -246,7 +246,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.educationLevels.map(level => (
+                {CANDIDATE_CATEGORIES.education.map(level => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
@@ -301,7 +301,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <button
                   key={ind}
                   onClick={() => toggleItem(selectedIndustries, setSelectedIndustries, ind)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 ${
                     selectedIndustries.includes(ind)
                       ? "bg-[#0077BE] text-white shadow-md"
                       : "bg-gray-50 text-gray-400 border border-gray-100 hover:border-[#0077BE]/30"
@@ -321,7 +321,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <button
                   key={style}
                   onClick={() => toggleItem(selectedWorkStyles, setSelectedWorkStyles, style)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 ${
                     selectedWorkStyles.includes(style)
                       ? "bg-[#0077BE] text-white shadow-md"
                       : "bg-gray-50 text-gray-400 border border-gray-100 hover:border-[#0077BE]/30"
@@ -341,7 +341,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <button
                   key={jt}
                   onClick={() => toggleItem(jobTypesSeeking, setJobTypesSeeking, jt)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 duration-200 ${
                     jobTypesSeeking.includes(jt)
                       ? "bg-[#0077BE] text-white shadow-md"
                       : "bg-gray-50 text-gray-400 border border-gray-100 hover:border-[#0077BE]/30"
@@ -358,7 +358,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
             <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Video Intro (optional)</h2>
             <button
               onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-300 hover:text-[#0077BE] hover:border-[#0077BE]/30 transition-all"
+              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-300 hover:text-[#0077BE] hover:border-[#0077BE]/30 transition-all hover:scale-105 active:scale-95 duration-200"
             >
               <Camera size={36} />
               <span className="font-black text-xs uppercase tracking-widest">Record Your 30-Second Intro</span>
@@ -370,7 +370,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
           <div className="pt-4 space-y-4">
             <Button
               onClick={handleSubmit}
-              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20 flex items-center justify-center gap-3"
+              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <Sparkles size={22} />
               Launch My Profile

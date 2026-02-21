@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Link Jobs 72 & 73 to Koa Beach Bistro</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Linking Jobs 72 & 73 to Koa Beach Bistro</h1>
+  <button onclick="linkJobs()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Link Jobs Now</button>
+  <pre id="output" style="background: #f5f5f5; padding: 20px; margin-top: 20px; border-radius: 8px;"></pre>
+
+  <script>
+    const { createClient } = supabase;
+    const supabaseUrl = 'https://mrcwjqnxtfzdmqsawhgl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yY3dqcW54dGZ6ZG1xc2F3aGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYyMTI3NTQsImV4cCI6MjA1MTc4ODc1NH0.VeV80xpz-gfDhN6OC2_q3Yco2pMtkp5SYyGJ9E0wGfc';
+
+    const client = createClient(supabaseUrl, supabaseKey);
+
+    async function linkJobs() {
+      const output = document.getElementById('output');
+      output.textContent = '';
+
+      try {
+        // Step 1: Find the Koa Beach Bistro employer
+        output.textContent += '1. Finding Koa Beach Bistro employer...\n';
+        const { data: employer, error: empError } = await client
+          .from('employers')
+          .select('*')
+          .eq('email', 'demo@koabeachbistro.com')
+          .single();
+
+        if (empError) {
+          output.textContent += '❌ Error finding employer: ' + JSON.stringify(empError, null, 2) + '\n';
+          return;
+        }
+
+        output.textContent += '✅ Found employer: ' + employer.business_name + ' (ID: ' + employer.id + ')\n\n';
+
+        // Step 2: Check current state of jobs 72 and 73
+        output.textContent += '2. Checking current state of jobs 72 & 73...\n';
+        const { data: currentJobs, error: checkError } = await client
+          .from('jobs')
+          .select('id, title, company_name, employer_id')
+          .in('id', [72, 73])
+          .order('id');
+
+        if (checkError) {
+          output.textContent += '❌ Error checking jobs: ' + JSON.stringify(checkError, null, 2) + '\n';
+          return;
+        }
+
+        output.textContent += 'Current state:\n';
+        currentJobs.forEach(job => {
+          output.textContent += `  Job ${job.id}: "${job.title}" - Company: ${job.company_name}, Employer ID: ${job.employer_id}\n`;
+        });
+        output.textContent += '\n';
+
+        // Step 3: Update jobs 72 and 73
+        output.textContent += '3. Updating jobs 72 & 73 to link to Koa Beach Bistro...\n';
+        const { data: updatedJobs, error: updateError } = await client
+          .from('jobs')
+          .update({
+            employer_id: employer.id,
+            company_name: 'Koa Beach Bistro',
+            contact_email: 'demo@koabeachbistro.com',
+            contact_phone: '(808) 555-9876',
+            company_industry: 'Food & Beverage',
+            company_size: 'Small Business (10-25)',
+            company_description: 'Beachfront restaurant in Waikiki serving fresh Hawaiian cuisine with ocean views. We pride ourselves on a supportive team culture and aloha spirit.',
+            location: 'Waikiki, HI'
+          })
+          .in('id', [72, 73])
+          .select();
+
+        if (updateError) {
+          output.textContent += '❌ Error updating jobs: ' + JSON.stringify(updateError, null, 2) + '\n';
+          return;
+        }
+
+        output.textContent += '✅ Successfully updated ' + updatedJobs.length + ' jobs!\n\n';
+
+        // Step 4: Verify the updates
+        output.textContent += '4. Verifying updates...\n';
+        const { data: verifyJobs, error: verifyError } = await client
+          .from('jobs')
+          .select('id, title, company_name, employer_id, contact_email, location')
+          .in('id', [72, 73])
+          .order('id');
+
+        if (verifyError) {
+          output.textContent += '❌ Error verifying: ' + JSON.stringify(verifyError, null, 2) + '\n';
+          return;
+        }
+
+        output.textContent += '✅ Final state:\n';
+        verifyJobs.forEach(job => {
+          output.textContent += `  Job ${job.id}: "${job.title}"\n`;
+          output.textContent += `    Company: ${job.company_name}\n`;
+          output.textContent += `    Employer ID: ${job.employer_id}\n`;
+          output.textContent += `    Email: ${job.contact_email}\n`;
+          output.textContent += `    Location: ${job.location}\n\n`;
+        });
+
+        output.textContent += '\n🎉 SUCCESS! Jobs 72 and 73 are now linked to Koa Beach Bistro!\n';
+        output.textContent += 'When you log in as demo@koabeachbistro.com, these jobs will appear in the dashboard.\n';
+
+      } catch (error) {
+        output.textContent += '❌ Unexpected error: ' + error.message + '\n';
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>

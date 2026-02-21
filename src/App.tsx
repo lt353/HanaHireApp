@@ -28,7 +28,9 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
+import { mergeJobsWithEmployers } from "./utils/jobHelpers";
 import { projectId, publicAnonKey } from './utils/supabase/info';
+import { supabase } from './utils/supabase/client';
 
 
 // Components
@@ -49,6 +51,7 @@ import { SeekerOnboarding } from './components/screens/SeekerOnboarding';
 import { EmployerOnboarding } from './components/screens/EmployerOnboarding';
 import { JobPostingFlow } from './components/screens/JobPostingFlow';
 import { ProfileTitleCustomization } from './components/screens/ProfileTitleCustomization';
+import { ProfileEditor } from './components/screens/ProfileEditor';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
@@ -57,13 +60,20 @@ import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } 
 // Utils
 import { formatCandidateTitle } from "./utils/formatters";
 
-export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding";
+export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
+// Demo account emails for demo flow (go through onboarding but don't create new records)
+const DEMO_ACCOUNTS = {
+  employer: 'demo@koabeachbistro.com',
+  candidate: 'luca.kahananui@email.com'
+};
+
 export default function App() {
-  const [currentView, setCurrentView] = useState<"landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "seeker-onboarding" | "employer-onboarding">("landing");
+  const [currentView, setCurrentView] = useState<ViewType>("landing");
   const [jobs, setJobs] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [employers, setEmployers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasSeeded, setHasSeeded] = useState(false);
   const [userRole, setUserRole] = useState<'seeker' | 'employer'>('seeker');
@@ -82,24 +92,31 @@ export default function App() {
   const [showPostJobModal, setShowPostJobModal] = useState(false);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
-  
+
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [isSignupLoading, setIsSignupLoading] = useState(false);
+
   // App State
   const [seekerQueue, setSeekerQueue] = useState<any[]>([]);
   const [employerQueue, setEmployerQueue] = useState<any[]>([]);
   const [unlockedJobIds, setUnlockedJobIds] = useState<any[]>([]);
   const [unlockedCandidateIds, setUnlockedCandidateIds] = useState<any[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<any[]>([]);
   const [paymentTarget, setPaymentTarget] = useState<any>(null);
   const [paymentItems, setPaymentItems] = useState<any[]>([]);
   const [expandedPaymentItemId, setExpandedPaymentItemId] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [editingJob, setEditingJob] = useState<any>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ 
-    industries: [] as string[], 
+  const [filters, setFilters] = useState({
+    industries: [] as string[],
     locations: [] as string[],
     payRanges: [] as string[],
-    experienceLevels: [] as string[],
-    educationLevels: [] as string[],
+    experience: [] as string[],
+    education: [] as string[],
     skills: [] as string[]
   });
   const [userVisibility, setUserVisibility] = useState("broader");
@@ -160,28 +177,137 @@ export default function App() {
         });
         
         const newData = await newResponse.json();
-        setJobs(newData.jobs || []);
+        // Store employers separately
+        setEmployers(newData.employers || []);
+        // Merge jobs with employer data
+        const mergedJobs = mergeJobsWithEmployers(newData.jobs || [], newData.employers || []);
+        setJobs(mergedJobs);
         setCandidates(newData.candidates || []);
-        console.log(`Successfully seeded and loaded ${newData.jobs?.length || 0} jobs and ${newData.candidates?.length || 0} candidates from KV store`);
+        console.log(`Successfully seeded and loaded ${mergedJobs.length} jobs and ${newData.candidates?.length || 0} candidates from KV store`);
         toast.success('Marketplace initialized!');
       } else {
-        setJobs(data.jobs);
+        // Store employers separately
+        setEmployers(data.employers || []);
+        // Merge jobs with employer data
+        const mergedJobs = mergeJobsWithEmployers(data.jobs || [], data.employers || []);
+        setJobs(mergedJobs);
         setCandidates(data.candidates);
-        console.log(`Loaded ${data.jobs.length} jobs and ${data.candidates.length} candidates from Supabase KV store (kv_store_9b95b3f5 table)`);
+        console.log(`Loaded ${mergedJobs.length} jobs and ${data.candidates.length} candidates from Supabase`);
       }
     } catch (err) {
       console.error("Error loading data:", err);
       toast.error("Failed to load marketplace data");
       setJobs([]);
       setCandidates([]);
+      setEmployers([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchUnlocks = async (id: string) => {
-    // API disabled - unlocks stored in local state only
-    console.log("Unlocks loaded from local state for user:", id);
+  const fetchUnlocks = async (email: string) => {
+    if (!email) return;
+
+    try {
+      // Fetch unlocks from database
+      const { data: unlocks, error } = await supabase
+        .from('unlocks')
+        .select('target_type, target_id')
+        .eq('user_email', email)
+        .eq('payment_status', 'completed');
+
+      if (error) {
+        console.error("Error fetching unlocks:", error);
+        return;
+      }
+
+      if (unlocks && unlocks.length > 0) {
+        const jobUnlocks = unlocks.filter(u => u.target_type === 'job').map(u => u.target_id);
+        const candidateUnlocks = unlocks.filter(u => u.target_type === 'candidate').map(u => u.target_id);
+
+        setUnlockedJobIds(jobUnlocks);
+        setUnlockedCandidateIds(candidateUnlocks);
+
+        console.log(`Loaded ${jobUnlocks.length} job unlocks and ${candidateUnlocks.length} candidate unlocks`);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching unlocks:", err);
+    }
+  };
+
+  const fetchSavedItems = async (email: string, role: 'seeker' | 'employer') => {
+    if (!email) return;
+
+    try {
+      // Fetch saved items from database
+      const itemType = role === 'seeker' ? 'job' : 'candidate';
+      const { data: savedItems, error } = await supabase
+        .from('saved_items')
+        .select('item_id')
+        .eq('user_email', email)
+        .eq('item_type', itemType);
+
+      if (error) {
+        console.error("Error fetching saved items:", error);
+        return;
+      }
+
+      if (savedItems && savedItems.length > 0) {
+        const itemIds = savedItems.map(s => s.item_id);
+
+        // Fetch full item data
+        if (role === 'seeker') {
+          const { data: savedJobs, error: jobsError } = await supabase
+            .from('jobs')
+            .select('*')
+            .in('id', itemIds);
+
+          if (!jobsError && savedJobs) {
+            // Merge saved jobs with employer data
+            const mergedSavedJobs = mergeJobsWithEmployers(savedJobs, employers);
+            setSeekerQueue(mergedSavedJobs);
+            console.log(`Loaded ${mergedSavedJobs.length} saved jobs`);
+          }
+        } else {
+          const { data: savedCandidates, error: candidatesError } = await supabase
+            .from('candidates')
+            .select('*')
+            .in('id', itemIds);
+
+          if (!candidatesError && savedCandidates) {
+            setEmployerQueue(savedCandidates);
+            console.log(`Loaded ${savedCandidates.length} saved candidates`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching saved items:", err);
+    }
+  };
+
+  const fetchApplications = async (candidateId: number) => {
+    if (!candidateId) return;
+
+    try {
+      // Fetch applications from database
+      const { data: applications, error } = await supabase
+        .from('applications')
+        .select('job_id')
+        .eq('candidate_id', candidateId);
+
+      if (error) {
+        console.error("Error fetching applications:", error);
+        return;
+      }
+
+      if (applications && applications.length > 0) {
+        const jobIds = applications.map(a => a.job_id);
+        setAppliedJobIds(jobIds);
+        console.log(`Loaded ${jobIds.length} job applications`);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching applications:", err);
+    }
   };
 
   const handleNavigate = (view: ViewType) => {
@@ -214,19 +340,103 @@ export default function App() {
 
   const processPayment = async () => {
     if (!paymentTarget) return;
-    
+
     try {
       if (paymentItems.length === 0) return;
       // Process payment locally without API
       const itemIds = paymentItems.map((i: any) => i.id);
-      
+
       if (paymentTarget.type === 'seeker') {
+        // Save unlocks and applications to database
+        if (userProfile?.email) {
+          const unlockRecords = itemIds.map(jobId => ({
+            user_email: userProfile.email,
+            user_role: 'seeker',
+            target_type: 'job',
+            target_id: jobId,
+            amount_paid: INTERACTION_FEE,
+            payment_method: 'card',
+            payment_status: 'completed'
+          }));
+
+          const { error: unlockError } = await supabase
+            .from('unlocks')
+            .insert(unlockRecords);
+
+          if (unlockError) {
+            console.error("Error saving unlock:", unlockError);
+          }
+
+          // Save applications to database
+          if (userProfile?.id) {
+            const applicationRecords = itemIds.map(jobId => ({
+              candidate_id: userProfile.id,
+              job_id: jobId,
+              status: 'submitted'
+            }));
+
+            const { error: applicationError } = await supabase
+              .from('applications')
+              .insert(applicationRecords);
+
+            if (applicationError) {
+              console.error("Error saving application:", applicationError);
+            }
+          }
+
+          // Remove from saved_items after unlocking
+          const { error: deleteError } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'job')
+            .in('item_id', itemIds);
+
+          if (deleteError) {
+            console.error("Error removing from saved items:", deleteError);
+          }
+        }
+
         setUnlockedJobIds([...unlockedJobIds, ...itemIds]);
+        setAppliedJobIds([...appliedJobIds, ...itemIds]);
         setSeekerQueue(seekerQueue.filter(q => !itemIds.includes(q.id)));
         setShowPaymentModal(false);
         toast.success("Applied!", { description: "Business details now revealed in your jobs." });
         handleNavigate("seeker");
       } else {
+        // Save unlocks to database
+        if (userProfile?.email) {
+          const unlockRecords = itemIds.map(candidateId => ({
+            user_email: userProfile.email,
+            user_role: 'employer',
+            target_type: 'candidate',
+            target_id: candidateId,
+            amount_paid: INTERACTION_FEE,
+            payment_method: 'card',
+            payment_status: 'completed'
+          }));
+
+          const { error: unlockError } = await supabase
+            .from('unlocks')
+            .insert(unlockRecords);
+
+          if (unlockError) {
+            console.error("Error saving unlock:", unlockError);
+          }
+
+          // Remove from saved_items after unlocking
+          const { error: deleteError } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'candidate')
+            .in('item_id', itemIds);
+
+          if (deleteError) {
+            console.error("Error removing from saved items:", deleteError);
+          }
+        }
+
         setUnlockedCandidateIds([...unlockedCandidateIds, ...itemIds]);
         setEmployerQueue(employerQueue.filter(q => !itemIds.includes(q.id)));
         setShowPaymentModal(false);
@@ -304,15 +514,15 @@ export default function App() {
     )
   );
 
-  const filteredCandidates = candidates.filter(c => 
+  const filteredCandidates = candidates.filter(c =>
     (filters.locations.length === 0 || filters.locations.includes(c.location)) &&
     (filters.payRanges.length === 0 || filters.payRanges.includes(c.preferred_pay_range) || filters.payRanges.includes(c.target_pay)) &&
     (filters.skills.length === 0 || filters.skills.some(s => c.skills?.includes(s))) &&
     (filters.industries.length === 0 || (c.industries_interested && c.industries_interested.some((ind: string) => filters.industries.includes(ind)))) &&
-    matchesExperience(c.years_experience, filters.experienceLevels) &&
-    matchesEducation(c.education, filters.educationLevels) &&
-    (searchQuery === "" || 
-      (c.location?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || 
+    matchesExperience(c.years_experience, filters.experience) &&
+    matchesEducation(c.education, filters.education) &&
+    (searchQuery === "" ||
+      (c.location?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
       (c.skills?.some((s: string) => s.toLowerCase().includes(searchQuery.toLowerCase())) ?? false)
     )
   );
@@ -333,8 +543,8 @@ export default function App() {
       industries: [],
       locations: [],
       payRanges: [],
-      experienceLevels: [],
-      educationLevels: [],
+      experience: [],
+      education: [],
       skills: [],
     });
   };
@@ -355,18 +565,50 @@ export default function App() {
         return <Settings onRefreshData={fetchInitialData} />;
       case "jobs":
   return (
-    <JobsList 
+    <JobsList
       searchQuery={searchQuery}
       setSearchQuery={setSearchQuery}
       filteredJobs={filteredJobs}
       unlockedJobIds={unlockedJobIds}
+      appliedJobIds={appliedJobIds}
       seekerQueue={seekerQueue}
-      onAddToQueue={(j) => {
+      onAddToQueue={async (j) => {
         if (seekerQueue.find(q => q.id === j.id)) return;
+
+        // Save to database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .insert([{
+              user_email: userProfile.email,
+              user_role: 'seeker',
+              item_type: 'job',
+              item_id: j.id
+            }]);
+
+          if (error && error.code !== '23505') { // Ignore unique constraint violations
+            console.error("Error saving item:", error);
+          }
+        }
+
         setSeekerQueue([...seekerQueue, j]);
         toast.success("Added to Queue");
       }}
-      onRemoveFromQueue={(id) => {
+      onRemoveFromQueue={async (id) => {
+        // Remove from database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'job')
+            .eq('item_id', id);
+
+          if (error) {
+            console.error("Error removing saved item:", error);
+          }
+        }
+
         setSeekerQueue(seekerQueue.filter(q => q.id !== id));
         toast.success("Removed from saved");
       }}
@@ -384,12 +626,43 @@ export default function App() {
       filteredCandidates={filteredCandidates}
       unlockedCandidateIds={unlockedCandidateIds}
       employerQueue={employerQueue}
-      onAddToQueue={(c) => {
+      onAddToQueue={async (c) => {
         if (employerQueue.find(q => q.id === c.id)) return;
+
+        // Save to database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .insert([{
+              user_email: userProfile.email,
+              user_role: 'employer',
+              item_type: 'candidate',
+              item_id: c.id
+            }]);
+
+          if (error && error.code !== '23505') { // Ignore unique constraint violations
+            console.error("Error saving item:", error);
+          }
+        }
+
         setEmployerQueue([...employerQueue, c]);
         toast.success("Added to Queue");
       }}
-      onRemoveFromQueue={(id) => {
+      onRemoveFromQueue={async (id) => {
+        // Remove from database
+        if (userProfile?.email) {
+          const { error } = await supabase
+            .from('saved_items')
+            .delete()
+            .eq('user_email', userProfile.email)
+            .eq('item_type', 'candidate')
+            .eq('item_id', id);
+
+          if (error) {
+            console.error("Error removing saved item:", error);
+          }
+        }
+
         setEmployerQueue(employerQueue.filter(q => q.id !== id));
         toast.success("Removed from saved");
       }}
@@ -404,9 +677,25 @@ export default function App() {
           <Cart 
             role={userRole}
             queue={userRole === 'seeker' ? seekerQueue : employerQueue}
-            onRemoveFromQueue={(id) => {
+            onRemoveFromQueue={async (id) => {
+              // Remove from database
+              if (userProfile?.email) {
+                const itemType = userRole === 'seeker' ? 'job' : 'candidate';
+                const { error } = await supabase
+                  .from('saved_items')
+                  .delete()
+                  .eq('user_email', userProfile.email)
+                  .eq('item_type', itemType)
+                  .eq('item_id', id);
+
+                if (error) {
+                  console.error("Error removing saved item:", error);
+                }
+              }
+
               if (userRole === 'seeker') setSeekerQueue(seekerQueue.filter(q => q.id !== id));
               else setEmployerQueue(employerQueue.filter(q => q.id !== id));
+              toast.success("Removed from saved");
             }}
             onNavigate={handleNavigate}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
@@ -439,6 +728,7 @@ export default function App() {
             unlockedCandidateIds={unlockedCandidateIds}
             onNavigate={handleNavigate}
             onShowPostJob={() => handleNavigate("job-posting")}
+            onSelectJob={setSelectedJob}
             onSelectCandidate={(c) => setSelectedCandidate(c)}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
             onShowAuth={handleShowAuth}
@@ -448,10 +738,25 @@ export default function App() {
         );
       case "job-posting":
         return (
-          <JobPostingFlow 
-            onBack={() => handleNavigate("employer")}
-            onComplete={(newJob) => {
-              setJobs([newJob, ...jobs]);
+          <JobPostingFlow
+            userProfile={userProfile}
+            existingJob={editingJob}
+            onBack={() => {
+              setEditingJob(null);
+              handleNavigate("employer");
+            }}
+            onComplete={(updatedJob) => {
+              // Merge the new/updated job with employer data
+              const mergedJob = mergeJobsWithEmployers([updatedJob], employers)[0];
+
+              if (editingJob?.id) {
+                // Update existing job in the list
+                setJobs(jobs.map(j => j.id === updatedJob.id ? mergedJob : j));
+              } else {
+                // Add new job to the list
+                setJobs([mergedJob, ...jobs]);
+              }
+              setEditingJob(null);
               handleNavigate("employer");
             }}
           />
@@ -460,7 +765,77 @@ export default function App() {
         return (
           <SeekerOnboarding
             userProfile={userProfile}
-            onComplete={(profileData) => {
+            onComplete={async (profileData) => {
+              // Check if this is a demo account
+              if (profileData.isDemoAccount) {
+                // Demo account: fetch existing profile instead of updating
+                const { data: existingCandidate } = await supabase
+                  .from('candidates')
+                  .select('*')
+                  .eq('id', profileData.candidateId)
+                  .single();
+
+                if (existingCandidate) {
+                  await Promise.all([
+                    fetchApplications(existingCandidate.id),
+                    fetchUnlocks(existingCandidate.email),
+                    fetchSavedItems(existingCandidate.email, 'seeker')
+                  ]);
+                  setUserProfile({
+                    role: 'seeker',
+                    email: existingCandidate.email,
+                    name: existingCandidate.name,
+                    phone: existingCandidate.phone,
+                    location: existingCandidate.location,
+                    videoThumbnailUrl: existingCandidate.video_thumbnail_url,
+                    bio: existingCandidate.bio,
+                    skills: existingCandidate.skills || [],
+                    experience: existingCandidate.years_experience,
+                    education: existingCandidate.education,
+                    availability: existingCandidate.availability,
+                    targetPay: existingCandidate.preferred_pay_range || existingCandidate.target_pay,
+                    industries: existingCandidate.industries_interested || [],
+                    workStyles: existingCandidate.work_style?.split(', ') || [],
+                    jobTypesSeeking: existingCandidate.job_types_seeking || [],
+                    displayTitle: existingCandidate.display_title,
+                    candidateId: existingCandidate.id,
+                    id: existingCandidate.id
+                  });
+                  handleNavigate("seeker");
+                  toast.success("Demo complete! Welcome to your dashboard.");
+                }
+                return;
+              }
+
+              // Regular account: update candidates table with onboarding data
+              if (profileData.candidateId) {
+                try {
+                  const { error: updateError } = await supabase
+                    .from('candidates')
+                    .update({
+                      bio: profileData.bio || null,
+                      skills: profileData.skills || [],
+                      years_experience: profileData.experience ? parseInt(profileData.experience) : null,
+                      education: profileData.education || null,
+                      availability: profileData.availability || null,
+                      preferred_pay_range: profileData.targetPay || null,
+                      industries_interested: profileData.industries || [],
+                      work_style: profileData.workStyles?.join(', ') || null,
+                      job_types_seeking: profileData.jobTypesSeeking || [],
+                      display_title: profileData.displayTitle || null,
+                      is_profile_complete: true,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', profileData.candidateId);
+
+                  if (updateError) {
+                    console.error("Error updating candidate profile:", updateError);
+                    toast.error("Profile saved locally, but failed to sync to database.");
+                  }
+                } catch (err) {
+                  console.error("Unexpected error updating candidate:", err);
+                }
+              }
               setUserProfile(profileData);
               handleNavigate("seeker");
               toast.success("Profile saved! Welcome to your dashboard.");
@@ -471,7 +846,65 @@ export default function App() {
         return (
           <EmployerOnboarding
             userProfile={userProfile}
-            onComplete={(profileData) => {
+            onComplete={async (profileData) => {
+              // Check if this is a demo account
+              if (profileData.isDemoAccount) {
+                // Demo account: fetch existing profile instead of updating
+                const { data: existingEmployer } = await supabase
+                  .from('employers')
+                  .select('*')
+                  .eq('id', profileData.employerId)
+                  .single();
+
+                if (existingEmployer) {
+                  await Promise.all([
+                    fetchUnlocks(existingEmployer.email),
+                    fetchSavedItems(existingEmployer.email, 'employer')
+                  ]);
+                  setUserProfile({
+                    role: 'employer',
+                    email: existingEmployer.email,
+                    businessName: existingEmployer.business_name,
+                    phone: existingEmployer.phone,
+                    location: existingEmployer.location,
+                    industry: existingEmployer.industry,
+                    companySize: existingEmployer.company_size,
+                    bio: existingEmployer.company_description,
+                    companyLogoUrl: existingEmployer.company_logo_url,
+                    businessVerified: existingEmployer.business_verified,
+                    employerId: existingEmployer.id,
+                    id: existingEmployer.id
+                  });
+                  handleNavigate("employer");
+                  toast.success("Demo complete! Welcome to your dashboard.");
+                }
+                return;
+              }
+
+              // Regular account: update employers table with onboarding data
+              if (profileData.employerId) {
+                try {
+                  const { error: updateError } = await supabase
+                    .from('employers')
+                    .update({
+                      company_size: profileData.companySize || null,
+                      company_description: profileData.bio || null,
+                      location: profileData.location || null,
+                      phone: profileData.phone || null,
+                      industry: profileData.industry || null,
+                      company_logo_url: profileData.companyLogoUrl || null,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', profileData.employerId);
+
+                  if (updateError) {
+                    console.error("Error updating employer profile:", updateError);
+                    toast.error("Profile saved locally, but failed to sync to database.");
+                  }
+                } catch (err) {
+                  console.error("Unexpected error updating employer:", err);
+                }
+              }
               setUserProfile(profileData);
               handleNavigate("employer");
               toast.success("Business profile saved! Welcome to your dashboard.");
@@ -495,6 +928,42 @@ export default function App() {
             } : undefined}
           />
         );
+      case "profile-editor":
+        return (
+          <ProfileEditor
+            onBack={() => handleNavigate("seeker")}
+            onSave={async (profileData) => {
+              // Update candidates table with new data
+              if (profileData.candidateId) {
+                try {
+                  const { error } = await supabase
+                    .from('candidates')
+                    .update({
+                      name: profileData.name,
+                      email: profileData.email,
+                      phone: profileData.phone || null,
+                      location: profileData.location || null,
+                    })
+                    .eq('id', profileData.candidateId);
+
+                  if (error) {
+                    console.error("Error updating candidate:", error);
+                    toast.error("Failed to save profile changes");
+                    return;
+                  }
+                } catch (err) {
+                  console.error("Unexpected error:", err);
+                  toast.error("Failed to save profile changes");
+                  return;
+                }
+              }
+
+              setUserProfile(profileData);
+              handleNavigate("seeker");
+            }}
+            userProfile={userProfile}
+          />
+        );
       default:
         return <Home onSelectRole={selectRole} />;
     }
@@ -505,17 +974,98 @@ export default function App() {
     setSignupStep('role-select');
     setSignupRole(null);
     setSignupFormData({});
+    setLoginEmail("");
+    setLoginPassword("");
     setShowAuthModal(true);
   };
 
-  const handleDemoLogin = (role: 'seeker' | 'employer') => {
-    const profile = role === 'seeker' ? DEMO_PROFILES.seeker : DEMO_PROFILES.employer;
-    setUserProfile({ ...profile, role });
-    setUserRole(role);
-    setIsLoggedIn(true);
-    setShowAuthModal(false);
-    handleNavigate(role === 'seeker' ? 'seeker' : 'employer');
-    toast.success(`Demo ${role === 'seeker' ? 'Job Seeker' : 'Employer'} logged in!`);
+  const handleDemoLogin = async (role: 'seeker' | 'employer') => {
+    const demoEmail = role === 'seeker' ? DEMO_ACCOUNTS.candidate : DEMO_ACCOUNTS.employer;
+
+    try {
+      // Fetch demo account from database with ALL fields
+      if (role === 'seeker') {
+        const { data: candidate, error } = await supabase
+          .from('candidates')
+          .select('*')
+          .eq('email', demoEmail)
+          .single();
+
+        if (error || !candidate) {
+          throw new Error(`Demo seeker not found: ${error?.message}`);
+        }
+
+        await fetchApplications(candidate.id);
+        await fetchUnlocks(demoEmail);
+        await fetchSavedItems(demoEmail, role);
+
+        // Map database fields to profile format
+        setUserProfile({
+          role: 'seeker',
+          email: candidate.email,
+          name: candidate.name,
+          phone: candidate.phone,
+          location: candidate.location,
+          bio: candidate.bio,
+          skills: candidate.skills || [],
+          experience: candidate.years_experience,
+          education: candidate.education,
+          availability: candidate.availability,
+          targetPay: candidate.preferred_pay_range || candidate.target_pay,
+          industries: candidate.industries_interested || [],
+          videoThumbnailUrl: candidate.video_thumbnail_url,
+          candidateId: candidate.id,
+          id: candidate.id
+        });
+      } else {
+        console.log("Fetching demo employer from database...");
+        const { data: employer, error } = await supabase
+          .from('employers')
+          .select('*')
+          .eq('email', demoEmail)
+          .single();
+
+        console.log("Demo employer fetch result:", { employer, error });
+
+        if (error || !employer) {
+          console.error("Demo employer not found!", error);
+          throw new Error(`Demo employer not found: ${error?.message}`);
+        }
+
+        console.log("Employer data from database:", employer);
+
+        await fetchUnlocks(demoEmail);
+        await fetchSavedItems(demoEmail, role);
+
+        // Map database fields to profile format
+        const mappedProfile = {
+          role: 'employer',
+          email: employer.email,
+          businessName: employer.business_name,
+          phone: employer.phone,
+          location: employer.location,
+          industry: employer.industry,
+          companySize: employer.company_size,
+          bio: employer.company_description,
+          companyLogoUrl: employer.company_logo_url,
+          businessVerified: employer.business_verified,
+          employerId: employer.id,
+          id: employer.id
+        };
+
+        console.log("Setting userProfile to:", mappedProfile);
+        setUserProfile(mappedProfile);
+      }
+
+      setUserRole(role);
+      setIsLoggedIn(true);
+      setShowAuthModal(false);
+      handleNavigate(role === 'seeker' ? 'seeker' : 'employer');
+      toast.success(`Demo ${role === 'seeker' ? 'Job Seeker' : 'Employer'} logged in!`);
+    } catch (error: any) {
+      console.error('Demo login error:', error);
+      toast.error(`Demo login failed: ${error.message || 'Make sure migration has been run!'}`);
+    }
   };
 
   const handleLogout = () => {
@@ -551,33 +1101,129 @@ export default function App() {
 
       {/* --- Modals --- */}
       
-      <Modal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} title={authMode === 'login' ? "Access My Hub" : (signupStep === 'role-select' ? "Get Started" : (signupRole === 'employer' ? "Employer Sign Up" : "Job Seeker Sign Up"))}>
+      <Modal isOpen={showAuthModal} onClose={() => {
+        setShowAuthModal(false);
+        setLoginEmail("");
+        setLoginPassword("");
+      }} title={authMode === 'login' ? "Access My Hub" : (signupStep === 'role-select' ? "Get Started" : (signupRole === 'employer' ? "Employer Sign Up" : "Job Seeker Sign Up"))}>
          <div className="space-y-8 pb-32 sm:pb-8">
             {authMode === 'login' ? (
               <>
-                <form onSubmit={(e) => {
+                <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
                   const email = formData.get('email') as string;
-                  fetchUnlocks(email);
-                  setUserProfile({ email, role: userRole });
+
+                  // Detect user role by checking which table has this email
+                  let detectedRole: 'seeker' | 'employer' = 'seeker';
+                  let fullProfile: any = null;
+
+                  // First check candidates table
+                  const { data: candidate } = await supabase
+                    .from('candidates')
+                    .select('*')
+                    .eq('email', email)
+                    .single();
+
+                  if (candidate) {
+                    detectedRole = 'seeker';
+                    await Promise.all([
+                      fetchApplications(candidate.id),
+                      fetchUnlocks(email),
+                      fetchSavedItems(email, 'seeker')
+                    ]);
+                    fullProfile = {
+                      role: 'seeker',
+                      email: candidate.email,
+                      name: candidate.name,
+                      phone: candidate.phone,
+                      location: candidate.location,
+                      bio: candidate.bio,
+                      skills: candidate.skills || [],
+                      experience: candidate.years_experience,
+                      education: candidate.education,
+                      availability: candidate.availability,
+                      targetPay: candidate.preferred_pay_range || candidate.target_pay,
+                      industries: candidate.industries_interested || [],
+                      videoThumbnailUrl: candidate.video_thumbnail_url,
+                      candidateId: candidate.id,
+                      id: candidate.id
+                    };
+                  } else {
+                    // If not a candidate, check employers table
+                    const { data: employer } = await supabase
+                      .from('employers')
+                      .select('*')
+                      .eq('email', email)
+                      .single();
+
+                    if (employer) {
+                      detectedRole = 'employer';
+                      await Promise.all([
+                        fetchUnlocks(email),
+                        fetchSavedItems(email, 'employer')
+                      ]);
+                      fullProfile = {
+                        role: 'employer',
+                        email: employer.email,
+                        businessName: employer.business_name,
+                        phone: employer.phone,
+                        location: employer.location,
+                        industry: employer.industry,
+                        companySize: employer.company_size,
+                        bio: employer.company_description,
+                        companyLogoUrl: employer.company_logo_url,
+                        businessVerified: employer.business_verified,
+                        employerId: employer.id,
+                        id: employer.id
+                      };
+                    }
+                  }
+
+                  if (!fullProfile) {
+                    toast.error("No account found with that email. Please sign up first.");
+                    return;
+                  }
+
+                  setUserRole(detectedRole);
+                  setUserProfile(fullProfile);
                   setIsLoggedIn(true);
                   setShowAuthModal(false);
-                  if (userRole === 'employer') handleNavigate("employer");
+                  if (detectedRole === 'employer') handleNavigate("employer");
                   else handleNavigate("seeker");
                   toast.success("Welcome back!");
                 }} className="space-y-8">
                    <div className="space-y-6">
                       <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Email Identity</label>
-                         <input required name="email" type="email" placeholder="name@region.com" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tight" />
+                         <input
+                           required
+                           name="email"
+                           type="email"
+                           placeholder="name@region.com"
+                           value={loginEmail}
+                           onChange={(e) => setLoginEmail(e.target.value)}
+                           className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tight transition-all"
+                         />
                       </div>
                       <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Access Key</label>
-                         <input required type="password" placeholder="••••••••" className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tighter" />
+                         <input
+                           required
+                           type="password"
+                           placeholder="••••••••"
+                           value={loginPassword}
+                           onChange={(e) => setLoginPassword(e.target.value)}
+                           className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#0077BE]/10 outline-none font-black text-xl tracking-tighter transition-all"
+                         />
                       </div>
                    </div>
-                   <Button type="submit" className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#0077BE]/20">Log In to Hub</Button>
+                   <Button
+                     type="submit"
+                     className="w-full h-20 rounded-[1.5rem] text-xl border-2 border-[#0077BE]/30 hover:border-[#0077BE] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200"
+                   >
+                     Log In to Hub
+                   </Button>
                 </form>
 
                 {/* Demo Login Shortcuts */}
@@ -585,26 +1231,36 @@ export default function App() {
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] text-center">Demo Shortcuts</p>
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      onClick={() => handleDemoLogin('seeker')}
-                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10 transition-all text-center space-y-2 group"
+                      type="button"
+                      onClick={() => {
+                        setLoginEmail(DEMO_ACCOUNTS.candidate);
+                        setLoginPassword('demo123');
+                        toast.success("Demo credentials filled! Click 'Log In to Hub'");
+                      }}
+                      className="p-4 rounded-2xl border-2 border-[#0077BE]/20 bg-[#0077BE]/5 hover:border-[#0077BE] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <User size={24} className="mx-auto text-[#0077BE] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#0077BE]">Job Seeker</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Keanu Mahalo</span>
+                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
                     </button>
                     <button
-                      onClick={() => handleDemoLogin('employer')}
-                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all text-center space-y-2 group"
+                      type="button"
+                      onClick={() => {
+                        setLoginEmail(DEMO_ACCOUNTS.employer);
+                        setLoginPassword('demo123');
+                        toast.success("Demo credentials filled! Click 'Log In to Hub'");
+                      }}
+                      className="p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:border-[#2ECC71] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
                       <Building2 size={24} className="mx-auto text-[#2ECC71] group-hover:scale-110 transition-transform" />
                       <span className="block text-xs font-black uppercase tracking-widest text-[#2ECC71]">Employer</span>
-                      <span className="block text-[10px] text-gray-400 font-medium">Aloha Bistro</span>
+                      <span className="block text-[10px] text-gray-400 font-medium">Demo Account</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#0077BE] hover:underline">Create Account</button></p>
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#0077BE] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Create Account</button></p>
                 </div>
               </>
             ) : signupStep === 'role-select' ? (
@@ -615,7 +1271,7 @@ export default function App() {
                 <div className="space-y-4">
                   <button
                     onClick={() => { setSignupRole('seeker'); setSignupStep('form'); }}
-                    className="w-full p-6 rounded-[2rem] border-2 border-[#0077BE]/20 hover:border-[#0077BE] bg-white hover:bg-[#0077BE]/5 transition-all text-left space-y-3 group"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#0077BE]/20 hover:border-[#0077BE] bg-white hover:bg-[#0077BE]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#0077BE]/10 flex items-center justify-center shrink-0">
@@ -635,7 +1291,7 @@ export default function App() {
 
                   <button
                     onClick={() => { setSignupRole('employer'); setSignupStep('form'); }}
-                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#2ECC71] bg-white hover:bg-[#2ECC71]/5 transition-all text-left space-y-3 group"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#2ECC71]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#2ECC71]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-[#2ECC71]/10 flex items-center justify-center shrink-0">
@@ -661,7 +1317,7 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             ) : (
@@ -669,24 +1325,25 @@ export default function App() {
               <div className="space-y-8">
                 <button
                   onClick={() => { setSignupStep('role-select'); setSignupRole(null); setSignupFormData({}); }}
-                  className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-[#0077BE] transition-colors"
+                  className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-[#0077BE] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                 >
                   &larr; Back to role selection
                 </button>
 
                 {/* Demo Auto-Fill Button */}
                 <button
+                  type="button"
                   onClick={() => {
                     if (signupRole === 'seeker') {
                       const d = DEMO_PROFILES.seeker;
                       setSignupFormData({ name: d.name, email: d.email, password: d.password, phone: d.phone, location: d.location });
                     } else {
                       const d = DEMO_PROFILES.employer;
-                      setSignupFormData({ businessName: d.businessName, contactName: d.contactName, email: d.email, password: d.password, phone: d.phone, industry: d.industry, businessLicense: d.businessLicense });
+                      setSignupFormData({ businessName: d.businessName, email: d.email, password: d.password, phone: d.phone, industry: d.industry, businessLicense: d.businessLicense });
                     }
-                    toast.success("Demo data filled! Review and submit.");
+                    toast.success("Demo data filled! Click the button below to create your account.");
                   }}
-                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} transition-all flex items-center justify-center gap-3 group`}
+                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10' : 'border-[#0077BE]/20 bg-[#0077BE]/5 hover:bg-[#0077BE]/10'} hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group`}
                 >
                   <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'} group-hover:scale-110 transition-transform`} />
                   <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#2ECC71]' : 'text-[#0077BE]'}`}>
@@ -694,16 +1351,197 @@ export default function App() {
                   </span>
                 </button>
 
-                <form onSubmit={(e) => {
+                <form onSubmit={async (e) => {
                   e.preventDefault();
-                  const profile: any = { role: signupRole, ...signupFormData };
-                  setUserProfile(profile);
-                  setUserRole(signupRole!);
-                  setIsLoggedIn(true);
-                  setShowAuthModal(false);
-                  setSignupFormData({});
-                  handleNavigate(signupRole === 'employer' ? "employer-onboarding" : "seeker-onboarding");
-                  toast.success("Account created! Let's set up your profile.");
+                  setIsSignupLoading(true);
+
+                  try {
+                    // If employer, insert into employers table first
+                    if (signupRole === 'employer') {
+                      const isDemoAccount = signupFormData.email === DEMO_ACCOUNTS.employer;
+
+                      if (isDemoAccount) {
+                        // Demo account: skip DB insert, go straight to onboarding
+                        const profile: any = {
+                          role: signupRole,
+                          ...signupFormData,
+                          isDemoAccount: true, // Flag for onboarding handler
+                          employerId: 72 // Demo employer ID
+                        };
+                        setUserProfile(profile);
+                        setUserRole(signupRole!);
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
+                        setIsSignupLoading(false);
+                        handleNavigate("employer-onboarding");
+                        toast.success("Demo account detected! Let's go through the onboarding.");
+                        return;
+                      }
+
+                      // Check if email already exists — if so, just log them in
+                      const { data: existingEmployer } = await supabase
+                        .from('employers')
+                        .select('*')
+                        .eq('email', signupFormData.email)
+                        .single();
+
+                      if (existingEmployer) {
+                        await Promise.all([fetchUnlocks(signupFormData.email), fetchSavedItems(signupFormData.email, 'employer')]);
+                        setUserProfile({
+                          role: 'employer',
+                          email: existingEmployer.email,
+                          businessName: existingEmployer.business_name,
+                          phone: existingEmployer.phone,
+                          location: existingEmployer.location,
+                          industry: existingEmployer.industry,
+                          companySize: existingEmployer.company_size,
+                          bio: existingEmployer.company_description,
+                          companyLogoUrl: existingEmployer.company_logo_url,
+                          businessVerified: existingEmployer.business_verified,
+                          employerId: existingEmployer.id,
+                          id: existingEmployer.id
+                        });
+                        setUserRole('employer');
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
+                        setIsSignupLoading(false);
+                        handleNavigate("employer");
+                        toast.success("Welcome back! Logged in to your existing account.");
+                        return;
+                      }
+
+                      const { data: employerData, error: employerError } = await supabase
+                        .from('employers')
+                        .insert([{
+                          email: signupFormData.email,
+                          phone: signupFormData.phone || null,
+                          business_name: signupFormData.businessName,
+                          industry: signupFormData.industry || null,
+                        }])
+                        .select()
+                        .single();
+
+                      if (employerError) {
+                        console.error("Error creating employer:", employerError);
+                        toast.error(`Failed to create employer account: ${employerError.message}`);
+                        setIsSignupLoading(false);
+                        return;
+                      }
+
+                      // Store employer with database ID
+                      const profile: any = {
+                        role: signupRole,
+                        ...signupFormData,
+                        employerId: employerData.id
+                      };
+                      setUserProfile(profile);
+                      setUserRole(signupRole!);
+                      setIsLoggedIn(true);
+                      setShowAuthModal(false);
+                      setSignupFormData({});
+                      setIsSignupLoading(false);
+                      handleNavigate("employer-onboarding");
+                      toast.success("Account created! Let's set up your profile.");
+                    }
+                    else {
+                      // Seeker signup - insert into candidates table
+                      const isDemoAccount = signupFormData.email === DEMO_ACCOUNTS.candidate;
+
+                      if (isDemoAccount) {
+                        // Demo account: skip DB insert, go straight to onboarding
+                        const profile: any = {
+                          role: signupRole,
+                          ...signupFormData,
+                          isDemoAccount: true, // Flag for onboarding handler
+                          candidateId: 71 // Demo candidate ID
+                        };
+                        setUserProfile(profile);
+                        setUserRole(signupRole!);
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
+                        setIsSignupLoading(false);
+                        handleNavigate("seeker-onboarding");
+                        toast.success("Demo account detected! Let's go through the onboarding.");
+                        return;
+                      }
+
+                      // Check if email already exists — if so, just log them in
+                      const { data: existingCandidate } = await supabase
+                        .from('candidates')
+                        .select('*')
+                        .eq('email', signupFormData.email)
+                        .single();
+
+                      if (existingCandidate) {
+                        await Promise.all([fetchApplications(existingCandidate.id), fetchUnlocks(signupFormData.email), fetchSavedItems(signupFormData.email, 'seeker')]);
+                        setUserProfile({
+                          role: 'seeker',
+                          email: existingCandidate.email,
+                          name: existingCandidate.name,
+                          phone: existingCandidate.phone,
+                          location: existingCandidate.location,
+                          videoThumbnailUrl: existingCandidate.video_thumbnail_url,
+                          bio: existingCandidate.bio,
+                          skills: existingCandidate.skills || [],
+                          experience: existingCandidate.years_experience,
+                          education: existingCandidate.education,
+                          availability: existingCandidate.availability,
+                          targetPay: existingCandidate.preferred_pay_range || existingCandidate.target_pay,
+                          industries: existingCandidate.industries_interested || [],
+                          candidateId: existingCandidate.id,
+                          id: existingCandidate.id
+                        });
+                        setUserRole('seeker');
+                        setIsLoggedIn(true);
+                        setShowAuthModal(false);
+                        setSignupFormData({});
+                        setIsSignupLoading(false);
+                        handleNavigate("seeker");
+                        toast.success("Welcome back! Logged in to your existing account.");
+                        return;
+                      }
+
+                      const { data: candidateData, error: candidateError } = await supabase
+                        .from('candidates')
+                        .insert([{
+                          name: signupFormData.name,
+                          email: signupFormData.email,
+                          phone: signupFormData.phone || null,
+                          location: signupFormData.location || null,
+                        }])
+                        .select()
+                        .single();
+
+                      if (candidateError) {
+                        console.error("Error creating candidate:", candidateError);
+                        toast.error(`Failed to create candidate account: ${candidateError.message}`);
+                        setIsSignupLoading(false);
+                        return;
+                      }
+
+                      // Store candidate with database ID
+                      const profile: any = {
+                        role: signupRole,
+                        ...signupFormData,
+                        candidateId: candidateData.id
+                      };
+                      setUserProfile(profile);
+                      setUserRole(signupRole!);
+                      setIsLoggedIn(true);
+                      setShowAuthModal(false);
+                      setSignupFormData({});
+                      setIsSignupLoading(false);
+                      handleNavigate("seeker-onboarding");
+                      toast.success("Account created! Let's set up your profile.");
+                    }
+                  } catch (err: any) {
+                    console.error("Unexpected error:", err);
+                    toast.error(`An unexpected error occurred: ${err?.message || 'Please try again'}`);
+                    setIsSignupLoading(false);
+                  }
                 }} className="space-y-6">
                    {signupRole === 'seeker' ? (
                      /* Seeker Signup Form */
@@ -742,10 +1580,6 @@ export default function App() {
                          <input required type="text" value={signupFormData.businessName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessName: e.target.value }))} placeholder="Your business name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Contact Name</label>
-                         <input required type="text" value={signupFormData.contactName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, contactName: e.target.value }))} placeholder="Your name" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
-                       </div>
-                       <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-2">Business Email</label>
                          <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="hiring@business.com" className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
@@ -779,14 +1613,15 @@ export default function App() {
 
                    <Button
                      type="submit"
-                     className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
+                     disabled={isSignupLoading}
+                     className={`w-full h-16 rounded-[1.5rem] text-lg shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === 'employer' ? 'bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20' : 'shadow-[#0077BE]/20'}`}
                    >
-                     {signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account'}
+                     {isSignupLoading ? 'Creating Account...' : (signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account')}
                    </Button>
                 </form>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline">Sign In</button></p>
+                   <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#0077BE] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             )}
@@ -861,7 +1696,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setExpandedPaymentItemId(expandedPaymentItemId === item.id ? null : item.id)}
-                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   title="Toggle details"
                 >
                   {expandedPaymentItemId === item.id
@@ -876,7 +1711,7 @@ export default function App() {
                     setPaymentItems(next);
                     if (expandedPaymentItemId === item.id) setExpandedPaymentItemId(null);
                   }}
-                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors"
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#FF6B6B] hover:border-[#FF6B6B]/30 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   title="Remove from checkout"
                 >
                   <X size={14} />
@@ -995,11 +1830,11 @@ export default function App() {
     {/* Pay Button */}
     {paymentItems.length > 0 && (
       <Button
-        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white"
+        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#0077BE]/30 tracking-tight group bg-[#0077BE] hover:bg-[#0077BE]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
         onClick={processPayment}
       >
         <Lock size={18} className="mr-2" />
-        {paymentTarget?.type === 'seeker' ? `Apply & Reveal` : `Unlock ${paymentItems.length > 1 ? `${paymentItems.length} Profiles` : 'Profile'}`} — ${(paymentItems.length * INTERACTION_FEE).toFixed(2)}
+        {paymentTarget?.type === 'seeker' ? `Apply & Reveal` : `Unlock ${paymentItems.length > 1 ? `${paymentItems.length} Profiles` : 'Profile'}`}
         <ArrowRight size={20} className="ml-1 group-hover:translate-x-1 transition-transform" />
       </Button>
     )}
@@ -1052,34 +1887,34 @@ export default function App() {
             <div className="space-y-4">
                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Job Intro Format</label>
                <div className="flex gap-4">
-                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'}`}>
+                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'} hover:scale-105 active:scale-95 duration-200`}>
                      <Video size={24} />
                      <span className="font-black text-[10px]">VIDEO INTRO</span>
                   </button>
-                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'}`}>
+                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#0077BE] bg-[#0077BE]/5 text-[#0077BE]' : 'border-gray-50 text-gray-400'} hover:scale-105 active:scale-95 duration-200`}>
                      <Mic size={24} />
                      <span className="font-black text-[10px]">VOICE ONLY</span>
                   </button>
                </div>
-               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-300 hover:text-[#0077BE] hover:border-[#0077BE] transition-all">
+               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-300 hover:text-[#0077BE] hover:border-[#0077BE] hover:scale-105 active:scale-95 transition-all duration-200">
                   {mediaType === 'video' ? <Camera size={32} /> : <Mic size={32} />}
                   <span className="font-black text-[10px] uppercase">Record Job Intro</span>
                </button>
             </div>
 
             <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Overview</label><textarea required name="description" rows={4} className="w-full p-6 rounded-3xl bg-gray-50 border border-gray-100 font-medium text-lg" /></div>
-            <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#0077BE]/20">Go Live ($0 Post Fee)</Button>
+            <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#0077BE]/20 hover:scale-105 active:scale-95 transition-all duration-200">Go Live ($0 Post Fee)</Button>
          </form>
       </Modal>
 
       <Modal isOpen={showVisibilityModal} onClose={() => setShowVisibilityModal(false)} title="Visibility Preferences">
          <div className="space-y-12">
             <div className="space-y-6">
-               <button onClick={() => { setUserVisibility("broader"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left transition-all flex gap-10 items-center ${userVisibility === "broader" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
+               <button onClick={() => { setUserVisibility("broader"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "broader" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
                   <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "broader" ? "border-[#0077BE]" : "border-gray-200"}`}>{userVisibility === "broader" && <div className="w-6 h-6 rounded-full bg-[#0077BE]" />}</div>
                   <div className="space-y-2"><span className="font-black text-3xl text-gray-900 block tracking-tighter leading-none uppercase">Public Discovery</span><p className="text-lg text-gray-500 font-medium leading-tight">Businesses can find you in the pool.</p></div>
                </button>
-               <button onClick={() => { setUserVisibility("limited"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left transition-all flex gap-10 items-center ${userVisibility === "limited" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
+               <button onClick={() => { setUserVisibility("limited"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "limited" ? "border-[#0077BE] bg-[#0077BE]/5 shadow-xl" : "border-gray-50"}`}>
                    <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "limited" ? "border-[#0077BE]" : "border-gray-200"}`}>{userVisibility === "limited" && <div className="w-6 h-6 rounded-full bg-[#0077BE]" />}</div>
                   <div className="space-y-2"><span className="font-black text-3xl text-gray-900 block tracking-tighter leading-none uppercase">Direct Only</span><p className="text-lg text-gray-500 font-medium leading-tight">Only jobs you apply to see your profile.</p></div>
                </button>
@@ -1091,11 +1926,11 @@ export default function App() {
          <div className="space-y-10">
             <p className="text-center text-gray-500 font-medium">Choose how you want to show your personality.</p>
             <div className="grid grid-cols-2 gap-6">
-               <button onClick={() => { setMediaType("video"); toast.info("Starting Video Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 transition-all">
+               <button onClick={() => { setMediaType("video"); toast.info("Starting Video Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 hover:scale-105 active:scale-95 transition-all duration-200">
                   <Video size={48} className="text-[#0077BE]" />
                   <span className="font-black text-xs uppercase tracking-widest">VIDEO INTRO</span>
                </button>
-               <button onClick={() => { setMediaType("voice"); toast.info("Starting Voice Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 transition-all">
+               <button onClick={() => { setMediaType("voice"); toast.info("Starting Voice Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#0077BE] hover:bg-[#0077BE]/5 hover:scale-105 active:scale-95 transition-all duration-200">
                   <Mic size={48} className="text-[#0077BE]" />
                   <span className="font-black text-xs uppercase tracking-widest">VOICE ONLY</span>
                </button>
@@ -1113,9 +1948,9 @@ export default function App() {
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 {userRole === 'seeker' ? 'Job Filters' : 'Talent Filters'}
               </span>
-              <button 
+              <button
                 onClick={clearFilters}
-                className="text-[10px] font-black text-[#FF6B6B] uppercase tracking-widest hover:underline"
+                className="text-[10px] font-black text-[#FF6B6B] uppercase tracking-widest hover:underline hover:scale-105 active:scale-95 transition-all duration-200"
               >
                 Clear All
               </button>
@@ -1124,10 +1959,10 @@ export default function App() {
             {/* Industry Filter: Always available now, matching interested industries for candidates */}
             <CollapsibleFilter title="Industry" isOpen={true}>
               {(userRole === 'seeker' ? JOB_CATEGORIES.industries : CANDIDATE_CATEGORIES.industries).map(t => (
-                <button 
-                  key={t} 
-                  onClick={() => toggleFilter('industries', t)} 
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                <button
+                  key={t}
+                  onClick={() => toggleFilter('industries', t)}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {t}
                 </button>
@@ -1137,10 +1972,10 @@ export default function App() {
             {/* Common Filter: Location */}
             <CollapsibleFilter title="Location" isOpen={userRole === 'employer'}>
               {(userRole === 'seeker' ? JOB_CATEGORIES.locations : CANDIDATE_CATEGORIES.locations).map(l => (
-                <button 
-                  key={l} 
-                  onClick={() => toggleFilter('locations', l)} 
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                <button
+                  key={l}
+                  onClick={() => toggleFilter('locations', l)}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {l}
                 </button>
@@ -1151,10 +1986,10 @@ export default function App() {
             {userRole === 'seeker' ? (
               <CollapsibleFilter title="Pay Range">
                 {JOB_CATEGORIES.payRanges.map(p => (
-                  <button 
-                    key={p} 
-                    onClick={() => toggleFilter('payRanges', p)} 
-                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                  <button
+                    key={p}
+                    onClick={() => toggleFilter('payRanges', p)}
+                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                   >
                     {p}
                   </button>
@@ -1163,11 +1998,11 @@ export default function App() {
             ) : (
               <>
                 <CollapsibleFilter title="Experience Level" isOpen={true}>
-                  {CANDIDATE_CATEGORIES.experienceLevels.map(e => (
-                    <button 
-                      key={e} 
-                      onClick={() => toggleFilter('experienceLevels', e)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experienceLevels.includes(e) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                  {CANDIDATE_CATEGORIES.experience.map(e => (
+                    <button
+                      key={e}
+                      onClick={() => toggleFilter('experience', e)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {e}
                     </button>
@@ -1176,10 +2011,10 @@ export default function App() {
 
                 <CollapsibleFilter title="Skills">
                   {CANDIDATE_CATEGORIES.skills.map(s => (
-                    <button 
-                      key={s} 
-                      onClick={() => toggleFilter('skills', s)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                    <button
+                      key={s}
+                      onClick={() => toggleFilter('skills', s)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {s}
                     </button>
@@ -1187,11 +2022,11 @@ export default function App() {
                 </CollapsibleFilter>
 
                 <CollapsibleFilter title="Education">
-                  {CANDIDATE_CATEGORIES.educationLevels.map(edu => (
-                    <button 
-                      key={edu} 
-                      onClick={() => toggleFilter('educationLevels', edu)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.educationLevels.includes(edu) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                  {CANDIDATE_CATEGORIES.education.map(edu => (
+                    <button
+                      key={edu}
+                      onClick={() => toggleFilter('education', edu)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {edu}
                     </button>
@@ -1200,10 +2035,10 @@ export default function App() {
 
                 <CollapsibleFilter title="Target Pay">
                   {CANDIDATE_CATEGORIES.targetPayRanges.map(p => (
-                    <button 
-                      key={p} 
-                      onClick={() => toggleFilter('payRanges', p)} 
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'}`}
+                    <button
+                      key={p}
+                      onClick={() => toggleFilter('payRanges', p)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#0077BE] text-[#0077BE] bg-[#0077BE]/5' : 'border-gray-50 text-gray-400 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {p}
                     </button>
@@ -1213,7 +2048,7 @@ export default function App() {
             )}
 
             <div className="pt-6">
-              <Button className="w-full h-16 rounded-2xl text-lg" onClick={() => setShowFilterModal(false)}>
+              <Button className="w-full h-16 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => setShowFilterModal(false)}>
                 Show {userRole === 'seeker' ? filteredJobs.length : filteredCandidates.length} Results
               </Button>
             </div>
@@ -1223,15 +2058,15 @@ export default function App() {
      {/* Mobile Nav */}
 {currentView !== "landing" && !showPaymentModal && (
   <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-3 z-50 shadow-2xl">
-     <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300">
+     <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200">
        <Eye size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">EXPLORE</span>
      </button>
-     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#0077BE]' : 'text-gray-300'}`}>
+     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#0077BE]' : 'text-gray-300'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <Briefcase size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
      </button>
-     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#0077BE]' : 'text-gray-300'}`}>
+     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#0077BE]' : 'text-gray-300'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <User size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
      </button>
@@ -1329,9 +2164,26 @@ export default function App() {
             )}
 
             {/* CTA */}
-            {!unlockedJobIds.includes(selectedJob.id) && (
-              <Button className="w-full h-20 text-xl rounded-3xl shadow-2xl shadow-[#0077BE]/20" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
-                Apply & Reveal Business — ${INTERACTION_FEE.toFixed(2)}
+            {userRole === 'employer' ? (
+              /* Employer actions */
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
+                    setEditingJob(selectedJob);
+                    setSelectedJob(null);
+                    handleNavigate('job-posting');
+                  }}>
+                    Edit Job
+                  </Button>
+                  <Button className="h-16 rounded-2xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
+                    View Applicants
+                  </Button>
+                </div>
+              </div>
+            ) : !unlockedJobIds.includes(selectedJob.id) && (
+              /* Seeker actions */
+              <Button className="w-full h-20 text-xl rounded-3xl shadow-2xl shadow-[#0077BE]/20 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
+                Apply & Reveal Business
               </Button>
             )}
           </div>
@@ -1371,8 +2223,8 @@ export default function App() {
                 </div>
 
                 <div className="flex gap-4 p-1 bg-gray-50 rounded-2xl">
-                  <button className="flex-1 py-4 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase tracking-widest">Video Intro</button>
-                  <button className="flex-1 py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-600 transition-colors">Transcript</button>
+                  <button className="flex-1 py-4 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200">Video Intro</button>
+                  <button className="flex-1 py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-600 transition-colors hover:scale-105 active:scale-95 transition-all duration-200">Transcript</button>
                 </div>
               </div>
             ) : (
@@ -1533,8 +2385,8 @@ export default function App() {
             </div>
 
             {!unlockedCandidateIds.includes(selectedCandidate.id) && (
-              <Button className="w-full h-16 sm:h-20 md:h-24 text-base sm:text-xl md:text-2xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-[#FF6B6B]/20 bg-[#FF6B6B] hover:bg-[#FF6B6B]/90" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
-                Unlock Full Video & Contact ${INTERACTION_FEE.toFixed(2)}
+              <Button className="w-full h-16 sm:h-20 md:h-24 text-base sm:text-xl md:text-2xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-[#FF6B6B]/20 bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
+                Unlock Full Video & Contact
               </Button>
             )}
           </div>

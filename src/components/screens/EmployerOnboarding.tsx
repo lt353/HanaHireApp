@@ -17,13 +17,14 @@ interface EmployerOnboardingProps {
 }
 
 export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProfile, onComplete }) => {
-  const [bio, setBio] = useState("");
+  const [bio, setBio] = useState(userProfile?.bio || "");
   const [industry, setIndustry] = useState(userProfile?.industry || "");
-  const [companySize, setCompanySize] = useState("");
+  const [companySize, setCompanySize] = useState(userProfile?.companySize || "");
   const [location, setLocation] = useState(userProfile?.location || "");
   const [phone, setPhone] = useState(userProfile?.phone || "");
-  const [website, setWebsite] = useState("");
+  const [website, setWebsite] = useState(userProfile?.website || "");
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
+  const [logoUrl, setLogoUrl] = useState(userProfile?.companyLogoUrl || "");
 
   const handleDemoFill = () => {
     const d = DEMO_PROFILES.employer;
@@ -34,6 +35,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
     setPhone(d.phone);
     setWebsite("www.alohabistro.com");
     setBusinessLicense(d.businessLicense);
+    setLogoUrl("https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200&h=200&fit=crop");
   };
 
   const handleSubmit = () => {
@@ -46,6 +48,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
       phone,
       website,
       businessLicense,
+      companyLogoUrl: logoUrl,
     };
     onComplete(profileData);
   };
@@ -90,7 +93,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         {/* Demo Fill Button */}
         <button
           onClick={handleDemoFill}
-          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all flex items-center justify-center gap-3 group"
+          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#2ECC71]/20 bg-[#2ECC71]/5 hover:bg-[#2ECC71]/10 transition-all flex items-center justify-center gap-3 group hover:scale-105 active:scale-95 duration-200"
         >
           <Zap size={18} className="text-[#2ECC71] group-hover:scale-110 transition-transform" />
           <span className="text-xs font-black uppercase tracking-widest text-[#2ECC71]">
@@ -218,24 +221,29 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
             </div>
           </div>
 
-          {/* Logo Upload Placeholder */}
+          {/* Logo URL */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Logo (optional)</h2>
-            <button
-              onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-300 hover:text-[#2ECC71] hover:border-[#2ECC71]/30 transition-all"
-            >
-              <Upload size={36} />
-              <span className="font-black text-xs uppercase tracking-widest">Upload Your Logo</span>
-              <span className="text-[10px] text-gray-400 font-medium">PNG, JPG, or SVG &middot; 500x500 recommended</span>
-            </button>
+            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Logo URL (optional)</h2>
+            <input
+              type="url"
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              placeholder="https://yoursite.com/logo.png"
+              className="w-full p-4 rounded-xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base"
+            />
+            {logoUrl && (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <img src={logoUrl} alt="Logo preview" className="w-12 h-12 rounded-lg object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <span className="text-xs text-gray-500 font-medium">Logo preview</span>
+              </div>
+            )}
           </div>
 
           {/* Submit */}
           <div className="pt-4 space-y-4">
             <Button
               onClick={handleSubmit}
-              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20 flex items-center justify-center gap-3"
+              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#2ECC71] hover:bg-[#2ECC71]/90 shadow-[#2ECC71]/20 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <Sparkles size={22} />
               Launch Business Profile

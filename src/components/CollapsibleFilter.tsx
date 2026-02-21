@@ -20,7 +20,7 @@ export const CollapsibleFilter: React.FC<CollapsibleFilterProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-6 flex items-center justify-between group"
+        className="w-full py-6 flex items-center justify-between group hover:scale-105 active:scale-95 transition-all duration-200"
       >
         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-[#0077BE] transition-colors">
           {title}

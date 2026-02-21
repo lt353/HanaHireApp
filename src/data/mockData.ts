@@ -42,10 +42,10 @@ export const CANDIDATE_CATEGORIES = {
     'Medical', 'Dental', 'First Aid/CPR', 'Lifeguard', 'Teaching', 'Childcare', 
     'Tour Guide', 'Ocean Safety'
   ],
-  experienceLevels: [
+  experience: [
     '0-2 years', '2-5 years', '5-10 years', '10+ years'
   ],
-  educationLevels: [
+  education: [
     'High School', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Vocational Training'
   ],
   targetPayRanges: [
@@ -68,12 +68,12 @@ export const CANDIDATE_CATEGORIES = {
   locations: JOB_CATEGORIES.locations
 };
 
-// Demo profiles for quick login/signup shortcuts
+// Demo profiles matching the real demo accounts in the database
 export const DEMO_PROFILES = {
   seeker: {
-    email: 'keanu.mahalo@demo.com',
-    password: 'demo1234',
-    name: 'Keanu Mahalo',
+    email: 'luca.kahananui@email.com',  // Real demo account
+    password: 'demo123',
+    name: 'Luca Kahananui',
     phone: '(808) 555-1234',
     location: 'Honolulu, HI',
     skills: ['Customer Service', 'Bartending', 'Hospitality', 'Bilingual'],
@@ -85,16 +85,16 @@ export const DEMO_PROFILES = {
     industries: ['Food & Beverage', 'Tourism', 'Hospitality'],
   },
   employer: {
-    email: 'hiring@alohabistro.demo',
-    password: 'demo1234',
-    businessName: 'Aloha Bistro & Bar',
-    contactName: 'Lani Nakamura',
+    email: 'demo@koabeachbistro.com',  // Real demo account
+    password: 'demo123',
+    businessName: 'Koa Beach Bistro',
+    contactName: 'Makani Torres',
     phone: '(808) 555-9876',
     location: 'Waikiki, HI',
     industry: 'Food & Beverage',
     companySize: 'Small Business (10-25)',
     businessLicense: 'HI-BIZ-2024-88432',
-    bio: 'Family-owned restaurant in Waikiki serving modern Hawaiian fusion cuisine since 2018. We pride ourselves on a supportive team culture and aloha spirit.',
+    bio: 'Beachfront restaurant in Waikiki serving fresh Hawaiian cuisine with ocean views. We pride ourselves on a supportive team culture and aloha spirit.',
   },
 };
 
