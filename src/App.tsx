@@ -1210,15 +1210,6 @@ export default function App() {
 
                 <form onSubmit={async (e) => {
                   e.preventDefault();
-
-                  // Validate email is not a placeholder
-                  const email = signupFormData.email?.toLowerCase() || '';
-                  if (email.includes('example.com') || email.includes('yourcompany.com') || email.includes('yourname@') || email === '') {
-                    toast.error("⚠️ Please change the email to your real email address!");
-                    setIsSignupLoading(false);
-                    return;
-                  }
-
                   setIsSignupLoading(true);
 
                   try {
