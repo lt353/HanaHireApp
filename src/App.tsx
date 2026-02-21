@@ -873,46 +873,78 @@ export default function App() {
     const demoEmail = role === 'seeker' ? 'demo.seeker@hanahire.com' : 'demo.employer@hanahire.com';
 
     try {
-      // Fetch demo account from database
-      let userId = null;
+      // Fetch demo account from database with ALL fields
       if (role === 'seeker') {
-        const { data: candidate } = await supabase
+        const { data: candidate, error } = await supabase
           .from('candidates')
-          .select('id, name, email')
+          .select('*')
           .eq('email', demoEmail)
           .single();
 
-        if (candidate) {
-          userId = candidate.id;
-          await fetchApplications(candidate.id);
+        if (error || !candidate) {
+          throw new Error(`Demo seeker not found: ${error?.message}`);
         }
+
+        await fetchApplications(candidate.id);
+        await fetchUnlocks(demoEmail);
+        await fetchSavedItems(demoEmail, role);
+
+        // Map database fields to profile format
+        setUserProfile({
+          role: 'seeker',
+          email: candidate.email,
+          name: candidate.name,
+          phone: candidate.phone,
+          location: candidate.location,
+          bio: candidate.bio,
+          skills: candidate.skills || [],
+          experience: candidate.years_experience,
+          education: candidate.education,
+          availability: candidate.availability,
+          targetPay: candidate.preferred_pay_range || candidate.target_pay,
+          industries: candidate.industries_interested || [],
+          candidateId: candidate.id,
+          id: candidate.id
+        });
       } else {
-        const { data: employer } = await supabase
+        const { data: employer, error } = await supabase
           .from('employers')
-          .select('id, email, business_name')
+          .select('*')
           .eq('email', demoEmail)
           .single();
 
-        if (employer) {
-          userId = employer.id;
+        if (error || !employer) {
+          throw new Error(`Demo employer not found: ${error?.message}`);
         }
+
+        await fetchUnlocks(demoEmail);
+        await fetchSavedItems(demoEmail, role);
+
+        // Map database fields to profile format
+        setUserProfile({
+          role: 'employer',
+          email: employer.email,
+          businessName: employer.business_name,
+          phone: employer.phone,
+          location: employer.location,
+          industry: employer.industry,
+          companySize: employer.company_size,
+          bio: employer.company_description,
+          companyLogoUrl: employer.company_logo_url,
+          businessVerified: employer.business_verified,
+          employerId: employer.id,
+          id: employer.id
+        });
       }
 
-      // Load unlocks and saved items
-      await fetchUnlocks(demoEmail);
-      await fetchSavedItems(demoEmail, role);
-
-      // Use demo profile data but include database ID
-      const profile = role === 'seeker' ? DEMO_PROFILES.seeker : DEMO_PROFILES.employer;
-      setUserProfile({ ...profile, email: demoEmail, role, id: userId });
       setUserRole(role);
       setIsLoggedIn(true);
       setShowAuthModal(false);
       handleNavigate(role === 'seeker' ? 'seeker' : 'employer');
       toast.success(`Demo ${role === 'seeker' ? 'Job Seeker' : 'Employer'} logged in!`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Demo login error:', error);
-      toast.error('Demo login failed. Make sure migration has been run!');
+      toast.error(`Demo login failed: ${error.message || 'Make sure migration has been run!'}`);
     }
   };
 
