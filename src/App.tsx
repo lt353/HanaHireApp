@@ -907,21 +907,27 @@ export default function App() {
           id: candidate.id
         });
       } else {
+        console.log("Fetching demo employer from database...");
         const { data: employer, error } = await supabase
           .from('employers')
           .select('*')
           .eq('email', demoEmail)
           .single();
 
+        console.log("Demo employer fetch result:", { employer, error });
+
         if (error || !employer) {
+          console.error("Demo employer not found!", error);
           throw new Error(`Demo employer not found: ${error?.message}`);
         }
+
+        console.log("Employer data from database:", employer);
 
         await fetchUnlocks(demoEmail);
         await fetchSavedItems(demoEmail, role);
 
         // Map database fields to profile format
-        setUserProfile({
+        const mappedProfile = {
           role: 'employer',
           email: employer.email,
           businessName: employer.business_name,
@@ -934,7 +940,10 @@ export default function App() {
           businessVerified: employer.business_verified,
           employerId: employer.id,
           id: employer.id
-        });
+        };
+
+        console.log("Setting userProfile to:", mappedProfile);
+        setUserProfile(mappedProfile);
       }
 
       setUserRole(role);
@@ -1204,8 +1213,9 @@ export default function App() {
 
                   // Validate email is not a placeholder
                   const email = signupFormData.email?.toLowerCase() || '';
-                  if (email.includes('example.com') || email.includes('yourname@') || email.includes('yourcompany@')) {
-                    toast.error("Please use your real email address, not the placeholder!");
+                  if (email.includes('example.com') || email.includes('yourcompany.com') || email.includes('yourname@') || email === '') {
+                    toast.error("⚠️ Please change the email to your real email address!");
+                    setIsSignupLoading(false);
                     return;
                   }
 
