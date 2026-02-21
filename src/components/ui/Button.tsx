@@ -12,11 +12,11 @@ export const Button: React.FC<ButtonProps> = ({
   ...props 
 }) => {
   const variants = {
-    primary: "bg-[#0077BE] text-white hover:bg-[#005a91]",
-    secondary: "bg-[#FF6B6B] text-white hover:bg-[#e85a5a]",
-    outline: "border-2 border-gray-200 text-gray-700 hover:border-[#0077BE] hover:text-[#0077BE]",
-    ghost: "text-gray-500 hover:bg-gray-100",
-    success: "bg-[#2ECC71] text-white hover:bg-[#27ae60]",
+    primary: "bg-[#1A7A84] text-white hover:bg-[#1A7A84]/90",
+    secondary: "bg-[#D25B3A] text-white hover:bg-[#D25B3A]/90",
+    outline: "border-2 border-gray-200 text-gray-700 hover:border-[#1A7A84] hover:text-[#1A7A84]",
+    ghost: "text-gray-700 hover:bg-gray-100",
+    success: "bg-[#1A7A84] text-white hover:bg-[#1A7A84]/90",
   };
   
   return (
