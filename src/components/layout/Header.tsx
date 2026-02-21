@@ -154,8 +154,8 @@ export const Header: React.FC<HeaderProps> = ({
         {isLoggedIn ? (
           <Button
             onClick={onLogout}
-            variant="ghost"
-            className="h-9 sm:h-10 md:h-12 px-3 sm:px-4 md:px-6 text-[10px] sm:text-xs md:text-sm bg-gray-700 hover:bg-gray-800 text-white font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
+            variant="dark"
+            className="h-9 sm:h-10 md:h-12 px-3 sm:px-4 md:px-6 text-[10px] sm:text-xs md:text-sm hover:scale-105 active:scale-95 transition-all duration-200"
           >
             Sign Out
           </Button>
@@ -163,8 +163,8 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex gap-1 sm:gap-2">
             <Button
               onClick={() => onShowAuth("login")}
-              variant="ghost"
-              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm bg-gray-700 hover:bg-gray-800 text-white font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
+              variant="dark"
+              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm hover:scale-105 active:scale-95 transition-all duration-200"
             >
               Log In
             </Button>

@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "success";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "success" | "dark";
   className?: string;
 }
 
@@ -17,6 +17,7 @@ export const Button: React.FC<ButtonProps> = ({
     outline: "border-2 border-gray-200 text-gray-700 hover:border-[#1A7A84] hover:text-[#1A7A84]",
     ghost: "text-gray-700 hover:bg-gray-100",
     success: "bg-[#1A7A84] text-white hover:bg-[#1A7A84]/90",
+    dark: "bg-gray-700 text-white hover:bg-gray-800",
   };
   
   return (
