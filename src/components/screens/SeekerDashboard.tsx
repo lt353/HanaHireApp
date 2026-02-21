@@ -90,7 +90,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           <div className="lg:col-span-2 space-y-8 sm:space-y-12">
             <div className="p-6 sm:p-10 md:p-12 bg-white rounded-[2.5rem] sm:rounded-[3.5rem] md:rounded-[4.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-16 group relative overflow-hidden">
               <div className="w-40 sm:w-48 md:w-52 aspect-[9/16] bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] overflow-hidden relative shadow-2xl shrink-0">
-                <ImageWithFallback src="https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-70" />
+                <ImageWithFallback src={userProfile?.videoThumbnailUrl || "https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800"} className="w-full h-full object-cover opacity-70" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-2xl flex items-center justify-center text-white border-2 border-white/40 shadow-2xl cursor-pointer hover:scale-110 transition-transform">
                     <Play fill="white" size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />

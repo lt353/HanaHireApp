@@ -714,6 +714,7 @@ export default function App() {
             unlockedCandidateIds={unlockedCandidateIds}
             onNavigate={handleNavigate}
             onShowPostJob={() => handleNavigate("job-posting")}
+            onSelectJob={setSelectedJob}
             onSelectCandidate={(c) => setSelectedCandidate(c)}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
             onShowAuth={handleShowAuth}
@@ -983,6 +984,7 @@ export default function App() {
           availability: candidate.availability,
           targetPay: candidate.preferred_pay_range || candidate.target_pay,
           industries: candidate.industries_interested || [],
+          videoThumbnailUrl: candidate.video_thumbnail_url,
           candidateId: candidate.id,
           id: candidate.id
         });

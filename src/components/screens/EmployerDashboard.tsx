@@ -22,6 +22,7 @@ interface EmployerDashboardProps {
   unlockedCandidateIds: number[];
   onNavigate: (view: ViewType) => void;
   onShowPostJob: () => void;
+  onSelectJob: (job: any) => void;
   onSelectCandidate: (candidate: any) => void;
   onShowPayment: (target: { type: string; items: any[] }) => void;
   onShowAuth: (mode: "login" | "signup") => void;
@@ -37,6 +38,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   unlockedCandidateIds,
   onNavigate,
   onShowPostJob,
+  onSelectJob,
   onSelectCandidate,
   onShowPayment,
   onShowAuth,
@@ -207,7 +209,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                     <h4 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-words">{j.title}</h4>
                     <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • LIVE • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
                   </div>
-                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-gray-50 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200">
+                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-gray-50 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onSelectJob(j)}>
                     Manage
                   </Button>
                 </div>
