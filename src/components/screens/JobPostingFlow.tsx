@@ -327,9 +327,10 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         : `$${formData.pay_min}-${formData.pay_max}/yr`;
 
       // Prepare job data for Supabase
+      // NOTE: Company info (name, email, phone, description) is stored in employers table
+      // Jobs table only stores job-specific information and links to employer via employer_id
       const jobData = {
         title: formData.title,
-        company_name: formData.company_name,
         company_industry: formData.industry === "Other" ? formData.custom_industry : formData.industry,
         location: formData.location,
         pay_range: payRangeStr,
@@ -338,13 +339,10 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         description: formData.description,
         responsibilities: formData.responsibilities.filter((r:string) => r),
         benefits: formData.benefits.filter((b:string) => b),
-        company_size: formData.company_size,
-        company_description: formData.company_description,
-        contact_email: formData.contact_email,
-        contact_phone: formData.contact_phone,
         is_anonymous: true,
         status: 'active',
-        applicant_count: existingJob?.applicant_count || 0
+        applicant_count: existingJob?.applicant_count || 0,
+        employer_id: userProfile?.employerId  // Link to employer
       };
 
       let data;
