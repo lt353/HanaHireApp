@@ -606,25 +606,25 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
                     <div className="space-y-1.5 sm:space-y-2">
                       <label className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Job Title *</label>
-                      <input type="text" className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 border-2 border-transparent focus:border-[#1A7A84]/20 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+                      <input type="text" className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 border-2 border-transparent focus:border-[#1A7A84]/20 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900" value={formData.title} onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Industry *</label>
                       <div className="space-y-3">
-                        <select 
-                          className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 outline-none font-bold text-gray-900 appearance-none" 
-                          value={formData.industry} 
-                          onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                        <select
+                          className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 outline-none font-bold text-gray-900 appearance-none"
+                          value={formData.industry}
+                          onChange={(e) => setFormData(prev => ({...prev, industry: e.target.value}))}
                         >
                           {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
                         </select>
                         {formData.industry === "Other" && (
-                          <input 
-                            type="text" 
-                            className="w-full p-5 rounded-2xl bg-white border-2 border-[#1A7A84]/10 outline-none font-bold text-gray-900" 
-                            placeholder="Enter custom industry..." 
-                            value={formData.custom_industry} 
-                            onChange={(e) => setFormData({...formData, custom_industry: e.target.value})}
+                          <input
+                            type="text"
+                            className="w-full p-5 rounded-2xl bg-white border-2 border-[#1A7A84]/10 outline-none font-bold text-gray-900"
+                            placeholder="Enter custom industry..."
+                            value={formData.custom_industry}
+                            onChange={(e) => setFormData(prev => ({...prev, custom_industry: e.target.value}))}
                           />
                         )}
                       </div>
@@ -634,32 +634,32 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Location *</label>
-                      <input type="text" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 outline-none font-bold text-gray-900" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
+                      <input type="text" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 outline-none font-bold text-gray-900" value={formData.location} onChange={(e) => setFormData(prev => ({...prev, location: e.target.value}))} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Pay Range *</label>
                       <div className="flex gap-3">
                         <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#1A7A84]/20 transition-all">
                           <span className="text-gray-400 font-black">$</span>
-                          <input 
-                            type="text" 
-                            className="w-full bg-transparent font-black text-lg outline-none text-gray-900 placeholder:text-gray-300" 
-                            value={formData.pay_min} 
-                            onChange={(e) => setFormData({...formData, pay_min: e.target.value})} 
+                          <input
+                            type="text"
+                            className="w-full bg-transparent font-black text-lg outline-none text-gray-900 placeholder:text-gray-300"
+                            value={formData.pay_min}
+                            onChange={(e) => setFormData(prev => ({...prev, pay_min: e.target.value}))}
                             placeholder="Min"
                           />
                         </div>
                         <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#1A7A84]/20 transition-all">
                           <span className="text-gray-400 font-black">$</span>
-                          <input 
-                            type="text" 
-                            className="w-full bg-transparent font-black text-lg outline-none text-gray-900 placeholder:text-gray-300" 
-                            value={formData.pay_max} 
-                            onChange={(e) => setFormData({...formData, pay_max: e.target.value})} 
+                          <input
+                            type="text"
+                            className="w-full bg-transparent font-black text-lg outline-none text-gray-900 placeholder:text-gray-300"
+                            value={formData.pay_max}
+                            onChange={(e) => setFormData(prev => ({...prev, pay_max: e.target.value}))}
                             placeholder="Max"
                           />
                         </div>
-                        <select className="p-4 bg-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-900 outline-none cursor-pointer" value={formData.pay_type} onChange={(e) => setFormData({...formData, pay_type: e.target.value})}>
+                        <select className="p-4 bg-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-900 outline-none cursor-pointer" value={formData.pay_type} onChange={(e) => setFormData(prev => ({...prev, pay_type: e.target.value}))}>
                           <option>Hourly</option>
                           <option>Yearly</option>
                         </select>
@@ -669,26 +669,26 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Marketplace Description *</label>
-                    <textarea rows={4} className="w-full p-6 rounded-[2rem] bg-[#F9EBDA]/30 outline-none font-medium leading-relaxed text-gray-900" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+                    <textarea rows={4} className="w-full p-6 rounded-[2rem] bg-[#F9EBDA]/30 outline-none font-medium leading-relaxed text-gray-900" value={formData.description} onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))} />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Responsibilities (Public)</label>
-                        <button onClick={() => setFormData({...formData, responsibilities: [...formData.responsibilities, ""]})} className="text-[#1A7A84] hover:text-[#136068] transition-colors">
+                        <button onClick={() => setFormData(prev => ({...prev, responsibilities: [...prev.responsibilities, ""]}))} className="text-[#1A7A84] hover:text-[#136068] transition-colors">
                           <Plus size={16} />
                         </button>
                       </div>
                       {formData.responsibilities.map((r: string, idx: number) => (
                         <div key={idx} className="flex gap-2">
                           <input type="text" className="flex-1 p-4 bg-[#F9EBDA]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
-                            const n = [...formData.responsibilities]; n[idx] = e.target.value; setFormData({...formData, responsibilities: n});
+                            const n = [...formData.responsibilities]; n[idx] = e.target.value; setFormData(prev => ({...prev, responsibilities: n}));
                           }} />
                           {formData.responsibilities.length > 1 && (
                             <button onClick={() => {
                               const n = formData.responsibilities.filter((_:any, i:number) => i !== idx);
-                              setFormData({...formData, responsibilities: n});
+                              setFormData(prev => ({...prev, responsibilities: n}));
                             }} className="text-gray-500 hover:text-red-400">
                               <X size={16} />
                             </button>
@@ -699,19 +699,19 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Requirements (Public)</label>
-                        <button onClick={() => setFormData({...formData, requirements: [...formData.requirements, ""]})} className="text-[#1A7A84] hover:text-[#136068] transition-colors">
+                        <button onClick={() => setFormData(prev => ({...prev, requirements: [...prev.requirements, ""]}))} className="text-[#1A7A84] hover:text-[#136068] transition-colors">
                           <Plus size={16} />
                         </button>
                       </div>
                       {formData.requirements.map((r: string, idx: number) => (
                         <div key={idx} className="flex gap-2">
                           <input type="text" className="flex-1 p-4 bg-[#F9EBDA]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
-                            const n = [...formData.requirements]; n[idx] = e.target.value; setFormData({...formData, requirements: n});
+                            const n = [...formData.requirements]; n[idx] = e.target.value; setFormData(prev => ({...prev, requirements: n}));
                           }} />
                           {formData.requirements.length > 1 && (
                             <button onClick={() => {
                               const n = formData.requirements.filter((_:any, i:number) => i !== idx);
-                              setFormData({...formData, requirements: n});
+                              setFormData(prev => ({...prev, requirements: n}));
                             }} className="text-gray-500 hover:text-red-400">
                               <X size={16} />
                             </button>
@@ -724,11 +724,11 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Intro Video URL</label>
-                      <input type="url" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 text-gray-900 font-bold" value={formData.video_url} onChange={(e) => setFormData({...formData, video_url: e.target.value})} placeholder="YouTube/Vimeo link" />
+                      <input type="url" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 text-gray-900 font-bold" value={formData.video_url} onChange={(e) => setFormData(prev => ({...prev, video_url: e.target.value}))} placeholder="YouTube/Vimeo link" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Target Start Date</label>
-                      <input type="date" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 text-gray-900 font-bold" value={formData.start_date} onChange={(e) => setFormData({...formData, start_date: e.target.value})} />
+                      <input type="date" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 text-gray-900 font-bold" value={formData.start_date} onChange={(e) => setFormData(prev => ({...prev, start_date: e.target.value}))} />
                     </div>
                   </div>
 
@@ -738,11 +738,11 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                       {formData.benefits.map((b: string, idx: number) => (
                         <div key={idx} className="flex-1 min-w-[200px] flex gap-2">
                           <input type="text" className="flex-1 p-4 bg-[#F9EBDA]/30 rounded-xl text-gray-900 text-sm" value={b} onChange={(e) => {
-                            const n = [...formData.benefits]; n[idx] = e.target.value; setFormData({...formData, benefits: n});
+                            const n = [...formData.benefits]; n[idx] = e.target.value; setFormData(prev => ({...prev, benefits: n}));
                           }} placeholder="e.g. Health Insurance" />
                         </div>
                       ))}
-                      <button onClick={() => setFormData({...formData, benefits: [...formData.benefits, ""]})} className="p-4 border-2 border-dashed border-gray-100 rounded-xl text-gray-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16} /> Add Benefit</button>
+                      <button onClick={() => setFormData(prev => ({...prev, benefits: [...prev.benefits, ""]}))} className="p-4 border-2 border-dashed border-gray-100 rounded-xl text-gray-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16} /> Add Benefit</button>
                     </div>
                   </div>
                </div>
@@ -757,26 +757,26 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Legal Company Name *</label>
-                      <input type="text" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.company_name} onChange={(e) => setFormData({...formData, company_name: e.target.value})} placeholder="Blue Hawaii Surf Co." />
+                      <input type="text" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.company_name} onChange={(e) => setFormData(prev => ({...prev, company_name: e.target.value}))} placeholder="Blue Hawaii Surf Co." />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contact Email *</label>
-                      <input type="email" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.contact_email} onChange={(e) => setFormData({...formData, contact_email: e.target.value})} placeholder="hiring@company.com" />
+                      <input type="email" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.contact_email} onChange={(e) => setFormData(prev => ({...prev, contact_email: e.target.value}))} placeholder="hiring@company.com" />
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Hiring Phone *</label>
-                      <input type="tel" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.contact_phone} onChange={(e) => setFormData({...formData, contact_phone: e.target.value})} placeholder="(808) 555-0123" />
+                      <input type="tel" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.contact_phone} onChange={(e) => setFormData(prev => ({...prev, contact_phone: e.target.value}))} placeholder="(808) 555-0123" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Business Logo URL</label>
-                      <input type="url" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.image_url} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." />
+                      <input type="url" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.image_url} onChange={(e) => setFormData(prev => ({...prev, image_url: e.target.value}))} placeholder="https://..." />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Private Mission/Culture</label>
-                    <textarea rows={3} className="w-full p-6 rounded-[2rem] bg-white text-gray-900 outline-none" value={formData.company_description} onChange={(e) => setFormData({...formData, company_description: e.target.value})} placeholder="Tell seekers why they should join you..." />
+                    <textarea rows={3} className="w-full p-6 rounded-[2rem] bg-white text-gray-900 outline-none" value={formData.company_description} onChange={(e) => setFormData(prev => ({...prev, company_description: e.target.value}))} placeholder="Tell seekers why they should join you..." />
                   </div>
                </div>
             </section>
