@@ -42,16 +42,29 @@ export const Header: React.FC<HeaderProps> = ({
     return null;
   }
 
+  // Header background color - always lavender blush
+  const headerBgColor = "#FFF0F5"; // Lavender blush
+
   return (
-    <nav className="hidden md:flex sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-3 sm:px-4 md:px-8 h-20 items-center justify-between gap-2">
+    <nav 
+      className="hidden md:flex sticky top-0 z-40 border-b border-gray-100 shadow-sm px-3 sm:px-4 md:px-8 h-20 items-center justify-between gap-2 transition-colors duration-200"
+      style={{ backgroundColor: headerBgColor, background: headerBgColor }}
+    >
       {/* Left */}
       <div className="flex items-center gap-2 sm:gap-4 md:gap-10 min-w-0 flex-1">
         <button
           onClick={onReset}
-          className="text-xl sm:text-2xl md:text-3xl font-black text-[#1A7A84] tracking-tighter flex items-center gap-1 sm:gap-2 group shrink-0 hover:scale-105 active:scale-95 transition-all duration-200"
+          className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter flex items-center gap-1 sm:gap-2 group shrink-0 hover:scale-105 active:scale-95 transition-all duration-200"
         >
-          <Zap size={20} className="sm:w-[26px] sm:h-[26px]" fill="#1A7A84" />
-          <span className="truncate">HanaHire</span>
+          <Zap 
+            size={20} 
+            className="sm:w-[26px] sm:h-[26px]" 
+            fill={!isRoleSelected ? "#A63F8E" : role === "seeker" ? "#148F8B" : "#A63F8E"} 
+          />
+          <span className="truncate">
+            <span style={{ color: '#148F8B', WebkitTextFillColor: '#148F8B' }}>Hana</span>
+            <span style={{ color: '#A63F8E', WebkitTextFillColor: '#A63F8E' }}>Hire</span>
+          </span>
         </button>
 
         {isRoleSelected ? (
@@ -61,11 +74,14 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() =>
                   onNavigate(role === "seeker" ? "seeker" : "employer")
                 }
-                className={`font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                   (currentTab === "seeker" || currentTab === "employer")
-                    ? "text-[#1A7A84]"
-                    : "text-gray-400 hover:text-gray-900"
+                    ? "font-black" 
+                    : "font-bold hover:text-gray-900"
                 }`}
+                style={{ 
+                  color: role === "seeker" ? "#148F8B" : "#A63F8E"
+                }}
               >
                 Dashboard
               </button>
@@ -74,11 +90,12 @@ export const Header: React.FC<HeaderProps> = ({
             {role === "seeker" && (
               <button
                 onClick={() => onNavigate("jobs")}
-                className={`font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                   currentTab === "jobs"
-                    ? "text-[#1A7A84]"
-                    : "text-gray-400 hover:text-gray-900"
+                    ? "font-black"
+                    : "font-bold hover:text-gray-900"
                 }`}
+                style={{ color: "#148F8B" }}
               >
                 Browse Jobs
               </button>
@@ -87,11 +104,12 @@ export const Header: React.FC<HeaderProps> = ({
             {role === "employer" && (
               <button
                 onClick={() => onNavigate("job-posting")}
-                className={`font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                   currentTab === "job-posting"
-                    ? "text-[#1A7A84]"
-                    : "text-gray-400 hover:text-gray-900"
+                    ? "font-black"
+                    : "font-bold hover:text-gray-900"
                 }`}
+                style={{ color: "#A63F8E" }}
               >
                 Post Job
               </button>
@@ -100,11 +118,12 @@ export const Header: React.FC<HeaderProps> = ({
             {role === "employer" && (
               <button
                 onClick={() => onNavigate("candidates")}
-                className={`font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                   currentTab === "candidates"
-                    ? "text-[#1A7A84]"
-                    : "text-gray-400 hover:text-gray-900"
+                    ? "font-black"
+                    : "font-bold hover:text-gray-900"
                 }`}
+                style={{ color: "#A63F8E" }}
               >
                 Find Talent
               </button>
@@ -112,24 +131,38 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => onNavigate("about")}
-              className={`font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+              className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                 currentTab === "about"
-                  ? "text-[#1A7A84]"
-                  : "text-gray-400 hover:text-gray-900"
+                  ? "font-black"
+                  : "font-bold hover:text-gray-900"
               }`}
+              style={{ 
+                color: !isRoleSelected 
+                  ? "#A63F8E" 
+                  : role === "seeker" 
+                    ? "#148F8B" 
+                    : "#A63F8E"
+              }}
             >
               About
             </button>
 
             <button
               onClick={() => onNavigate("settings")}
-              className={`font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+              className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                 currentTab === "settings"
-                  ? "text-[#1A7A84]"
-                  : "text-gray-400 hover:text-gray-900"
+                  ? "font-black"
+                  : "font-bold hover:text-gray-900"
               }`}
+              style={{ 
+                color: !isRoleSelected 
+                  ? "#A63F8E" 
+                  : role === "seeker" 
+                    ? "#148F8B" 
+                    : "#A63F8E"
+              }}
             >
-              <SettingsIcon size={16} />
+              <SettingsIcon size={20} className="sm:w-6 sm:h-6" />
             </button>
           </div>
         ) : null}
@@ -142,7 +175,11 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Role Toggle - Desktop Only */}
             <button
               onClick={onToggleRole}
-              className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 hover:border-[#1A7A84] hover:bg-[#1A7A84]/5 transition-all text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-[#1A7A84] hover:scale-105 active:scale-95 duration-200"
+              className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 transition-all text-xs sm:text-sm font-black uppercase tracking-widest text-gray-600 hover:scale-105 active:scale-95 duration-200 ${
+                role === "seeker" 
+                  ? "hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:text-[#148F8B]"
+                  : "hover:border-[#A63F8E] hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
+              }`}
             >
               Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
             </button>
@@ -152,29 +189,29 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Auth Buttons */}
         {isLoggedIn ? (
-          <Button
+          <button
             onClick={onLogout}
-            variant="secondary"
-            className="h-9 sm:h-10 md:h-12 px-3 sm:px-4 md:px-6 text-[10px] sm:text-xs md:text-sm hover:scale-105 active:scale-95 transition-all duration-200"
+            className="h-9 sm:h-10 md:h-12 px-3 sm:px-4 md:px-6 text-sm sm:text-base md:text-lg hover:scale-105 active:scale-95 transition-all duration-200 rounded-2xl font-black text-white hover:opacity-90"
+            style={{ backgroundColor: '#A63F8E' }}
           >
             Sign Out
-          </Button>
+          </button>
         ) : (
           <div className="flex gap-1 sm:gap-2">
-            <Button
+            <button
               onClick={() => onShowAuth("login")}
-              variant="secondary"
-              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm hover:scale-105 active:scale-95 transition-all duration-200"
+              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-sm sm:text-base md:text-lg hover:scale-105 active:scale-95 transition-all duration-200 rounded-2xl font-black text-white hover:opacity-90"
+              style={{ backgroundColor: '#A63F8E' }}
             >
               Log In
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={() => onShowAuth("signup")}
-              variant="primary"
-              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs md:text-sm shadow-lg shadow-[#1A7A84]/20 hover:scale-105 active:scale-95 transition-all duration-200"
+              className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-sm sm:text-base md:text-lg shadow-lg shadow-[#148F8B]/20 hover:scale-105 active:scale-95 transition-all duration-200 rounded-2xl font-black text-white hover:opacity-90"
+              style={{ backgroundColor: '#148F8B' }}
             >
               Sign Up
-            </Button>
+            </button>
           </div>
         )}
       </div>
