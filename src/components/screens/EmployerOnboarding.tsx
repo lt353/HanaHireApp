@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Building2, Zap, CheckCircle, Upload, ChevronRight, Shield, Sparkles, BadgeCheck } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { JOB_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
 import { ViewType } from '../../App';
 

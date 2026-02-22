@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { User, Zap, CheckCircle, Video, Camera, ChevronRight, Sparkles, Edit3, Lock } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
 import { ViewType } from '../../App';
 

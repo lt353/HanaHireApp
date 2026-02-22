@@ -1,6 +1,6 @@
 import React from "react";
 import { Zap, FolderOpen, Settings as SettingsIcon } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 
 import { ViewType } from '../../App';
 

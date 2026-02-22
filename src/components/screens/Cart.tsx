@@ -1,7 +1,7 @@
 import React from "react";
 import { Briefcase, User, Trash2, ChevronDown, ChevronUp, FolderOpen, Lock } from "lucide-react";
 import { motion } from "motion/react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { formatCandidateTitle } from "../../utils/formatters";
 
 interface CartProps {

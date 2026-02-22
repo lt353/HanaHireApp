@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import { Plus, Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, Eye, FileText, BarChart3 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { ViewType } from '../../App';
 

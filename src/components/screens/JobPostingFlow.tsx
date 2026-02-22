@@ -21,7 +21,7 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { toast } from "sonner@2.0.3";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { projectId, publicAnonKey } from '../../utils/supabase/info';

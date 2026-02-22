@@ -37,7 +37,7 @@ import { supabase } from './utils/supabase/client';
 import { Header } from './components/layout/Header';
 import { ImprovedPaymentModalContent } from './components/ui/ImprovedPaymentModal';
 import { Modal } from './components/ui/Modal';
-import { Button } from './components/ui/button';
+import { Button } from './components/ui/Button';
 import { CollapsibleFilter } from './components/CollapsibleFilter';
 import { Home } from './components/screens/Home';
 import { About } from './components/screens/About';

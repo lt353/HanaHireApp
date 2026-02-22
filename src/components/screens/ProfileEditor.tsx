@@ -16,7 +16,7 @@ import {
   Video,
   Camera
 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { JOB_CATEGORIES, CANDIDATE_CATEGORIES } from '../../data/mockData';
 
 interface ProfileEditorProps {

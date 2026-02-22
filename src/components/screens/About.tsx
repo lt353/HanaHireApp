@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import { User } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { ViewType } from '../../App';
 import { TEAM_MEMBERS, INTERACTION_FEE } from "../../data/mockData";
 

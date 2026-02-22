@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { ChevronRight, CreditCard, HelpCircle, Mail, Phone, Plus, RefreshCw, Database } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { toast } from "sonner@2.0.3";
 import { projectId, publicAnonKey } from "../../utils/supabase/info";
 import { ViewType } from '../../App';

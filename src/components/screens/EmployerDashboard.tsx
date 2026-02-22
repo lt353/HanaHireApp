@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, Building2, CheckCircle, Clock, ChevronDown, Eye, DollarSign, X, Filter } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
 import { ViewType } from '../../App';
