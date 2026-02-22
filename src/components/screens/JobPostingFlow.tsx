@@ -327,11 +327,38 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         ? `$${formData.pay_min}-${formData.pay_max}/hr`
         : `$${formData.pay_min}-${formData.pay_max}/yr`;
 
+      // Update employer information first (company info)
+      if (userProfile?.employerId) {
+        const employerData: any = {
+          company_name: formData.company_name,
+          contact_email: formData.contact_email,
+          contact_phone: formData.contact_phone,
+          company_description: formData.company_description,
+          industry: formData.industry === "Other" ? formData.custom_industry : formData.industry
+        };
+
+        // Only add image_url if it's provided
+        if (formData.image_url) {
+          employerData.image_url = formData.image_url;
+        }
+
+        const { error: employerError } = await supabase
+          .from('employers')
+          .update(employerData)
+          .eq('id', userProfile.employerId);
+
+        if (employerError) {
+          console.error("Error updating employer info:", employerError);
+          toast.error("Failed to update company information");
+          // Continue anyway - don't block job posting
+        }
+      }
+
       // Prepare job data for Supabase
       // NOTE: Company info (name, email, phone, description, industry) is stored in employers table
       // Jobs table only stores job-specific information and links to employer via employer_id
       // Industry is NOT stored in jobs table - it comes from the employers table via JOIN
-      const jobData = {
+      const jobData: any = {
         title: formData.title,
         location: formData.location,
         pay_range: payRangeStr,
@@ -345,6 +372,14 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         applicant_count: existingJob?.applicant_count || 0,
         employer_id: userProfile?.employerId  // Link to employer
       };
+
+      // Add optional fields if provided
+      if (formData.video_url) {
+        jobData.video_url = formData.video_url;
+      }
+      if (formData.start_date) {
+        jobData.start_date = formData.start_date;
+      }
 
       let data;
       if (existingJob?.id) {
