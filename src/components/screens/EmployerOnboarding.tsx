@@ -65,12 +65,12 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
   const totalSections = 5;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#D25B3A]/5 to-white pt-24 pb-32">
+    <div className="min-h-screen bg-gradient-to-b from-[#A63F8E]/5 to-white pt-24 pb-32">
       <div className="max-w-2xl mx-auto px-6">
         {/* Header */}
         <div className="text-center space-y-4 mb-10">
-          <div className="w-20 h-20 rounded-[1.5rem] bg-[#D25B3A]/10 flex items-center justify-center mx-auto">
-            <Building2 size={36} className="text-[#D25B3A]" />
+          <div className="w-20 h-20 rounded-[1.5rem] bg-[#A63F8E]/10 flex items-center justify-center mx-auto">
+            <Building2 size={36} className="text-[#A63F8E]" />
           </div>
           <h1 className="text-4xl font-black tracking-tighter">Set Up Your Business</h1>
           <p className="text-gray-500 font-medium text-lg max-w-md mx-auto">
@@ -82,11 +82,11 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Business Profile Progress</span>
-            <span className="text-sm font-black text-[#D25B3A]">{filledSections}/{totalSections} sections</span>
+            <span className="text-sm font-black text-[#A63F8E]">{filledSections}/{totalSections} sections</span>
           </div>
           <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#D25B3A] rounded-full transition-all duration-500"
+              className="h-full bg-[#A63F8E] rounded-full transition-all duration-500"
               style={{ width: `${(filledSections / totalSections) * 100}%` }}
             />
           </div>
@@ -95,10 +95,10 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         {/* Demo Fill Button */}
         <button
           onClick={handleDemoFill}
-          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#D25B3A]/20 bg-[#D25B3A]/5 hover:bg-[#D25B3A]/10 transition-all flex items-center justify-center gap-3 group"
+          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#A63F8E]/20 bg-[#A63F8E]/5 hover:bg-[#A63F8E]/10 transition-all flex items-center justify-center gap-3 group"
         >
-          <Zap size={18} className="text-[#D25B3A] group-hover:scale-110 transition-transform" />
-          <span className="text-xs font-black uppercase tracking-widest text-[#D25B3A]">
+          <Zap size={18} className="text-[#A63F8E] group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">
             Auto-fill Demo Business
           </span>
         </button>
@@ -107,7 +107,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
           {/* Business Description */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
-              {bio.length > 0 && <CheckCircle size={18} className="text-[#D25B3A]" />}
+              {bio.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
               <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Description</h2>
             </div>
             <textarea
@@ -115,7 +115,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell job seekers about your business — your culture, mission, what makes it a great place to work..."
               rows={4}
-              className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-medium text-base resize-none"
+              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-medium text-base resize-none"
             />
           </div>
 
@@ -123,13 +123,13 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-3">
-                {industry.length > 0 && <CheckCircle size={18} className="text-[#D25B3A]" />}
+                {industry.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Industry</h2>
               </div>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
                 {JOB_CATEGORIES.industries.map(ind => (
@@ -140,13 +140,13 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
 
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-3">
-                {companySize.length > 0 && <CheckCircle size={18} className="text-[#D25B3A]" />}
+                {companySize.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Company Size</h2>
               </div>
               <select
                 value={companySize}
                 onChange={(e) => setCompanySize(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
                 {COMPANY_SIZES.map(size => (
@@ -160,13 +160,13 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-3">
-                {location.length > 0 && <CheckCircle size={18} className="text-[#D25B3A]" />}
+                {location.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Location</h2>
               </div>
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
                 {JOB_CATEGORIES.locations.map(loc => (
@@ -177,7 +177,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
 
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-3">
-                {phone.length > 0 && <CheckCircle size={18} className="text-[#D25B3A]" />}
+                {phone.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Phone</h2>
               </div>
               <input
@@ -185,7 +185,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="(808) 555-0000"
-                className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base"
               />
             </div>
           </div>
@@ -198,14 +198,14 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="www.yourbusiness.com"
-              className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-base"
+              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base"
             />
           </div>
 
           {/* Business Verification — Now Optional */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
-              {businessLicense.length > 0 && <CheckCircle size={18} className="text-[#D25B3A]" />}
+              {businessLicense.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
               <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
                 Business License Verification
                 <span className="ml-2 normal-case font-medium tracking-normal text-gray-600">(optional)</span>
@@ -219,13 +219,13 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
                 if (e.target.value.length === 0) setWantsBadge(false);
               }}
               placeholder="HI-BIZ-XXXX-XXXXX"
-              className="w-full p-4 rounded-xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-base tracking-widest"
+              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base tracking-widest"
             />
-            <div className="p-4 bg-[#D25B3A]/5 rounded-xl border border-[#D25B3A]/10 flex items-start gap-3">
-              <Shield size={18} className="text-[#D25B3A] shrink-0 mt-0.5" />
+            <div className="p-4 bg-[#A63F8E]/5 rounded-xl border border-[#A63F8E]/10 flex items-start gap-3">
+              <Shield size={18} className="text-[#A63F8E] shrink-0 mt-0.5" />
               <p className="text-xs text-gray-600 font-medium">
                 Skip for now or add your license to unlock a{' '}
-                <span className="font-black text-[#D25B3A]">✓ Verified Business Badge</span>
+                <span className="font-black text-[#A63F8E]">✓ Verified Business Badge</span>
                 {' '}on your job posts — for a small fee. Helps candidates feel confident applying.
               </p>
             </div>
@@ -265,7 +265,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
             <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Logo (optional)</h2>
             <button
               onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#D25B3A] hover:border-[#D25B3A]/30 transition-all"
+              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#A63F8E] hover:border-[#A63F8E]/30 transition-all"
             >
               <Upload size={36} />
               <span className="font-black text-xs uppercase tracking-widest">Upload Your Logo</span>
@@ -286,7 +286,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
             )}
             <Button
               onClick={handleSubmit}
-              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#D25B3A] hover:bg-[#D25B3A]/90 shadow-[#D25B3A]/20 flex items-center justify-center gap-3"
+              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 shadow-[#A63F8E]/20 flex items-center justify-center gap-3"
             >
               <Sparkles size={22} />
               Launch Business Profile

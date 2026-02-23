@@ -431,26 +431,26 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         <p className="text-base sm:text-lg md:text-xl text-gray-500 font-medium tracking-tight">Hire with speed and privacy</p>
       </div>
       <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-        <button onClick={handleManualEntry} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-gray-50 bg-white hover:border-[#1A7A84]/20 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 group">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 flex items-center justify-center text-gray-600 group-hover:bg-[#1A7A84]/5 group-hover:text-[#1A7A84]">
+        <button onClick={handleManualEntry} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-gray-50 bg-white hover:border-[#148F8B]/20 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 group">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#F3EAF5]/30 flex items-center justify-center text-gray-600 group-hover:bg-[#148F8B]/5 group-hover:text-[#148F8B]">
             <Pencil size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
           </div>
           <div className="space-y-1 sm:space-y-2">
             <h3 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">Manual Entry</h3>
             <p className="text-sm sm:text-base text-gray-500 font-medium">Build your listing from scratch</p>
           </div>
-          <div className="pt-2 sm:pt-4 text-gray-400 group-hover:text-[#1A7A84] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
+          <div className="pt-2 sm:pt-4 text-gray-400 group-hover:text-[#148F8B] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
             Start Now <ArrowRight size={14} className="sm:w-4 sm:h-4" />
           </div>
         </button>
-        <button onClick={() => setStep('ai-input')} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-[#1A7A84]/10 bg-white hover:border-[#1A7A84]/30 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 relative group">
-          <div className="absolute top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8"><span className="px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-[#D25B3A]/10 text-[#D25B3A] rounded-full text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-widest">Recommended</span></div>
-          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#1A7A84]/5 flex items-center justify-center text-[#1A7A84]"><Sparkles size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /></div>
+        <button onClick={() => setStep('ai-input')} className="p-6 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] border-2 sm:border-4 border-[#148F8B]/10 bg-white hover:border-[#148F8B]/30 hover:shadow-2xl transition-all text-left space-y-4 sm:space-y-6 relative group">
+          <div className="absolute top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8"><span className="px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 bg-[#A63F8E]/10 text-[#A63F8E] rounded-full text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-widest">Recommended</span></div>
+          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 flex items-center justify-center text-[#148F8B]"><Sparkles size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /></div>
           <div className="space-y-1 sm:space-y-2">
             <h3 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">AI Assisted</h3>
             <p className="text-sm sm:text-base text-gray-500 font-medium">Just describe what you need</p>
           </div>
-          <div className="pt-2 sm:pt-4 text-[#1A7A84] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
+          <div className="pt-2 sm:pt-4 text-[#148F8B] font-black text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
             Try AI <ArrowRight size={14} className="sm:w-4 sm:h-4" />
           </div>
         </button>
@@ -460,13 +460,13 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
   const renderReview = () => {
     const PublicPreview = () => (
-      <div className="bg-white rounded-[2.5rem] border-2 border-[#1A7A84]/10 shadow-xl overflow-hidden">
-        <div className="bg-[#1A7A84]/5 px-8 py-4 border-b border-[#1A7A84]/10 flex items-center justify-between">
+      <div className="bg-white rounded-[2.5rem] border-2 border-[#148F8B]/10 shadow-xl overflow-hidden">
+        <div className="bg-[#148F8B]/5 px-8 py-4 border-b border-[#148F8B]/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Lock size={12} className="text-[#1A7A84]" />
-            <span className="text-[10px] font-black text-[#1A7A84] uppercase tracking-widest">Seeker View (Locked)</span>
+            <Lock size={12} className="text-[#148F8B]" />
+            <span className="text-[10px] font-black text-[#148F8B] uppercase tracking-widest">Seeker View (Locked)</span>
           </div>
-          <span className="px-3 py-1 bg-[#1A7A84]/10 rounded-full text-[8px] font-black text-[#1A7A84] uppercase tracking-widest">Public</span>
+          <span className="px-3 py-1 bg-[#148F8B]/10 rounded-full text-[8px] font-black text-[#148F8B] uppercase tracking-widest">Public</span>
         </div>
         <div className="p-10 space-y-8">
           <div className="space-y-4">
@@ -475,12 +475,12 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
               <p className="text-xs text-gray-400 font-medium">{formData.location}</p>
             </div>
             <h4 className="text-4xl font-black tracking-tighter uppercase text-gray-900">{formData.title || "Job Title"}</h4>
-            <div className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-[#D25B3A]">
+            <div className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-[#A63F8E]">
               <span>{formData.pay_type === 'Hourly' ? `$${formData.pay_min}-${formData.pay_max}/hr` : `$${formData.pay_min}-${formData.pay_max}/yr`}</span>
             </div>
           </div>
           <div className="space-y-6">
-             <div className="p-6 bg-[#F9EBDA]/30 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center gap-3">
+             <div className="p-6 bg-[#F3EAF5]/30 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center gap-3">
                 <Building2 size={24} className="text-gray-600" />
                 <span className="text-xs font-black text-gray-600 uppercase tracking-widest italic">Business Identity Blurred</span>
              </div>
@@ -502,34 +502,34 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                 {formData.benefits.some((b:string) => b) && (
                   <div className="space-y-2">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Benefits</p>
-                    <div className="flex flex-wrap gap-2">{formData.benefits.map((b: string, i: number) => b && <span key={i} className="px-3 py-1 bg-green-50 text-[#D25B3A] rounded-full text-[9px] font-black uppercase tracking-widest">{b}</span>)}</div>
+                    <div className="flex flex-wrap gap-2">{formData.benefits.map((b: string, i: number) => b && <span key={i} className="px-3 py-1 bg-green-50 text-[#A63F8E] rounded-full text-[9px] font-black uppercase tracking-widest">{b}</span>)}</div>
                   </div>
                 )}
              </div>
           </div>
-          <Button className="w-full h-16 rounded-2xl bg-[#1A7A84]/10 text-[#1A7A84] border-0 text-sm">Unlock — $2.00</Button>
+          <Button className="w-full h-16 rounded-2xl bg-[#148F8B]/10 text-[#148F8B] border-0 text-sm">Unlock — $2.00</Button>
         </div>
       </div>
     );
 
     const PrivatePreview = () => (
-      <div className="bg-white rounded-[2.5rem] border-2 border-[#D25B3A]/10 shadow-xl overflow-hidden ring-4 ring-[#D25B3A]/5">
-        <div className="bg-[#D25B3A]/5 px-8 py-4 border-b border-[#D25B3A]/10 flex items-center justify-between">
+      <div className="bg-white rounded-[2.5rem] border-2 border-[#A63F8E]/10 shadow-xl overflow-hidden ring-4 ring-[#A63F8E]/5">
+        <div className="bg-[#A63F8E]/5 px-8 py-4 border-b border-[#A63F8E]/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle2 size={12} className="text-[#D25B3A]" />
-            <span className="text-[10px] font-black text-[#D25B3A] uppercase tracking-widest">Seeker View (Unlocked)</span>
+            <CheckCircle2 size={12} className="text-[#A63F8E]" />
+            <span className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest">Seeker View (Unlocked)</span>
           </div>
-          <span className="px-3 py-1 bg-[#D25B3A]/10 rounded-full text-[8px] font-black text-[#D25B3A] uppercase tracking-widest">Revealed</span>
+          <span className="px-3 py-1 bg-[#A63F8E]/10 rounded-full text-[8px] font-black text-[#A63F8E] uppercase tracking-widest">Revealed</span>
         </div>
         <div className="p-10 space-y-8">
           {/* Company Brand Reveal */}
-          <div className="flex gap-6 items-center p-6 bg-[#D25B3A]/5 rounded-[2rem] border border-[#D25B3A]/10">
-             <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#D25B3A] overflow-hidden">
+          <div className="flex gap-6 items-center p-6 bg-[#A63F8E]/5 rounded-[2rem] border border-[#A63F8E]/10">
+             <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#A63F8E] overflow-hidden">
                 {formData.image_url ? <img src={formData.image_url} className="w-full h-full object-cover" /> : <Building2 size={32} />}
              </div>
              <div className="space-y-1 flex-1 min-w-0">
                 <h5 className="font-black text-xl tracking-tight leading-none uppercase truncate text-gray-900">{formData.company_name || "Legal Business Name"}</h5>
-                <p className="text-[10px] font-black text-[#1A7A84] uppercase tracking-[0.2em]">{formData.industry} • {formData.company_size}</p>
+                <p className="text-[10px] font-black text-[#148F8B] uppercase tracking-[0.2em]">{formData.industry} • {formData.company_size}</p>
              </div>
           </div>
 
@@ -537,7 +537,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
           <div className="space-y-6">
             <div className="space-y-1">
               <h4 className="text-4xl font-black tracking-tighter uppercase text-gray-900">{formData.title || "Job Title"}</h4>
-              <div className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-[#D25B3A]">
+              <div className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-[#A63F8E]">
                 <span>{formData.pay_type === 'Hourly' ? `$${formData.pay_min}-${formData.pay_max}/hr` : `$${formData.pay_min}-${formData.pay_max}/yr`}</span>
                 <span className="text-gray-200">•</span>
                 <span className="text-gray-400 font-medium">{formData.location}</span>
@@ -546,13 +546,13 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
             {/* Direct Contact Info */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-[#D25B3A] font-black text-[10px] uppercase tracking-widest"><Globe size={14} /> Direct Connection revealed</div>
+              <div className="flex items-center gap-2 text-[#A63F8E] font-black text-[10px] uppercase tracking-widest"><Globe size={14} /> Direct Connection revealed</div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-[#F9EBDA]/30 rounded-2xl space-y-1">
+                <div className="p-4 bg-[#F3EAF5]/30 rounded-2xl space-y-1">
                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Hiring Email</p>
-                   <p className="text-xs font-bold truncate text-[#1A7A84]">{formData.contact_email || "hiring@example.com"}</p>
+                   <p className="text-xs font-bold truncate text-[#148F8B]">{formData.contact_email || "hiring@example.com"}</p>
                 </div>
-                <div className="p-4 bg-[#F9EBDA]/30 rounded-2xl space-y-1">
+                <div className="p-4 bg-[#F3EAF5]/30 rounded-2xl space-y-1">
                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Phone</p>
                    <p className="text-xs font-bold truncate text-gray-900">{formData.contact_phone || "Not provided"}</p>
                 </div>
@@ -591,7 +591,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
             {/* Private Mission Reveal */}
             <div className="space-y-2">
                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Private Mission & Culture</p>
-               <p className="text-sm text-gray-600 font-medium leading-relaxed bg-[#D25B3A]/5 p-4 rounded-2xl">
+               <p className="text-sm text-gray-600 font-medium leading-relaxed bg-[#A63F8E]/5 p-4 rounded-2xl">
                  {formData.company_description || "Culture and mission details visible only to unlocked applicants."}
                </p>
             </div>
@@ -601,7 +601,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
               {formData.benefits.some((b:string) => b) && (
                 <div className="flex flex-wrap gap-2">
                   {formData.benefits.map((b: string, i: number) => (
-                    b && <span key={i} className="px-3 py-1 bg-green-50 text-[#D25B3A] rounded-full text-[9px] font-black uppercase tracking-widest">{b}</span>
+                    b && <span key={i} className="px-3 py-1 bg-green-50 text-[#A63F8E] rounded-full text-[9px] font-black uppercase tracking-widest">{b}</span>
                   ))}
                 </div>
               )}
@@ -614,7 +614,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
             </div>
           </div>
 
-          <Button className="w-full h-16 rounded-2xl bg-[#D25B3A] text-white hover:bg-[#B84A2F] border-0 text-sm shadow-lg shadow-[#D25B3A]/20">
+          <Button className="w-full h-16 rounded-2xl bg-[#A63F8E] text-white hover:bg-[#5C014A] border-0 text-sm shadow-lg shadow-[#A63F8E]/20">
             Apply with Video
           </Button>
         </div>
@@ -641,13 +641,13 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
                     <div className="space-y-1.5 sm:space-y-2">
                       <label className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Job Title *</label>
-                      <input type="text" className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 border-2 border-transparent focus:border-[#1A7A84]/20 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900" value={formData.title} onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))} />
+                      <input type="text" className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-[#F3EAF5]/30 border-2 border-transparent focus:border-[#148F8B]/20 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900" value={formData.title} onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Industry *</label>
                       <div className="space-y-3">
                         <select
-                          className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 outline-none font-bold text-gray-900 appearance-none"
+                          className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 outline-none font-bold text-gray-900 appearance-none"
                           value={formData.industry}
                           onChange={(e) => setFormData(prev => ({...prev, industry: e.target.value}))}
                         >
@@ -656,7 +656,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         {formData.industry === "Other" && (
                           <input
                             type="text"
-                            className="w-full p-5 rounded-2xl bg-white border-2 border-[#1A7A84]/10 outline-none font-bold text-gray-900"
+                            className="w-full p-5 rounded-2xl bg-white border-2 border-[#148F8B]/10 outline-none font-bold text-gray-900"
                             placeholder="Enter custom industry..."
                             value={formData.custom_industry}
                             onChange={(e) => setFormData(prev => ({...prev, custom_industry: e.target.value}))}
@@ -669,12 +669,12 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Location *</label>
-                      <input type="text" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 outline-none font-bold text-gray-900" value={formData.location} onChange={(e) => setFormData(prev => ({...prev, location: e.target.value}))} />
+                      <input type="text" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 outline-none font-bold text-gray-900" value={formData.location} onChange={(e) => setFormData(prev => ({...prev, location: e.target.value}))} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Pay Range *</label>
                       <div className="flex gap-3">
-                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#1A7A84]/20 transition-all">
+                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#148F8B]/20 transition-all">
                           <span className="text-gray-400 font-black">$</span>
                           <input
                             type="text"
@@ -684,7 +684,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             placeholder="Min"
                           />
                         </div>
-                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#1A7A84]/20 transition-all">
+                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#148F8B]/20 transition-all">
                           <span className="text-gray-400 font-black">$</span>
                           <input
                             type="text"
@@ -704,20 +704,20 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Marketplace Description *</label>
-                    <textarea rows={4} className="w-full p-6 rounded-[2rem] bg-[#F9EBDA]/30 outline-none font-medium leading-relaxed text-gray-900" value={formData.description} onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))} />
+                    <textarea rows={4} className="w-full p-6 rounded-[2rem] bg-[#F3EAF5]/30 outline-none font-medium leading-relaxed text-gray-900" value={formData.description} onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))} />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Responsibilities (Public)</label>
-                        <button onClick={() => setFormData(prev => ({...prev, responsibilities: [...prev.responsibilities, ""]}))} className="text-[#1A7A84] hover:text-[#136068] transition-colors">
+                        <button onClick={() => setFormData(prev => ({...prev, responsibilities: [...prev.responsibilities, ""]}))} className="text-[#148F8B] hover:text-[#136068] transition-colors">
                           <Plus size={16} />
                         </button>
                       </div>
                       {formData.responsibilities.map((r: string, idx: number) => (
                         <div key={idx} className="flex gap-2">
-                          <input type="text" className="flex-1 p-4 bg-[#F9EBDA]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
+                          <input type="text" className="flex-1 p-4 bg-[#F3EAF5]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
                             const n = [...formData.responsibilities]; n[idx] = e.target.value; setFormData(prev => ({...prev, responsibilities: n}));
                           }} />
                           {formData.responsibilities.length > 1 && (
@@ -734,13 +734,13 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Requirements (Public)</label>
-                        <button onClick={() => setFormData(prev => ({...prev, requirements: [...prev.requirements, ""]}))} className="text-[#1A7A84] hover:text-[#136068] transition-colors">
+                        <button onClick={() => setFormData(prev => ({...prev, requirements: [...prev.requirements, ""]}))} className="text-[#148F8B] hover:text-[#136068] transition-colors">
                           <Plus size={16} />
                         </button>
                       </div>
                       {formData.requirements.map((r: string, idx: number) => (
                         <div key={idx} className="flex gap-2">
-                          <input type="text" className="flex-1 p-4 bg-[#F9EBDA]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
+                          <input type="text" className="flex-1 p-4 bg-[#F3EAF5]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
                             const n = [...formData.requirements]; n[idx] = e.target.value; setFormData(prev => ({...prev, requirements: n}));
                           }} />
                           {formData.requirements.length > 1 && (
@@ -759,11 +759,11 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Intro Video URL</label>
-                      <input type="url" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 text-gray-900 font-bold" value={formData.video_url} onChange={(e) => setFormData(prev => ({...prev, video_url: e.target.value}))} placeholder="YouTube/Vimeo link" />
+                      <input type="url" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 text-gray-900 font-bold" value={formData.video_url} onChange={(e) => setFormData(prev => ({...prev, video_url: e.target.value}))} placeholder="YouTube/Vimeo link" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Target Start Date</label>
-                      <input type="date" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 text-gray-900 font-bold" value={formData.start_date} onChange={(e) => setFormData(prev => ({...prev, start_date: e.target.value}))} />
+                      <input type="date" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 text-gray-900 font-bold" value={formData.start_date} onChange={(e) => setFormData(prev => ({...prev, start_date: e.target.value}))} />
                     </div>
                   </div>
 
@@ -772,7 +772,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                     <div className="flex flex-wrap gap-2">
                       {formData.benefits.map((b: string, idx: number) => (
                         <div key={idx} className="flex-1 min-w-[200px] flex gap-2">
-                          <input type="text" className="flex-1 p-4 bg-[#F9EBDA]/30 rounded-xl text-gray-900 text-sm" value={b} onChange={(e) => {
+                          <input type="text" className="flex-1 p-4 bg-[#F3EAF5]/30 rounded-xl text-gray-900 text-sm" value={b} onChange={(e) => {
                             const n = [...formData.benefits]; n[idx] = e.target.value; setFormData(prev => ({...prev, benefits: n}));
                           }} placeholder="e.g. Health Insurance" />
                         </div>
@@ -783,7 +783,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                </div>
             </section>
 
-            <section className="space-y-8 p-10 bg-[#F9EBDA]/30 rounded-[3rem] border-2 border-dashed border-gray-100">
+            <section className="space-y-8 p-10 bg-[#F3EAF5]/30 rounded-[3rem] border-2 border-dashed border-gray-100">
                <div className="space-y-2">
                   <h3 className="text-xl font-black tracking-tight">Private Identity Details</h3>
                   <p className="text-xs text-[#F39C12] font-black uppercase tracking-widest flex items-center gap-2"><Lock size={12} /> Only revealed to candidates after payment</p>
@@ -819,7 +819,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
           <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <button onClick={() => existingJob ? onBack() : setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left">← Back</button>
-            <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#1A7A84]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto" onClick={handlePostJob}>
+            <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#148F8B]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto" onClick={handlePostJob}>
               {isSubmitting ? <Loader2 className="animate-spin" /> : <>{existingJob ? 'Update Listing' : 'Publish Listing'} <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
             </Button>
           </div>
@@ -828,8 +828,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         <aside className="w-full lg:sticky lg:top-8 space-y-6 sm:space-y-8 order-1 lg:order-2">
            <div className="space-y-4 sm:space-y-6">
               <div className="flex bg-gray-100 p-1 rounded-xl sm:rounded-2xl">
-                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'public' ? 'bg-white text-[#1A7A84] shadow-sm' : 'text-gray-700'}`}>Locked</button>
-                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'private' ? 'bg-white text-[#D25B3A] shadow-sm' : 'text-gray-700'}`}>Unlocked</button>
+                 <button onClick={() => setPreviewMode('public')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'public' ? 'bg-white text-[#148F8B] shadow-sm' : 'text-gray-700'}`}>Locked</button>
+                 <button onClick={() => setPreviewMode('private')} className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${previewMode === 'private' ? 'bg-white text-[#A63F8E] shadow-sm' : 'text-gray-700'}`}>Unlocked</button>
               </div>
               <AnimatePresence mode="wait">
                  <motion.div key={previewMode} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
@@ -838,7 +838,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
               </AnimatePresence>
            </div>
            <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
-              <AlertCircle size={20} className="text-[#1A7A84] shrink-0" /><p className="text-[10px] text-[#1A7A84]/70 font-medium leading-relaxed">Identity revealed only after interaction fee.</p>
+              <AlertCircle size={20} className="text-[#148F8B] shrink-0" /><p className="text-[10px] text-[#148F8B]/70 font-medium leading-relaxed">Identity revealed only after interaction fee.</p>
            </div>
         </aside>
       </div>
@@ -858,7 +858,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       </div>
       <div className="space-y-4 sm:space-y-6">
         <div className="relative">
-          <textarea rows={6} className="w-full p-4 sm:p-6 md:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#F9EBDA]/30 outline-none font-medium text-base sm:text-lg md:text-xl resize-none text-gray-900" placeholder="e.g. Experienced line cook for Waikiki resort. $22/hr, must work weekends." value={prompt} onChange={(e) => setPrompt(e.target.value.slice(0, 500))} />
+          <textarea rows={6} className="w-full p-4 sm:p-6 md:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#F3EAF5]/30 outline-none font-medium text-base sm:text-lg md:text-xl resize-none text-gray-900" placeholder="e.g. Experienced line cook for Waikiki resort. $22/hr, must work weekends." value={prompt} onChange={(e) => setPrompt(e.target.value.slice(0, 500))} />
           <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 flex items-center gap-4"><Mic size={18} className="sm:w-5 sm:h-5 text-gray-600" /></div>
         </div>
         <div className="space-y-2 sm:space-y-3">
@@ -878,7 +878,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
   const renderConfirmation = () => (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20 text-center space-y-8 sm:space-y-10 md:space-y-12">
-      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-[#D25B3A]/10 rounded-full flex items-center justify-center text-[#D25B3A] mx-auto">
+      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-[#A63F8E]/10 rounded-full flex items-center justify-center text-[#A63F8E] mx-auto">
         <CheckCircle2 size={40} className="sm:w-12 sm:h-12 md:w-16 md:h-16" />
       </div>
       <div className="space-y-3 sm:space-y-4">
@@ -897,7 +897,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       {step === 'ai-input' && renderAIInput()}
       {step === 'loading' && (
         <div className="h-[70vh] flex flex-col items-center justify-center space-y-6 sm:space-y-8 px-4">
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-3 sm:border-4 border-dashed border-[#1A7A84]/20" />
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-3 sm:border-4 border-dashed border-[#148F8B]/20" />
           <h3 className="text-lg sm:text-xl md:text-2xl font-black text-center">Building your listing...</h3>
         </div>
       )}

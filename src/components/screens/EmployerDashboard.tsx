@@ -8,9 +8,9 @@ import { ViewType } from '../../App';
 
 const APPLICANT_STATUSES = ['New', 'Reviewed', 'Shortlisted', 'Interview Scheduled'] as const;
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  'New': { bg: 'bg-[#D25B3A]/10', text: 'text-[#D25B3A]' },
-  'Reviewed': { bg: 'bg-[#1A7A84]/10', text: 'text-[#1A7A84]' },
-  'Shortlisted': { bg: 'bg-[#D25B3A]/10', text: 'text-[#D25B3A]' },
+  'New': { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]' },
+  'Reviewed': { bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]' },
+  'Shortlisted': { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]' },
   'Interview Scheduled': { bg: 'bg-purple-100', text: 'text-purple-600' },
 };
 
@@ -80,7 +80,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16 md:space-y-24 mb-12 sm:mb-16 md:mb-20">
       {/* Browse anonymously banner */}
       {!isLoggedIn && (
-        <div className="p-6 sm:p-8 bg-gradient-to-r from-[#D25B3A]/5 to-[#1A7A84]/5 rounded-[2rem] sm:rounded-[3rem] border border-[#D25B3A]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="p-6 sm:p-8 bg-gradient-to-r from-[#A63F8E]/5 to-[#148F8B]/5 rounded-[2rem] sm:rounded-[3rem] border border-[#A63F8E]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-2 flex-1">
             <h3 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900">Browse Candidates Anonymously</h3>
             <p className="text-sm sm:text-base text-gray-600 font-medium">No sign-up required to explore. Create an account and verify your business to post jobs and unlock profiles.</p>
@@ -94,7 +94,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
               <LogIn size={20} /> Log In
             </Button>
             <Button
-              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl bg-[#D25B3A] hover:bg-[#D25B3A]/90 whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={() => onShowAuth("signup")}
             >
               Get Started
@@ -105,12 +105,12 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
       {/* Business Verification Banner */}
       {isLoggedIn && (
-        <div className={`p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border flex flex-col sm:flex-row items-start sm:items-center gap-4 ${isVerified ? 'bg-[#D25B3A]/5 border-[#D25B3A]/20' : 'bg-amber-50 border-amber-200'}`}>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isVerified ? 'bg-[#D25B3A]/10' : 'bg-amber-100'}`}>
-            {isVerified ? <CheckCircle size={22} className="text-[#D25B3A]" /> : <Shield size={22} className="text-amber-600" />}
+        <div className={`p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border flex flex-col sm:flex-row items-start sm:items-center gap-4 ${isVerified ? 'bg-[#A63F8E]/5 border-[#A63F8E]/20' : 'bg-amber-50 border-amber-200'}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isVerified ? 'bg-[#A63F8E]/10' : 'bg-amber-100'}`}>
+            {isVerified ? <CheckCircle size={22} className="text-[#A63F8E]" /> : <Shield size={22} className="text-amber-600" />}
           </div>
           <div className="flex-1 space-y-1">
-            <h4 className={`text-sm font-black uppercase tracking-widest ${isVerified ? 'text-[#D25B3A]' : 'text-amber-700'}`}>
+            <h4 className={`text-sm font-black uppercase tracking-widest ${isVerified ? 'text-[#A63F8E]' : 'text-amber-700'}`}>
               {isVerified ? 'Business Verified' : 'Verification Pending'}
             </h4>
             <p className="text-xs text-gray-600 font-medium">
@@ -120,7 +120,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             </p>
           </div>
           {isVerified && (
-            <span className="px-3 py-1.5 bg-[#D25B3A]/10 text-[#D25B3A] rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+            <span className="px-3 py-1.5 bg-[#A63F8E]/10 text-[#A63F8E] rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
               License: {userProfile.businessLicense}
             </span>
           )}
@@ -138,13 +138,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
           <Button
-            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#1A7A84]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#1A7A84] hover:bg-[#1A7A84]/90 hover:scale-105 active:scale-95 transition-all duration-200"
+            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#148F8B]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#148F8B] hover:bg-[#148F8B]/90 hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={onShowPostJob}
           >
             <Plus size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Post a Job
           </Button>
           <Button
-  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#D25B3A]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#D25B3A] hover:bg-[#D25B3A]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#A63F8E]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
   onClick={() => onNavigate("candidates")}
 >
   <Users size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Candidates
@@ -166,20 +166,20 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
             <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Jobs Posted</span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#1A7A84] transition-colors">{myJobs.length}</p>
+            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#148F8B] transition-colors">{myJobs.length}</p>
             <Briefcase className="absolute -right-4 -bottom-4 text-white/5" size={80} />
           </div>
           <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
             <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Candidates Unlocked</span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#D25B3A] transition-colors">{unlockedCandidates.length}</p>
+            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#A63F8E] transition-colors">{unlockedCandidates.length}</p>
             <Users className="absolute -right-4 -bottom-4 text-white/5" size={80} />
           </div>
           <button
             onClick={() => { setFilterByJobId(null); setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}
-            className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden text-left hover:ring-2 ring-[#D25B3A]/40 transition-all hover:scale-105 active:scale-95 duration-200"
+            className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200"
           >
             <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px] flex items-center gap-2">Applicants Received <ChevronDown size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" /></span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#D25B3A] transition-colors">{mockApplicants.length}</p>
+            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#A63F8E] transition-colors">{mockApplicants.length}</p>
             <Mail className="absolute -right-4 -bottom-4 text-white/5" size={80} />
           </button>
           <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
@@ -194,11 +194,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         <section className="space-y-8 sm:space-y-12">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-              <Briefcase size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#1A7A84]" /> Active Postings
+              <Briefcase size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#148F8B]" /> Active Postings
             </h3>
             <Button
               variant="outline"
-              className="h-10 sm:h-12 rounded-xl border-[#1A7A84]/20 text-[#1A7A84] font-black text-[10px] uppercase tracking-widest gap-2 hover:scale-105 active:scale-95 transition-all duration-200"
+              className="h-10 sm:h-12 rounded-xl border-[#148F8B]/20 text-[#148F8B] font-black text-[10px] uppercase tracking-widest gap-2 hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={onShowPostJob}
             >
               <Plus size={16} /> New Job
@@ -214,7 +214,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                     <h4 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-words">{j.title}</h4>
                     <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • LIVE • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
                   </div>
-                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-[#F9EBDA]/30 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onSelectJob(j)}>
+                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-[#F3EAF5]/30 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onSelectJob(j)}>
                     Manage
                   </Button>
                 </div>
@@ -237,11 +237,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
         <section className="space-y-8 sm:space-y-12">
           <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-            <Star size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#D25B3A]" /> Unlocked Talent
+            <Star size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> Unlocked Talent
           </h3>
 
           {unlockedCandidates.length === 0 ? (
-            <div className="p-12 sm:p-16 md:p-20 bg-[#F9EBDA]/30 rounded-[3rem] sm:rounded-[3.5rem] md:rounded-[4rem] border-4 border-dashed border-gray-100 text-center space-y-4 sm:space-y-6">
+            <div className="p-12 sm:p-16 md:p-20 bg-[#F3EAF5]/30 rounded-[3rem] sm:rounded-[3.5rem] md:rounded-[4rem] border-4 border-dashed border-gray-100 text-center space-y-4 sm:space-y-6">
               <Users size={40} className="sm:w-11 sm:h-11 md:w-12 md:h-12 mx-auto text-gray-600" />
               <p className="text-gray-400 font-black uppercase tracking-widest text-xs sm:text-sm">No unlocked profiles yet</p>
               <Button variant="outline" className="h-12 sm:h-14 px-6 sm:px-8 mx-auto hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("candidates")}>
@@ -263,7 +263,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                         alt={cand.full_name || cand.profession}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-[#1A7A84]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 bg-[#148F8B]/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Play size={20} className="sm:w-6 sm:h-6 text-white fill-white" />
                       </div>
                     </div>
@@ -276,11 +276,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                   </div>
 
                   <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-50 flex gap-2 sm:gap-3">
-                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#1A7A84]/5 text-[#1A7A84] flex items-center justify-center gap-2 hover:bg-[#1A7A84] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
                       <Phone size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Call</span>
                     </button>
-                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#D25B3A]/5 text-[#D25B3A] flex items-center justify-center gap-2 hover:bg-[#D25B3A] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
                       <Mail size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Email</span>
                     </button>
@@ -298,25 +298,25 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-                <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#D25B3A]" /> {filterJobTitle ? 'Applicants' : 'Recent Applicants'}
+                <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> {filterJobTitle ? 'Applicants' : 'Recent Applicants'}
               </h3>
               <div className="flex items-center gap-4">
                 <span className="text-xs font-black uppercase tracking-widest text-gray-400">{filteredApplicants.length} total</span>
-                <span className="text-xs font-black uppercase tracking-widest text-[#D25B3A]">{unlockedApplicants.length} unlocked</span>
-                <span className="text-xs font-black uppercase tracking-widest text-[#D25B3A]/60">{lockedApplicants.length} locked</span>
+                <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">{unlockedApplicants.length} unlocked</span>
+                <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]/60">{lockedApplicants.length} locked</span>
               </div>
             </div>
 
             {/* Job filter indicator */}
             {filterJobTitle && (
-              <div className="flex items-center gap-3 p-3 bg-[#1A7A84]/5 rounded-xl border border-[#1A7A84]/10">
-                <Filter size={14} className="text-[#1A7A84] shrink-0" />
-                <span className="text-xs font-bold text-[#1A7A84] flex-1 truncate">Showing applicants for: {filterJobTitle}</span>
+              <div className="flex items-center gap-3 p-3 bg-[#148F8B]/5 rounded-xl border border-[#148F8B]/10">
+                <Filter size={14} className="text-[#148F8B] shrink-0" />
+                <span className="text-xs font-bold text-[#148F8B] flex-1 truncate">Showing applicants for: {filterJobTitle}</span>
                 <button
                   onClick={() => setFilterByJobId(null)}
-                  className="p-1 rounded-lg hover:bg-[#1A7A84]/10 transition-colors shrink-0"
+                  className="p-1 rounded-lg hover:bg-[#148F8B]/10 transition-colors shrink-0"
                 >
-                  <X size={14} className="text-[#1A7A84]" />
+                  <X size={14} className="text-[#148F8B]" />
                 </button>
               </div>
             )}
@@ -326,10 +326,10 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           {unlockedApplicants.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#D25B3A]/10 flex items-center justify-center">
-                  <CheckCircle size={14} className="text-[#D25B3A]" />
+                <div className="w-6 h-6 rounded-full bg-[#A63F8E]/10 flex items-center justify-center">
+                  <CheckCircle size={14} className="text-[#A63F8E]" />
                 </div>
-                <h4 className="text-sm font-black uppercase tracking-widest text-[#D25B3A]">Unlocked Applicants</h4>
+                <h4 className="text-sm font-black uppercase tracking-widest text-[#A63F8E]">Unlocked Applicants</h4>
               </div>
           {unlockedApplicants.map((applicant, i) => {
   const statusStyle = STATUS_COLORS[applicant.status] || STATUS_COLORS['New'];
@@ -351,7 +351,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             alt={applicant.name}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-[#D25B3A]/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 bg-[#A63F8E]/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
             <Play size={20} className="text-white fill-white drop-shadow-lg" />
           </div>
         </div>
@@ -383,7 +383,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       <div className="px-4 sm:px-6 pb-3">
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Applied to:</span>
-          <span className="text-xs sm:text-sm font-black text-[#1A7A84] tracking-tight truncate">
+          <span className="text-xs sm:text-sm font-black text-[#148F8B] tracking-tight truncate">
             {applicant.appliedToJob?.title || 'Your Job Post'}
           </span>
         </div>
@@ -397,7 +397,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             {applicant.skills.slice(0, 6).map((s: string, idx: number) => (
               <span 
                 key={idx} 
-                className="px-3 py-1.5 bg-[#F9EBDA]/30 text-gray-600 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
+                className="px-3 py-1.5 bg-[#F3EAF5]/30 text-gray-600 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
               >
                 {s}
               </span>
@@ -415,14 +415,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       <div className="px-4 sm:px-6 pb-4 flex gap-2">
         <button
           onClick={(e) => { e.stopPropagation(); }}
-          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#1A7A84]/5 text-[#1A7A84] flex items-center justify-center gap-1.5 hover:bg-[#1A7A84] hover:text-white transition-all"
+          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-1.5 hover:bg-[#148F8B] hover:text-white transition-all"
         >
           <Phone size={16} />
           <span className="font-black text-[10px] uppercase tracking-wider">Call</span>
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); }}
-          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#D25B3A]/5 text-[#D25B3A] flex items-center justify-center gap-1.5 hover:bg-[#D25B3A] hover:text-white transition-all"
+          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-1.5 hover:bg-[#A63F8E] hover:text-white transition-all"
         >
           <Mail size={16} />
           <span className="font-black text-[10px] uppercase tracking-wider">Email</span>
@@ -438,8 +438,8 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           {lockedApplicants.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#D25B3A]/10 flex items-center justify-center">
-                  <Lock size={14} className="text-[#D25B3A]" />
+                <div className="w-6 h-6 rounded-full bg-[#A63F8E]/10 flex items-center justify-center">
+                  <Lock size={14} className="text-[#A63F8E]" />
                 </div>
                 <h4 className="text-sm font-black uppercase tracking-widest text-gray-500">Locked Applicants — Unlock to see full profile</h4>
               </div>
@@ -487,7 +487,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       <div className="px-4 sm:px-6 pb-3">
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Applied to:</span>
-          <span className="text-xs sm:text-sm font-black text-[#1A7A84] tracking-tight truncate">
+          <span className="text-xs sm:text-sm font-black text-[#148F8B] tracking-tight truncate">
             {applicant.appliedToJob?.title || 'Your Job Post'}
           </span>
         </div>
@@ -501,7 +501,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             {applicant.skills.slice(0, 4).map((s: string, idx: number) => (
               <span 
                 key={idx} 
-                className="px-3 py-1.5 bg-[#F9EBDA]/30 text-gray-700 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
+                className="px-3 py-1.5 bg-[#F3EAF5]/30 text-gray-700 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
               >
                 {s}
               </span>
@@ -519,14 +519,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       <div className="px-4 sm:px-6 pb-4 flex gap-2">
         <button
           onClick={() => onSelectCandidate(applicant)}
-          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#F9EBDA]/30 text-gray-600 flex items-center justify-center gap-1.5 hover:bg-gray-100 transition-all"
+          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#F3EAF5]/30 text-gray-600 flex items-center justify-center gap-1.5 hover:bg-gray-100 transition-all"
         >
           <Eye size={16} />
           <span className="font-black text-[10px] uppercase tracking-wider">Preview</span>
         </button>
         <button
           onClick={() => onShowPayment({ type: 'employer', items: [applicant] })}
-          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#D25B3A] text-white flex items-center justify-center gap-1.5 hover:bg-[#D25B3A]/90 transition-all shadow-md shadow-[#D25B3A]/20"
+          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#A63F8E] text-white flex items-center justify-center gap-1.5 hover:bg-[#A63F8E]/90 transition-all shadow-md shadow-[#A63F8E]/20"
         >
           <Lock size={16} />
           <span className="font-black text-[10px] uppercase tracking-wider">${interactionFee.toFixed(2)}</span>

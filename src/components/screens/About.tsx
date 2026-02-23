@@ -25,7 +25,7 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
       </div>
 
       <div className="grid md:grid-cols-2 gap-12">
-        <div className="p-12 bg-[#1A7A84]/5 rounded-[4rem] space-y-6">
+        <div className="p-12 bg-[#148F8B]/5 rounded-[4rem] space-y-6">
           <h3 className="text-4xl font-black tracking-tight">How It Works</h3>
           <div className="space-y-4 text-gray-600 font-medium">
             <p className="font-black text-gray-900">For Job Seekers:</p>
@@ -35,7 +35,7 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
           </div>
         </div>
         <div className="p-12 bg-gray-900 text-white rounded-[4rem] space-y-6">
-          <h3 className="text-4xl font-black tracking-tight text-[#D25B3A]">What Makes Us Different</h3>
+          <h3 className="text-4xl font-black tracking-tight text-[#A63F8E]">What Makes Us Different</h3>
           <div className="space-y-4 text-white/70 font-medium">
             <p><span className="text-white font-black">Video-first, not video-required.</span> Want to show your face? Great. Prefer a voice intro or a transcript? That works too.</p>
             <p><span className="text-white font-black">No subscriptions.</span> Pay ${INTERACTION_FEE.toFixed(2)} when you apply or unlock. No monthly fees.</p>
@@ -57,7 +57,7 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
               </div>
               <div>
                 <p className="font-black text-xl tracking-tight leading-none">{m.name}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#1A7A84] pt-1">{m.role}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B] pt-1">{m.role}</p>
               </div>
             </div>
           ))}
@@ -75,9 +75,9 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
         <div className="space-y-4">
           <p className="text-xl font-black uppercase tracking-widest text-gray-600">Questions?</p>
           <div className="flex flex-wrap justify-center gap-8 text-[11px] font-black uppercase tracking-widest text-gray-400">
-            <button className="hover:text-[#1A7A84]" onClick={() => onNavigate("settings")}>Contact Us</button>
-            <button className="hover:text-[#1A7A84]" onClick={() => onNavigate("about")}>How It Works</button>
-            <button className="hover:text-[#1A7A84]">Pricing</button>
+            <button className="hover:text-[#148F8B]" onClick={() => onNavigate("settings")}>Contact Us</button>
+            <button className="hover:text-[#148F8B]" onClick={() => onNavigate("about")}>How It Works</button>
+            <button className="hover:text-[#148F8B]">Pricing</button>
           </div>
         </div>
       </div>

@@ -34,7 +34,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16">
       {/* Browse anonymously banner */}
       {!isLoggedIn && (
-        <div className="p-6 sm:p-8 bg-gradient-to-r from-[#1A7A84]/5 to-[#D25B3A]/5 rounded-[2rem] sm:rounded-[3rem] border border-[#1A7A84]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="p-6 sm:p-8 bg-gradient-to-r from-[#148F8B]/5 to-[#A63F8E]/5 rounded-[2rem] sm:rounded-[3rem] border border-[#148F8B]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-2 flex-1">
             <h3 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900">Browse Jobs Anonymously</h3>
             <p className="text-sm sm:text-base text-gray-600 font-medium">No sign-up required to explore. Create an account to save your info for future applications.</p>
@@ -68,7 +68,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
           <Button
-  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#D25B3A]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#D25B3A] hover:bg-[#D25B3A]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#A63F8E]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
   onClick={() => onNavigate("jobs")}
 >
   <Briefcase size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Jobs
@@ -104,10 +104,10 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                 </div>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 md:gap-5 justify-center md:justify-start">
                   <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200" onClick={onShowMedia}>
-                    <Video size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#1A7A84]" /> Update Video
+                    <Video size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#148F8B]" /> Update Video
                   </Button>
                   <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("profile-editor")}>
-                    <Edit3 size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#1A7A84]" /> Edit Profile
+                    <Edit3 size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#148F8B]" /> Edit Profile
                   </Button>
                   <Button variant="ghost" className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl text-gray-400 font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all duration-200" onClick={onShowVisibility}>
                     <SettingsIcon size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" /> Visibility
@@ -121,20 +121,20 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           <aside className="space-y-6 sm:space-y-8">
             <div className="p-8 sm:p-10 md:p-12 bg-gray-900 text-white rounded-[2.5rem] sm:rounded-[3.5rem] md:rounded-[4.5rem] space-y-6 sm:space-y-8 shadow-2xl relative overflow-hidden group">
               <h3 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none flex items-center gap-3">
-                <BarChart3 size={24} className="text-[#1A7A84]" /> Activity
+                <BarChart3 size={24} className="text-[#148F8B]" /> Activity
               </h3>
               <div className="space-y-5">
                 <div className="flex justify-between items-end border-b border-white/10 pb-4">
                   <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Profile Views</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#1A7A84]">42</span>
+                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#148F8B]">42</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-white/10 pb-4">
                   <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Applications</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#D25B3A]">{applicationCount}</span>
+                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#A63F8E]">{applicationCount}</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-white/10 pb-4">
                   <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Unlocked Profiles</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#D25B3A]">{unlockedJobs?.length || 0}</span>
+                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#A63F8E]">{unlockedJobs?.length || 0}</span>
                 </div>
                 <div className="flex justify-between items-end">
                   <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Employers Seen You</span>
@@ -150,7 +150,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                 <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Your Profile</h4>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <Users size={16} className="text-[#1A7A84] shrink-0" />
+                    <Users size={16} className="text-[#148F8B] shrink-0" />
                     <span className="font-bold text-gray-900 text-sm">{userProfile.name}</span>
                   </div>
                   {userProfile.location && (
@@ -162,7 +162,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                   {userProfile.skills && (
                     <div className="flex flex-wrap gap-1.5 pt-2">
                       {userProfile.skills.slice(0, 4).map((s: string) => (
-                        <span key={s} className="px-2.5 py-1 bg-[#1A7A84]/5 text-[#1A7A84] rounded-lg text-[10px] font-black uppercase tracking-widest">{s}</span>
+                        <span key={s} className="px-2.5 py-1 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest">{s}</span>
                       ))}
                     </div>
                   )}
@@ -189,27 +189,27 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                 key={job.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-6 sm:p-8 md:p-10 bg-white border-2 border-[#D25B3A]/20 rounded-[2rem] sm:rounded-[3rem] shadow-lg hover:shadow-2xl transition-all group cursor-pointer"
+                className="p-6 sm:p-8 md:p-10 bg-white border-2 border-[#A63F8E]/20 rounded-[2rem] sm:rounded-[3rem] shadow-lg hover:shadow-2xl transition-all group cursor-pointer"
                 onClick={() => onSelectJob && onSelectJob(job)}
               >
                 <div className="space-y-6">
                   {/* Header with company name - ONLY VISIBLE WHEN UNLOCKED */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-3 flex-1">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#D25B3A]/10 rounded-full">
-                        <div className="w-2 h-2 rounded-full bg-[#D25B3A] animate-pulse" />
-                        <span className="text-xs font-black uppercase tracking-widest text-[#D25B3A]">Unlocked</span>
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#A63F8E]/10 rounded-full">
+                        <div className="w-2 h-2 rounded-full bg-[#A63F8E] animate-pulse" />
+                        <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">Unlocked</span>
                       </div>
-                      <h4 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight group-hover:text-[#1A7A84] transition-colors">
+                      <h4 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight group-hover:text-[#148F8B] transition-colors">
                         {job.title}
                       </h4>
                       {/* Company Name - REVEALED ONLY WHEN UNLOCKED */}
                       <div className="flex items-center gap-2 text-lg sm:text-xl font-bold text-gray-900">
-                        <Building2 size={20} className="text-[#1A7A84]" />
+                        <Building2 size={20} className="text-[#148F8B]" />
                         <span>{job.company_name || 'Company Name Hidden'}</span>
                       </div>
                     </div>
-                    <ExternalLink size={24} className="text-gray-600 group-hover:text-[#1A7A84] transition-colors shrink-0" />
+                    <ExternalLink size={24} className="text-gray-600 group-hover:text-[#148F8B] transition-colors shrink-0" />
                   </div>
 
                   {/* Job Details Grid */}
@@ -262,12 +262,12 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                       <div className="space-y-2">
                         {job.contact_email && (
                           <p className="text-sm font-bold text-gray-900">
-                            Email: <a href={`mailto:${job.contact_email}`} className="text-[#1A7A84] hover:underline">{job.contact_email}</a>
+                            Email: <a href={`mailto:${job.contact_email}`} className="text-[#148F8B] hover:underline">{job.contact_email}</a>
                           </p>
                         )}
                         {job.contact_phone && (
                           <p className="text-sm font-bold text-gray-900">
-                            Phone: <span className="text-[#1A7A84]">{job.contact_phone}</span>
+                            Phone: <span className="text-[#148F8B]">{job.contact_phone}</span>
                           </p>
                         )}
                       </div>

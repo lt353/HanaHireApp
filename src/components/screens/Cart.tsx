@@ -30,7 +30,7 @@ export const Cart: React.FC<CartProps> = ({
     <div className="max-w-5xl mx-auto px-4 py-16 sm:py-24 space-y-12 sm:space-y-16 pb-48 sm:pb-16">
       {/* Updated heading with folder icon */}
       <div className="flex items-center gap-4">
-        <FolderOpen size={48} className="text-[#1A7A84]" />
+        <FolderOpen size={48} className="text-[#148F8B]" />
         <h2 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter">Saved Items</h2>
       </div>
 
@@ -39,7 +39,7 @@ export const Cart: React.FC<CartProps> = ({
           <FolderOpen size={48} className="sm:w-16 sm:h-16 text-gray-100 mx-auto" />
           <p className="text-gray-400 font-black text-lg sm:text-xl md:text-2xl uppercase tracking-widest">No saved items yet</p>
           <div className="flex justify-center">
-            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg bg-[#1A7A84] hover:bg-[#1A7A84]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
+            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
               Start Browsing
             </Button>
           </div>
@@ -53,7 +53,7 @@ export const Cart: React.FC<CartProps> = ({
                   <div className="p-4 sm:p-6 lg:p-10 flex items-center justify-between gap-2 sm:gap-4 cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
                     <div className="flex items-center gap-2 sm:gap-4 lg:gap-8 min-w-0 flex-1">
                       {role === 'seeker' ? (
-                        <div className="w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] bg-[#1A7A84]/5 flex items-center justify-center text-[#1A7A84] shadow-inner group-hover:rotate-6 transition-transform shrink-0">
+                        <div className="w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] bg-[#148F8B]/5 flex items-center justify-center text-[#148F8B] shadow-inner group-hover:rotate-6 transition-transform shrink-0">
                           <Briefcase size={20} className="sm:w-8 sm:h-8" />
                         </div>
                       ) : (
@@ -94,7 +94,7 @@ export const Cart: React.FC<CartProps> = ({
                           e.stopPropagation();
                           onRemoveFromQueue(item.id);
                         }}
-                        className="p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-[#F9EBDA]/30 text-gray-600 hover:bg-[#D25B3A]/10 hover:text-[#D25B3A] transition-all shrink-0 hover:scale-105 active:scale-95 duration-200"
+                        className="p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-[#F3EAF5]/30 text-gray-600 hover:bg-[#A63F8E]/10 hover:text-[#A63F8E] transition-all shrink-0 hover:scale-105 active:scale-95 duration-200"
                         aria-label="Remove from queue"
                       >
                         <Trash2 size={16} className="sm:w-5 sm:h-5" />
@@ -117,8 +117,8 @@ export const Cart: React.FC<CartProps> = ({
                           {/* Tags row */}
                           <div className="flex flex-wrap gap-2 sm:gap-3">
                             {item.job_type && <span className="px-3 sm:px-4 py-2 bg-white border border-gray-100 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-600">{item.job_type}</span>}
-                            {item.pay_range && <span className="px-3 sm:px-4 py-2 bg-white border border-gray-100 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#D25B3A]">{item.pay_range}</span>}
-                            {item.company_industry && <span className="px-3 sm:px-4 py-2 bg-[#1A7A84]/5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#1A7A84]">{item.company_industry}</span>}
+                            {item.pay_range && <span className="px-3 sm:px-4 py-2 bg-white border border-gray-100 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#A63F8E]">{item.pay_range}</span>}
+                            {item.company_industry && <span className="px-3 sm:px-4 py-2 bg-[#148F8B]/5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#148F8B]">{item.company_industry}</span>}
                             {item.company_size && <span className="px-3 sm:px-4 py-2 bg-white border border-gray-100 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-600">{item.company_size}</span>}
                             {item.start_date && <span className="px-3 sm:px-4 py-2 bg-white border border-gray-100 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-600">Start: {item.start_date}</span>}
                           </div>
@@ -130,7 +130,7 @@ export const Cart: React.FC<CartProps> = ({
                               <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Requirements</span>
                               <div className="flex flex-wrap gap-2">
                                 {item.requirements.map((r: string, i: number) => (
-                                  <span key={i} className="px-3 py-1.5 bg-[#1A7A84]/5 text-[#1A7A84] rounded-lg text-[10px] font-black uppercase tracking-widest">{r}</span>
+                                  <span key={i} className="px-3 py-1.5 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest">{r}</span>
                                 ))}
                               </div>
                             </div>
@@ -142,7 +142,7 @@ export const Cart: React.FC<CartProps> = ({
                               <ul className="space-y-1.5">
                                 {item.responsibilities.map((r: string, i: number) => (
                                   <li key={i} className="flex gap-2 items-start text-xs text-gray-600">
-                                    <div className="w-1.5 h-1.5 mt-1.5 rounded-full bg-[#1A7A84] shrink-0" />
+                                    <div className="w-1.5 h-1.5 mt-1.5 rounded-full bg-[#148F8B] shrink-0" />
                                     {r}
                                   </li>
                                 ))}
@@ -155,7 +155,7 @@ export const Cart: React.FC<CartProps> = ({
                               <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Benefits</span>
                               <div className="flex flex-wrap gap-2">
                                 {item.benefits.map((b: string, i: number) => (
-                                  <span key={i} className="px-3 py-1.5 bg-[#D25B3A]/5 text-[#D25B3A] rounded-lg text-[10px] font-black uppercase tracking-widest">{b}</span>
+                                  <span key={i} className="px-3 py-1.5 bg-[#A63F8E]/5 text-[#A63F8E] rounded-lg text-[10px] font-black uppercase tracking-widest">{b}</span>
                                 ))}
                               </div>
                             </div>
@@ -184,7 +184,7 @@ export const Cart: React.FC<CartProps> = ({
                             {item.availability && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Availability</span>
-                                <p className="text-xs font-black text-[#D25B3A]">{item.availability}</p>
+                                <p className="text-xs font-black text-[#A63F8E]">{item.availability}</p>
                               </div>
                             )}
                             {item.education && (
@@ -196,7 +196,7 @@ export const Cart: React.FC<CartProps> = ({
                             {item.preferred_pay_range && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Target Pay</span>
-                                <p className="text-xs font-black text-[#D25B3A]">{item.preferred_pay_range}</p>
+                                <p className="text-xs font-black text-[#A63F8E]">{item.preferred_pay_range}</p>
                               </div>
                             )}
                             {item.work_style && (
@@ -218,7 +218,7 @@ export const Cart: React.FC<CartProps> = ({
                               <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Industries Interested</span>
                               <div className="flex flex-wrap gap-2">
                                 {item.industries_interested.map((ind: string, i: number) => (
-                                  <span key={i} className="px-3 py-1.5 bg-[#1A7A84]/5 text-[#1A7A84] rounded-lg text-[10px] font-black uppercase tracking-widest">{ind}</span>
+                                  <span key={i} className="px-3 py-1.5 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest">{ind}</span>
                                 ))}
                               </div>
                             </div>
@@ -253,11 +253,11 @@ export const Cart: React.FC<CartProps> = ({
                   </div>
                   <div className="flex justify-between items-center border-t border-gray-100 pt-8">
                     <span className="text-3xl font-black tracking-tight">Total</span>
-                    <span className="text-5xl font-black text-[#1A7A84] tracking-tighter">${total.toFixed(2)}</span>
+                    <span className="text-5xl font-black text-[#148F8B] tracking-tighter">${total.toFixed(2)}</span>
                   </div>
                 </div>
                 <Button
-                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#1A7A84]/20 bg-[#1A7A84] hover:bg-[#1A7A84]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#148F8B]/20 bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
                   onClick={() => onShowPayment({ type: role, items: queue })}
                 >
                   {role === 'seeker' ? 'Apply to All Jobs' : 'Unlock All Profiles'}
@@ -275,11 +275,11 @@ export const Cart: React.FC<CartProps> = ({
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                       {queue.length} {queue.length === 1 ? 'Item' : 'Items'}
                     </span>
-                    <span className="block text-3xl font-black text-[#1A7A84] tracking-tighter">${total.toFixed(2)}</span>
+                    <span className="block text-3xl font-black text-[#148F8B] tracking-tighter">${total.toFixed(2)}</span>
                   </div>
                 </div>
                 <Button
-                  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#1A7A84]/20 bg-[#1A7A84] hover:bg-[#1A7A84]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#148F8B]/20 bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
                   onClick={() => onShowPayment({ type: role, items: queue })}
                 >
                   {role === 'seeker' ? 'Apply to All Jobs' : 'Unlock All Profiles'}

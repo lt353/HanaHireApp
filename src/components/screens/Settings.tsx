@@ -49,7 +49,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 py-16 grid lg:grid-cols-4 gap-12">
       <aside className="lg:col-span-1 space-y-4">
         {["Account info", "Payment method", "Transaction history", "Support", "System"].map(tab => (
-          <button key={tab} className="w-full text-left p-6 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] border border-gray-50 bg-white hover:bg-[#F9EBDA]/30 transition-all flex justify-between items-center group">
+          <button key={tab} className="w-full text-left p-6 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] border border-gray-50 bg-white hover:bg-[#F3EAF5]/30 transition-all flex justify-between items-center group">
             {tab} <ChevronRight size={16} className="text-gray-600 group-hover:translate-x-1 transition-transform" />
           </button>
         ))}
@@ -61,15 +61,15 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Full Name</label>
-              <input type="text" placeholder="Identity Name" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 outline-none font-bold" />
+              <input type="text" placeholder="Identity Name" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Email Address</label>
-              <input type="email" placeholder="contact@domain.com" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 outline-none font-bold" />
+              <input type="email" placeholder="contact@domain.com" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Phone Number</label>
-              <input type="tel" placeholder="+1 (808) 000-0000" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 outline-none font-bold" />
+              <input type="tel" placeholder="+1 (808) 000-0000" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="flex items-end">
               <Button className="h-16 px-10 rounded-2xl w-full" onClick={() => toast.success("Info Updated")}>Update Info</Button>
@@ -78,7 +78,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
         </section>
 
         <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><Database className="text-[#D25B3A]" /> System Data</h2>
+          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><Database className="text-[#A63F8E]" /> System Data</h2>
           <div className="p-10 bg-red-50/30 border border-red-100 rounded-[3rem] space-y-6">
             <div className="space-y-2">
               <p className="font-black text-lg tracking-tight uppercase text-red-600">Factory Reset</p>
@@ -97,22 +97,22 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
         </section>
 
         <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><CreditCard className="text-[#1A7A84]" /> Payment Setup</h2>
+          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><CreditCard className="text-[#148F8B]" /> Payment Setup</h2>
           <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-[#F9EBDA]/30 flex items-center justify-center text-gray-600"><Plus size={32} /></div>
+            <div className="w-16 h-16 rounded-full bg-[#F3EAF5]/30 flex items-center justify-center text-gray-600"><Plus size={32} /></div>
             <p className="text-gray-400 font-bold">Secure Stripe Connection</p>
             <Button variant="outline" className="h-14 px-10 rounded-2xl bg-white" onClick={() => toast.info("Redirecting to Stripe...")}>Add Card</Button>
           </div>
         </section>
 
-        <section className="bg-[#1A7A84]/5 p-12 rounded-[4rem] border border-[#1A7A84]/10 space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><HelpCircle className="text-[#1A7A84]" /> Support</h2>
+        <section className="bg-[#148F8B]/5 p-12 rounded-[4rem] border border-[#148F8B]/10 space-y-10">
+          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><HelpCircle className="text-[#148F8B]" /> Support</h2>
           <div className="grid md:grid-cols-2 gap-8 text-sm">
             <div className="space-y-4">
               <p className="font-black text-xl tracking-tight leading-none">Contact HanaHire</p>
               <div className="space-y-2 font-bold">
-                <p className="flex items-center gap-3"><Mail size={18} className="text-[#1A7A84]" /> support@hanahire.com</p>
-                <p className="flex items-center gap-3"><Phone size={18} className="text-[#1A7A84]" /> +1 (808) 555-0199</p>
+                <p className="flex items-center gap-3"><Mail size={18} className="text-[#148F8B]" /> support@hanahire.com</p>
+                <p className="flex items-center gap-3"><Phone size={18} className="text-[#148F8B]" /> +1 (808) 555-0199</p>
               </div>
             </div>
           </div>

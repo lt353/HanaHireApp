@@ -22,13 +22,13 @@ export const CollapsibleFilter: React.FC<CollapsibleFilterProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full py-6 flex items-center justify-between group hover:scale-105 active:scale-95 transition-all duration-200"
       >
-        <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest group-hover:text-[#1A7A84] transition-colors">
+        <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest group-hover:text-[#148F8B] transition-colors">
           {title}
         </span>
         {isOpen ? (
-          <ChevronUp size={16} className="text-gray-600 group-hover:text-[#1A7A84]" />
+          <ChevronUp size={16} className="text-gray-600 group-hover:text-[#148F8B]" />
         ) : (
-          <ChevronDown size={16} className="text-gray-600 group-hover:text-[#1A7A84]" />
+          <ChevronDown size={16} className="text-gray-600 group-hover:text-[#148F8B]" />
         )}
       </button>
       

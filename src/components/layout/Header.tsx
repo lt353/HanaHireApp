@@ -17,7 +17,7 @@ interface HeaderProps {
   onLogout: () => void;
   onShowAuth: (mode: "login" | "signup") => void;
   onReset: () => void;
-  isPaymentModalOpen?: boolean;  // ADD THIS LINE
+  isPaymentModalOpen?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,33 +33,39 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onShowAuth,
   onReset,
-  isPaymentModalOpen = false  // ADD THIS LINE
+  isPaymentModalOpen = false
 }) => {
   const queueCount = role === "seeker" ? seekerQueueCount : employerQueueCount;
 
-  // HIDE HEADER WHEN PAYMENT MODAL IS OPEN
   if (isPaymentModalOpen) {
     return null;
   }
 
-  // Header background color - always lavender blush
-  const headerBgColor = "#FFF0F5"; // Lavender blush
-
   return (
-    <nav 
-      className="hidden md:flex sticky top-0 z-40 border-b border-gray-100 shadow-sm px-3 sm:px-4 md:px-8 h-20 items-center justify-between gap-2 transition-colors duration-200"
-      style={{ backgroundColor: headerBgColor, background: headerBgColor }}
+    <nav
+      className="hidden md:flex sticky top-0 z-40 px-3 sm:px-4 md:px-8 h-20 items-center justify-between gap-2 transition-colors duration-200 relative"
+      style={{ backgroundColor: '#FAF9F7' }}
     >
+      {/* Gradient bottom border */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '5px',
+        background: 'linear-gradient(to right, #148F8B, #A63F8E)'
+      }} />
+
       {/* Left */}
       <div className="flex items-center gap-2 sm:gap-4 md:gap-10 min-w-0 flex-1">
         <button
           onClick={onReset}
           className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter flex items-center gap-1 sm:gap-2 group shrink-0 hover:scale-105 active:scale-95 transition-all duration-200"
         >
-          <Zap 
-            size={20} 
-            className="sm:w-[26px] sm:h-[26px]" 
-            fill={!isRoleSelected ? "#A63F8E" : role === "seeker" ? "#148F8B" : "#A63F8E"} 
+          <Zap
+            size={20}
+            className="sm:w-[26px] sm:h-[26px]"
+            fill={!isRoleSelected ? "#A63F8E" : role === "seeker" ? "#148F8B" : "#A63F8E"}
           />
           <span className="truncate">
             <span style={{ color: '#148F8B', WebkitTextFillColor: '#148F8B' }}>Hana</span>
@@ -76,10 +82,10 @@ export const Header: React.FC<HeaderProps> = ({
                 }
                 className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                   (currentTab === "seeker" || currentTab === "employer")
-                    ? "font-black" 
+                    ? "font-black"
                     : "font-bold hover:text-gray-900"
                 }`}
-                style={{ 
+                style={{
                   color: role === "seeker" ? "#148F8B" : "#A63F8E"
                 }}
               >
@@ -136,11 +142,11 @@ export const Header: React.FC<HeaderProps> = ({
                   ? "font-black"
                   : "font-bold hover:text-gray-900"
               }`}
-              style={{ 
-                color: !isRoleSelected 
-                  ? "#A63F8E" 
-                  : role === "seeker" 
-                    ? "#148F8B" 
+              style={{
+                color: !isRoleSelected
+                  ? "#A63F8E"
+                  : role === "seeker"
+                    ? "#148F8B"
                     : "#A63F8E"
               }}
             >
@@ -154,11 +160,11 @@ export const Header: React.FC<HeaderProps> = ({
                   ? "font-black"
                   : "font-bold hover:text-gray-900"
               }`}
-              style={{ 
-                color: !isRoleSelected 
-                  ? "#A63F8E" 
-                  : role === "seeker" 
-                    ? "#148F8B" 
+              style={{
+                color: !isRoleSelected
+                  ? "#A63F8E"
+                  : role === "seeker"
+                    ? "#148F8B"
                     : "#A63F8E"
               }}
             >
@@ -176,14 +182,13 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onToggleRole}
               className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 transition-all text-xs sm:text-sm font-black uppercase tracking-widest text-gray-600 hover:scale-105 active:scale-95 duration-200 ${
-                role === "seeker" 
+                role === "seeker"
                   ? "hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:text-[#148F8B]"
                   : "hover:border-[#A63F8E] hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
               }`}
             >
               Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
             </button>
-
           </>
         )}
 

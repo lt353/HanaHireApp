@@ -1075,7 +1075,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] font-sans text-gray-900 selection:bg-[#1A7A84]/10">
+    <div className="min-h-screen bg-[#FAF9F7] font-sans text-gray-900 selection:bg-[#148F8B]/10">
       
       <Header 
         isRoleSelected={currentView !== "landing"}
@@ -1203,7 +1203,7 @@ export default function App() {
                            placeholder="name@region.com"
                            value={loginEmail}
                            onChange={(e) => setLoginEmail(e.target.value)}
-                           className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-black text-xl tracking-tight transition-all"
+                           className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-black text-xl tracking-tight transition-all"
                          />
                       </div>
                       <div className="space-y-3">
@@ -1214,14 +1214,14 @@ export default function App() {
                            placeholder="••••••••"
                            value={loginPassword}
                            onChange={(e) => setLoginPassword(e.target.value)}
-                           className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-black text-xl tracking-tighter transition-all"
+                           className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-black text-xl tracking-tighter transition-all"
                          />
                       </div>
                    </div>
                    <Button
                      type="submit"
                      variant="primary"
-                     className="w-full h-20 rounded-[1.5rem] text-xl shadow-lg shadow-[#1A7A84]/20 hover:scale-105 active:scale-95 transition-all duration-200"
+                     className="w-full h-20 rounded-[1.5rem] text-xl shadow-lg shadow-[#148F8B]/20 hover:scale-105 active:scale-95 transition-all duration-200"
                    >
                      Log In to Hub
                    </Button>
@@ -1238,10 +1238,10 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#1A7A84]/20 bg-[#1A7A84]/5 hover:border-[#1A7A84] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
+                      className="p-4 rounded-2xl border-2 border-[#148F8B]/20 bg-[#148F8B]/5 hover:border-[#148F8B] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
-                      <User size={24} className="mx-auto text-[#1A7A84] group-hover:scale-110 transition-transform" />
-                      <span className="block text-xs font-black uppercase tracking-widest text-[#1A7A84]">Job Seeker</span>
+                      <User size={24} className="mx-auto text-[#148F8B] group-hover:scale-110 transition-transform" />
+                      <span className="block text-xs font-black uppercase tracking-widest text-[#148F8B]">Job Seeker</span>
                       <span className="block text-[10px] text-gray-600 font-medium">Demo Account</span>
                     </button>
                     <button
@@ -1251,17 +1251,17 @@ export default function App() {
                         setLoginPassword('demo123');
                         toast.success("Demo credentials filled! Click 'Log In to Hub'");
                       }}
-                      className="p-4 rounded-2xl border-2 border-[#D25B3A]/20 bg-[#D25B3A]/5 hover:border-[#D25B3A] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
+                      className="p-4 rounded-2xl border-2 border-[#A63F8E]/20 bg-[#A63F8E]/5 hover:border-[#A63F8E] hover:border-4 hover:scale-105 active:scale-95 transition-all duration-200 text-center space-y-2 group"
                     >
-                      <Building2 size={24} className="mx-auto text-[#D25B3A] group-hover:scale-110 transition-transform" />
-                      <span className="block text-xs font-black uppercase tracking-widest text-[#D25B3A]">Employer</span>
+                      <Building2 size={24} className="mx-auto text-[#A63F8E] group-hover:scale-110 transition-transform" />
+                      <span className="block text-xs font-black uppercase tracking-widest text-[#A63F8E]">Employer</span>
                       <span className="block text-[10px] text-gray-600 font-medium">Demo Account</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2">
-                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Create Account</button></p>
+                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">First time here? <button onClick={() => { setAuthMode('signup'); setSignupStep('role-select'); setSignupRole(null); }} className="text-[#148F8B] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Create Account</button></p>
                 </div>
               </>
             ) : signupStep === 'role-select' ? (
@@ -1272,53 +1272,53 @@ export default function App() {
                 <div className="space-y-4">
                   <button
                     onClick={() => { setSignupRole('seeker'); setSignupStep('form'); }}
-                    className="w-full p-6 rounded-[2rem] border-2 border-[#1A7A84]/20 hover:border-[#1A7A84] bg-white hover:bg-[#1A7A84]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#148F8B]/20 hover:border-[#148F8B] bg-white hover:bg-[#148F8B]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-[#1A7A84]/10 flex items-center justify-center shrink-0">
-                        <User size={28} className="text-[#1A7A84]" />
+                      <div className="w-14 h-14 rounded-2xl bg-[#148F8B]/10 flex items-center justify-center shrink-0">
+                        <User size={28} className="text-[#148F8B]" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-black tracking-tight group-hover:text-[#1A7A84] transition-colors">I'm Looking for a Job</h3>
+                        <h3 className="text-xl font-black tracking-tight group-hover:text-[#148F8B] transition-colors">I'm Looking for a Job</h3>
                         <p className="text-sm text-gray-600 font-medium mt-1">Browse and apply to opportunities</p>
                       </div>
                     </div>
                     <div className="pl-[4.5rem] space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Save your intro video and profile for future applications</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Track profile views, applications, and unlocked jobs</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#1A7A84] shrink-0" /> Come back anytime without re-entering your info</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#148F8B] shrink-0" /> Save your intro video and profile for future applications</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#148F8B] shrink-0" /> Track profile views, applications, and unlocked jobs</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#148F8B] shrink-0" /> Come back anytime without re-entering your info</div>
                     </div>
                   </button>
 
                   <button
                     onClick={() => { setSignupRole('employer'); setSignupStep('form'); }}
-                    className="w-full p-6 rounded-[2rem] border-2 border-[#D25B3A]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#D25B3A]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
+                    className="w-full p-6 rounded-[2rem] border-2 border-[#A63F8E]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#A63F8E]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-[#D25B3A]/10 flex items-center justify-center shrink-0">
-                        <Building2 size={28} className="text-[#D25B3A]" />
+                      <div className="w-14 h-14 rounded-2xl bg-[#A63F8E]/10 flex items-center justify-center shrink-0">
+                        <Building2 size={28} className="text-[#A63F8E]" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-black tracking-tight group-hover:text-[#D25B3A] transition-colors">I'm Looking to Hire</h3>
+                        <h3 className="text-xl font-black tracking-tight group-hover:text-[#A63F8E] transition-colors">I'm Looking to Hire</h3>
                         <p className="text-sm text-gray-600 font-medium mt-1">Post jobs and find talent</p>
                       </div>
                     </div>
                     <div className="pl-[4.5rem] space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Post jobs and browse candidate video profiles</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Track candidates unlocked, profile views, and applicants</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#D25B3A] shrink-0" /> Verify your business for trusted hiring</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#A63F8E] shrink-0" /> Post jobs and browse candidate video profiles</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#A63F8E] shrink-0" /> Track candidates unlocked, profile views, and applicants</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-700"><CheckCircle size={14} className="text-[#A63F8E] shrink-0" /> Verify your business for trusted hiring</div>
                     </div>
                   </button>
                 </div>
 
-                <div className="p-4 bg-[#F9EBDA]/30 rounded-2xl">
+                <div className="p-4 bg-[#F3EAF5]/30 rounded-2xl">
                   <p className="text-xs text-gray-700 text-center font-medium">
                     <span className="font-black text-gray-700">No account needed to browse.</span> Sign up to save your info, track activity, and come back easily.
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
+                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#148F8B] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             ) : (
@@ -1326,7 +1326,7 @@ export default function App() {
               <div className="space-y-8">
                 <button
                   onClick={() => { setSignupStep('role-select'); setSignupRole(null); setSignupFormData({}); }}
-                  className="text-xs font-black text-gray-600 uppercase tracking-widest hover:text-[#1A7A84] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="text-xs font-black text-gray-600 uppercase tracking-widest hover:text-[#148F8B] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                 >
                   &larr; Back to role selection
                 </button>
@@ -1344,10 +1344,10 @@ export default function App() {
                     }
                     toast.success("Demo data filled! Click the button below to create your account.");
                   }}
-                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#D25B3A]/20 bg-[#D25B3A]/5 hover:bg-[#D25B3A]/10' : 'border-[#1A7A84]/20 bg-[#1A7A84]/5 hover:bg-[#1A7A84]/10'} hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group`}
+                  className={`w-full p-4 rounded-2xl border-2 ${signupRole === 'employer' ? 'border-[#A63F8E]/20 bg-[#A63F8E]/5 hover:bg-[#A63F8E]/10' : 'border-[#148F8B]/20 bg-[#148F8B]/5 hover:bg-[#148F8B]/10'} hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group`}
                 >
-                  <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#D25B3A]' : 'text-[#1A7A84]'} group-hover:scale-110 transition-transform`} />
-                  <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#D25B3A]' : 'text-[#1A7A84]'}`}>
+                  <Zap size={18} className={`${signupRole === 'employer' ? 'text-[#A63F8E]' : 'text-[#148F8B]'} group-hover:scale-110 transition-transform`} />
+                  <span className={`text-xs font-black uppercase tracking-widest ${signupRole === 'employer' ? 'text-[#A63F8E]' : 'text-[#148F8B]'}`}>
                     Auto-fill Demo Data
                   </span>
                 </button>
@@ -1549,24 +1549,24 @@ export default function App() {
                      <div className="space-y-5">
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Full Name</label>
-                         <input required type="text" value={signupFormData.name || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Your full name" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="text" value={signupFormData.name || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Your full name" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Email</label>
-                         <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="name@email.com" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="name@email.com" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Password</label>
-                         <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-lg tracking-tighter" />
+                         <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-lg tracking-tighter" />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
-                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base" />
+                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Location</label>
-                           <select value={signupFormData.location || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, location: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base">
+                           <select value={signupFormData.location || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, location: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base">
                              <option value="">Select...</option>
                              {JOB_CATEGORIES.locations.map(l => <option key={l} value={l}>{l}</option>)}
                            </select>
@@ -1578,24 +1578,24 @@ export default function App() {
                      <div className="space-y-5">
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Business Name</label>
-                         <input required type="text" value={signupFormData.businessName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessName: e.target.value }))} placeholder="Your business name" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="text" value={signupFormData.businessName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessName: e.target.value }))} placeholder="Your business name" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Business Email</label>
-                         <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="hiring@business.com" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-lg tracking-tight" />
+                         <input required type="email" value={signupFormData.email || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, email: e.target.value }))} placeholder="hiring@business.com" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-lg tracking-tight" />
                        </div>
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Password</label>
-                         <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-lg tracking-tighter" />
+                         <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-lg tracking-tighter" />
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
-                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 focus:ring-4 ring-[#D25B3A]/10 outline-none font-bold text-base" />
+                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Industry</label>
-                           <select value={signupFormData.industry || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, industry: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F9EBDA]/30 border border-gray-100 font-bold text-base">
+                           <select value={signupFormData.industry || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, industry: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base">
                              <option value="">Select...</option>
                              {JOB_CATEGORIES.industries.map(i => <option key={i} value={i}>{i}</option>)}
                            </select>
@@ -1617,14 +1617,14 @@ export default function App() {
                    <Button
                      type="submit"
                      disabled={isSignupLoading}
-                     className={`w-full h-16 rounded-[1.5rem] text-lg font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === 'employer' ? 'bg-[#D25B3A] hover:bg-[#D25B3A]/90 shadow-[#D25B3A]/20' : 'bg-[#1A7A84] hover:bg-[#1A7A84]/90 shadow-[#1A7A84]/20'}`}
+                     className={`w-full h-16 rounded-[1.5rem] text-lg font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === 'employer' ? 'bg-[#A63F8E] hover:bg-[#A63F8E]/90 shadow-[#A63F8E]/20' : 'bg-[#148F8B] hover:bg-[#148F8B]/90 shadow-[#148F8B]/20'}`}
                    >
                      {isSignupLoading ? 'Creating Account...' : (signupRole === 'employer' ? 'Create Employer Account' : 'Create My Account')}
                    </Button>
                 </form>
 
                 <div className="flex flex-col items-center gap-6 pt-4 border-t border-gray-50">
-                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#1A7A84] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
+                   <p className="text-sm text-gray-600 font-black uppercase tracking-widest">Already a member? <button onClick={() => setAuthMode('login')} className="text-[#148F8B] hover:underline hover:scale-105 active:scale-95 transition-all duration-200">Sign In</button></p>
                 </div>
               </div>
             )}
@@ -1635,33 +1635,33 @@ export default function App() {
   <div className="space-y-8">
 
     {/* What you get after purchase */}
-    <div className={`p-4 rounded-2xl border ${paymentTarget?.type === 'seeker' ? 'bg-[#1A7A84]/5 border-[#1A7A84]/10' : 'bg-[#D25B3A]/5 border-[#D25B3A]/10'}`}>
-      <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: paymentTarget?.type === 'seeker' ? '#1A7A84' : '#D25B3A' }}>
+    <div className={`p-4 rounded-2xl border ${paymentTarget?.type === 'seeker' ? 'bg-[#148F8B]/5 border-[#148F8B]/10' : 'bg-[#A63F8E]/5 border-[#A63F8E]/10'}`}>
+      <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: paymentTarget?.type === 'seeker' ? '#148F8B' : '#A63F8E' }}>
         {paymentTarget?.type === 'seeker' ? 'What you get after applying' : 'What unlocks after payment'}
       </p>
       {paymentTarget?.type === 'seeker' ? (
         <ul className="space-y-1">
-          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#1A7A84] shrink-0" /> Business name and branding revealed</li>
-          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#1A7A84] shrink-0" /> Direct contact details for the hiring team</li>
-          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#1A7A84] shrink-0" /> Your application is submitted immediately</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#148F8B] shrink-0" /> Business name and branding revealed</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#148F8B] shrink-0" /> Direct contact details for the hiring team</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#148F8B] shrink-0" /> Your application is submitted immediately</li>
         </ul>
       ) : (
         <ul className="space-y-1">
-          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#D25B3A] shrink-0" /> Full video intro becomes playable</li>
-          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#D25B3A] shrink-0" /> Candidate's real name revealed</li>
-          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#D25B3A] shrink-0" /> Direct phone number and verified email</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#A63F8E] shrink-0" /> Full video intro becomes playable</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#A63F8E] shrink-0" /> Candidate's real name revealed</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#A63F8E] shrink-0" /> Direct phone number and verified email</li>
         </ul>
       )}
     </div>
 
     {/* Unlock Summary */}
-    <div className="bg-[#F9EBDA]/30 rounded-[2rem] border border-gray-100 overflow-hidden">
+    <div className="bg-[#F3EAF5]/30 rounded-[2rem] border border-gray-100 overflow-hidden">
       <div className="p-5 sm:p-6 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">
             {paymentTarget?.type === 'seeker' ? 'Application Summary' : 'Unlock Summary'}
           </span>
-          <span className="text-[10px] font-black text-[#D25B3A] uppercase tracking-widest">
+          <span className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest">
             {paymentItems.length} {paymentItems.length === 1 ? 'item' : 'items'}
           </span>
         </div>
@@ -1679,8 +1679,8 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-[#1A7A84]/10 flex items-center justify-center shrink-0">
-                  <Briefcase size={14} className="text-[#1A7A84]" />
+                <div className="w-10 h-10 rounded-xl bg-[#148F8B]/10 flex items-center justify-center shrink-0">
+                  <Briefcase size={14} className="text-[#148F8B]" />
                 </div>
               )}
 
@@ -1714,7 +1714,7 @@ export default function App() {
                     setPaymentItems(next);
                     if (expandedPaymentItemId === item.id) setExpandedPaymentItemId(null);
                   }}
-                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#D25B3A] hover:border-[#D25B3A]/30 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-[#A63F8E] hover:border-[#A63F8E]/30 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                   title="Remove from checkout"
                 >
                   <X size={14} />
@@ -1730,10 +1730,10 @@ export default function App() {
                     {item.bio && <p className="text-xs text-gray-700 leading-relaxed">{item.bio}</p>}
                     <div className="flex flex-wrap gap-1.5">
                       {item.years_experience && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.years_experience} yrs exp</span>}
-                      {item.availability && <span className="px-2 py-1 bg-[#D25B3A]/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#D25B3A]">{item.availability}</span>}
+                      {item.availability && <span className="px-2 py-1 bg-[#A63F8E]/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#A63F8E]">{item.availability}</span>}
                       {item.work_style && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.work_style}</span>}
                       {item.education && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.education}</span>}
-                      {item.current_employment_status && <span className="px-2 py-1 bg-[#1A7A84]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#1A7A84]">{item.current_employment_status}</span>}
+                      {item.current_employment_status && <span className="px-2 py-1 bg-[#148F8B]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{item.current_employment_status}</span>}
                     </div>
                     {Array.isArray(item.skills) && item.skills.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
@@ -1745,7 +1745,7 @@ export default function App() {
                     {Array.isArray(item.industries_interested) && item.industries_interested.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {item.industries_interested.map((ind: string, ii: number) => (
-                          <span key={ii} className="px-2 py-1 bg-[#1A7A84]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#1A7A84]">{ind}</span>
+                          <span key={ii} className="px-2 py-1 bg-[#148F8B]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{ind}</span>
                         ))}
                       </div>
                     )}
@@ -1755,21 +1755,21 @@ export default function App() {
                     {item.description && <p className="text-xs text-gray-700 leading-relaxed">{item.description}</p>}
                     <div className="flex flex-wrap gap-1.5">
                       {item.job_type && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.job_type}</span>}
-                      {item.company_industry && <span className="px-2 py-1 bg-[#1A7A84]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#1A7A84]">{item.company_industry}</span>}
+                      {item.company_industry && <span className="px-2 py-1 bg-[#148F8B]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{item.company_industry}</span>}
                       {item.company_size && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">{item.company_size}</span>}
                       {item.start_date && <span className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-600">Start: {item.start_date}</span>}
                     </div>
                     {Array.isArray(item.requirements) && item.requirements.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {item.requirements.map((r: string, ri: number) => (
-                          <span key={ri} className="px-2 py-1 bg-[#1A7A84]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#1A7A84]">{r}</span>
+                          <span key={ri} className="px-2 py-1 bg-[#148F8B]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{r}</span>
                         ))}
                       </div>
                     )}
                     {Array.isArray(item.benefits) && item.benefits.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {item.benefits.map((b: string, bi: number) => (
-                          <span key={bi} className="px-2 py-1 bg-[#D25B3A]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#D25B3A]">{b}</span>
+                          <span key={bi} className="px-2 py-1 bg-[#A63F8E]/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-[#A63F8E]">{b}</span>
                         ))}
                       </div>
                     )}
@@ -1797,33 +1797,33 @@ export default function App() {
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Payment Details</span>
           <div className="flex items-center gap-1.5 text-xs font-black text-gray-500 uppercase tracking-widest">
-            <Lock size={10} className="text-[#1A7A84]" /> SSL Encrypted
+            <Lock size={10} className="text-[#148F8B]" /> SSL Encrypted
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Name on Card</label>
-          <input type="text" placeholder="Full name as shown on card" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base transition-colors" />
+          <input type="text" placeholder="Full name as shown on card" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base transition-colors" />
         </div>
 
         <div className="space-y-2">
           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Card Number</label>
           <div className="relative">
-            <CreditCard size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#1A7A84]/40" />
-            <input type="text" placeholder="1234  5678  1234  5678" className="w-full p-4 sm:p-5 pl-14 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base tracking-widest transition-colors" />
+            <CreditCard size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#148F8B]/40" />
+            <input type="text" placeholder="1234  5678  1234  5678" className="w-full p-4 sm:p-5 pl-14 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base tracking-widest transition-colors" />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Expiry</label>
-            <input type="text" placeholder="MM / YY" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
+            <input type="text" placeholder="MM / YY" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Security Code</label>
             <div className="relative">
-              <input type="text" placeholder="CVC" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#1A7A84] focus:ring-4 ring-[#1A7A84]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
-              <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1A7A84]/30" />
+              <input type="text" placeholder="CVC" className="w-full p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base text-center tracking-widest transition-colors" />
+              <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#148F8B]/30" />
             </div>
           </div>
         </div>
@@ -1833,7 +1833,7 @@ export default function App() {
     {/* Pay Button */}
     {paymentItems.length > 0 && (
       <Button
-        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#1A7A84]/30 tracking-tight group bg-[#1A7A84] hover:bg-[#1A7A84]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+        className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#148F8B]/30 tracking-tight group bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
         onClick={processPayment}
       >
         <Lock size={18} className="mr-2" />
@@ -1845,13 +1845,13 @@ export default function App() {
     {/* Trust Indicators */}
     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-2 pb-20 md:pb-2">
       <div className="flex items-center gap-1.5 text-xs font-black text-gray-500 uppercase tracking-widest">
-        <Shield size={12} className="text-[#1A7A84]" /> Secure Payment
+        <Shield size={12} className="text-[#148F8B]" /> Secure Payment
       </div>
       <div className="flex items-center gap-1.5 text-xs font-black text-gray-500 uppercase tracking-widest">
-        <Lock size={12} className="text-[#1A7A84]" /> 256-bit Encryption
+        <Lock size={12} className="text-[#148F8B]" /> 256-bit Encryption
       </div>
       <div className="flex items-center gap-1.5 text-xs font-black text-gray-500 uppercase tracking-widest">
-        <CheckCircle size={12} className="text-[#1A7A84]" /> Money-back Guarantee
+        <CheckCircle size={12} className="text-[#148F8B]" /> Money-back Guarantee
       </div>
     </div>
   </div>
@@ -1889,12 +1889,12 @@ export default function App() {
             setShowPostJobModal(false);
             toast.success("Job Live!");
          }} className="space-y-8">
-            <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Job Title</label><input required name="title" type="text" placeholder="e.g. Server" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-black text-xl" /></div>
+            <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Job Title</label><input required name="title" type="text" placeholder="e.g. Server" className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 font-black text-xl" /></div>
             <div className="grid grid-cols-2 gap-8">
-               <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Type</label><select name="type" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-bold">
+               <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Type</label><select name="type" className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 font-bold">
                   {JOB_CATEGORIES.industries.map(ind => <option key={ind}>{ind}</option>)}
                </select></div>
-               <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Pay Range</label><select name="pay" className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-bold">
+               <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Pay Range</label><select name="pay" className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 font-bold">
                   {JOB_CATEGORIES.payRanges.map(pay => <option key={pay}>{pay}</option>)}
                </select></div>
             </div>
@@ -1902,35 +1902,35 @@ export default function App() {
             <div className="space-y-4">
                <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Job Intro Format</label>
                <div className="flex gap-4">
-                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#1A7A84] bg-[#1A7A84]/5 text-[#1A7A84]' : 'border-gray-200 text-gray-700'} hover:scale-105 active:scale-95 duration-200`}>
+                  <button type="button" onClick={() => setMediaType("video")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'video' ? 'border-[#148F8B] bg-[#148F8B]/5 text-[#148F8B]' : 'border-gray-200 text-gray-700'} hover:scale-105 active:scale-95 duration-200`}>
                      <Video size={24} />
                      <span className="font-black text-[10px]">VIDEO INTRO</span>
                   </button>
-                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#1A7A84] bg-[#1A7A84]/5 text-[#1A7A84]' : 'border-gray-200 text-gray-700'} hover:scale-105 active:scale-95 duration-200`}>
+                  <button type="button" onClick={() => setMediaType("voice")} className={`flex-1 p-6 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${mediaType === 'voice' ? 'border-[#148F8B] bg-[#148F8B]/5 text-[#148F8B]' : 'border-gray-200 text-gray-700'} hover:scale-105 active:scale-95 duration-200`}>
                      <Mic size={24} />
                      <span className="font-black text-[10px]">VOICE ONLY</span>
                   </button>
                </div>
-               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-600 hover:text-[#1A7A84] hover:border-[#1A7A84] hover:scale-105 active:scale-95 transition-all duration-200">
+               <button type="button" onClick={() => toast.info(`Starting ${mediaType} recorder...`)} className="w-full py-10 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center gap-2 text-gray-600 hover:text-[#148F8B] hover:border-[#148F8B] hover:scale-105 active:scale-95 transition-all duration-200">
                   {mediaType === 'video' ? <Camera size={32} /> : <Mic size={32} />}
                   <span className="font-black text-[10px] uppercase">Record Job Intro</span>
                </button>
             </div>
 
-            <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Overview</label><textarea required name="description" rows={4} className="w-full p-6 rounded-3xl bg-[#F9EBDA]/30 border border-gray-100 font-medium text-lg" /></div>
-            <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#1A7A84]/20 hover:scale-105 active:scale-95 transition-all duration-200">Go Live ($0 Post Fee)</Button>
+            <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Overview</label><textarea required name="description" rows={4} className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 font-medium text-lg" /></div>
+            <Button type="submit" className="w-full h-24 text-3xl rounded-[2rem] shadow-2xl shadow-[#148F8B]/20 hover:scale-105 active:scale-95 transition-all duration-200">Go Live ($0 Post Fee)</Button>
          </form>
       </Modal>
 
       <Modal isOpen={showVisibilityModal} onClose={() => setShowVisibilityModal(false)} title="Visibility Preferences">
          <div className="space-y-12">
             <div className="space-y-6">
-               <button onClick={() => { setUserVisibility("broader"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "broader" ? "border-[#1A7A84] bg-[#1A7A84]/5 shadow-xl" : "border-gray-50"}`}>
-                  <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "broader" ? "border-[#1A7A84]" : "border-gray-200"}`}>{userVisibility === "broader" && <div className="w-6 h-6 rounded-full bg-[#1A7A84]" />}</div>
+               <button onClick={() => { setUserVisibility("broader"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "broader" ? "border-[#148F8B] bg-[#148F8B]/5 shadow-xl" : "border-gray-50"}`}>
+                  <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "broader" ? "border-[#148F8B]" : "border-gray-200"}`}>{userVisibility === "broader" && <div className="w-6 h-6 rounded-full bg-[#148F8B]" />}</div>
                   <div className="space-y-2"><span className="font-black text-3xl text-gray-900 block tracking-tighter leading-none uppercase">Public Discovery</span><p className="text-lg text-gray-500 font-medium leading-tight">Businesses can find you in the pool.</p></div>
                </button>
-               <button onClick={() => { setUserVisibility("limited"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "limited" ? "border-[#1A7A84] bg-[#1A7A84]/5 shadow-xl" : "border-gray-50"}`}>
-                   <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "limited" ? "border-[#1A7A84]" : "border-gray-200"}`}>{userVisibility === "limited" && <div className="w-6 h-6 rounded-full bg-[#1A7A84]" />}</div>
+               <button onClick={() => { setUserVisibility("limited"); toast.success("Visibility Updated"); setShowVisibilityModal(false); }} className={`w-full p-10 rounded-[4rem] border-4 text-left hover:scale-105 active:scale-95 transition-all duration-200 flex gap-10 items-center ${userVisibility === "limited" ? "border-[#148F8B] bg-[#148F8B]/5 shadow-xl" : "border-gray-50"}`}>
+                   <div className={`w-12 h-12 rounded-full border-4 shrink-0 flex items-center justify-center ${userVisibility === "limited" ? "border-[#148F8B]" : "border-gray-200"}`}>{userVisibility === "limited" && <div className="w-6 h-6 rounded-full bg-[#148F8B]" />}</div>
                   <div className="space-y-2"><span className="font-black text-3xl text-gray-900 block tracking-tighter leading-none uppercase">Direct Only</span><p className="text-lg text-gray-500 font-medium leading-tight">Only jobs you apply to see your profile.</p></div>
                </button>
             </div>
@@ -1941,16 +1941,16 @@ export default function App() {
          <div className="space-y-10">
             <p className="text-center text-gray-500 font-medium">Choose how you want to show your personality.</p>
             <div className="grid grid-cols-2 gap-6">
-               <button onClick={() => { setMediaType("video"); toast.info("Starting Video Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#1A7A84] hover:bg-[#1A7A84]/5 hover:scale-105 active:scale-95 transition-all duration-200">
-                  <Video size={48} className="text-[#1A7A84]" />
+               <button onClick={() => { setMediaType("video"); toast.info("Starting Video Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:scale-105 active:scale-95 transition-all duration-200">
+                  <Video size={48} className="text-[#148F8B]" />
                   <span className="font-black text-xs uppercase tracking-widest">VIDEO INTRO</span>
                </button>
-               <button onClick={() => { setMediaType("voice"); toast.info("Starting Voice Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#1A7A84] hover:bg-[#1A7A84]/5 hover:scale-105 active:scale-95 transition-all duration-200">
-                  <Mic size={48} className="text-[#1A7A84]" />
+               <button onClick={() => { setMediaType("voice"); toast.info("Starting Voice Recorder..."); }} className="p-10 border-2 border-gray-100 rounded-[3rem] flex flex-col items-center gap-4 hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:scale-105 active:scale-95 transition-all duration-200">
+                  <Mic size={48} className="text-[#148F8B]" />
                   <span className="font-black text-xs uppercase tracking-widest">VOICE ONLY</span>
                </button>
             </div>
-            <div className="p-8 bg-[#F9EBDA]/30 rounded-3xl space-y-4">
+            <div className="p-8 bg-[#F3EAF5]/30 rounded-3xl space-y-4">
                <p className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2"><FileText size={14} /> Transcript Mode</p>
                <p className="text-sm text-gray-500">Your recording automatically generates a transcript for employers.</p>
             </div>
@@ -1965,7 +1965,7 @@ export default function App() {
               </span>
               <button
                 onClick={clearFilters}
-                className="text-[10px] font-black text-[#D25B3A] uppercase tracking-widest hover:underline hover:scale-105 active:scale-95 transition-all duration-200"
+                className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest hover:underline hover:scale-105 active:scale-95 transition-all duration-200"
               >
                 Clear All
               </button>
@@ -1977,7 +1977,7 @@ export default function App() {
                 <button
                   key={t}
                   onClick={() => toggleFilter('industries', t)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {t}
                 </button>
@@ -1990,7 +1990,7 @@ export default function App() {
                 <button
                   key={l}
                   onClick={() => toggleFilter('locations', l)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                 >
                   {l}
                 </button>
@@ -2004,7 +2004,7 @@ export default function App() {
                   <button
                     key={p}
                     onClick={() => toggleFilter('payRanges', p)}
-                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                   >
                     {p}
                   </button>
@@ -2017,7 +2017,7 @@ export default function App() {
                     <button
                       key={e}
                       onClick={() => toggleFilter('experience', e)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {e}
                     </button>
@@ -2029,7 +2029,7 @@ export default function App() {
                     <button
                       key={s}
                       onClick={() => toggleFilter('skills', s)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {s}
                     </button>
@@ -2041,7 +2041,7 @@ export default function App() {
                     <button
                       key={edu}
                       onClick={() => toggleFilter('education', edu)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {edu}
                     </button>
@@ -2053,7 +2053,7 @@ export default function App() {
                     <button
                       key={p}
                       onClick={() => toggleFilter('payRanges', p)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#1A7A84] text-[#1A7A84] bg-[#1A7A84]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
                     >
                       {p}
                     </button>
@@ -2077,11 +2077,11 @@ export default function App() {
        <Eye size={24} />
        <span className="text-xs font-black uppercase tracking-widest">EXPLORE</span>
      </button>
-     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#1A7A84]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <Briefcase size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
      </button>
-     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#1A7A84]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <User size={24} />
        <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
      </button>
@@ -2096,10 +2096,10 @@ export default function App() {
             <div className="space-y-3">
               <h3 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none">{selectedJob.title}</h3>
               <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-widest">
-                <span className="flex items-center gap-1.5 text-[#1A7A84]"><MapPin size={13} />{selectedJob.location}</span>
-                <span className="flex items-center gap-1.5 text-[#D25B3A]"><DollarSign size={13} />{selectedJob.pay_range}</span>
+                <span className="flex items-center gap-1.5 text-[#148F8B]"><MapPin size={13} />{selectedJob.location}</span>
+                <span className="flex items-center gap-1.5 text-[#A63F8E]"><DollarSign size={13} />{selectedJob.pay_range}</span>
                 <span className="px-3 py-1 bg-gray-100 rounded-lg text-gray-600">{selectedJob.job_type}</span>
-                {selectedJob.company_industry && <span className="px-3 py-1 bg-[#1A7A84]/5 text-[#1A7A84] rounded-lg">{selectedJob.company_industry}</span>}
+                {selectedJob.company_industry && <span className="px-3 py-1 bg-[#148F8B]/5 text-[#148F8B] rounded-lg">{selectedJob.company_industry}</span>}
                 {selectedJob.company_size && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">{selectedJob.company_size}</span>}
                 {selectedJob.start_date && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">Start: {selectedJob.start_date}</span>}
               </div>
@@ -2115,7 +2115,7 @@ export default function App() {
                 }}>
                   Edit Job
                 </Button>
-                <Button className="h-16 rounded-2xl bg-[#D25B3A] hover:bg-[#D25B3A]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
+                <Button className="h-16 rounded-2xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
                   View Applicants
                 </Button>
               </div>
@@ -2123,7 +2123,7 @@ export default function App() {
 
             {/* Business identity (locked until applied) */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-5 bg-[#F9EBDA]/30 rounded-2xl space-y-1">
+              <div className="p-5 bg-[#F3EAF5]/30 rounded-2xl space-y-1">
                 <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Business</span>
                 <p className="font-black text-base tracking-tight">
                   {(selectedJob.is_anonymous && !unlockedJobIds.includes(selectedJob.id))
@@ -2132,7 +2132,7 @@ export default function App() {
                 </p>
               </div>
               {selectedJob.applicant_count !== undefined && (
-                <div className="p-5 bg-[#F9EBDA]/30 rounded-2xl space-y-1">
+                <div className="p-5 bg-[#F3EAF5]/30 rounded-2xl space-y-1">
                   <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Applicants</span>
                   <p className="font-black text-base tracking-tight">{selectedJob.applicant_count}</p>
                 </div>
@@ -2161,7 +2161,7 @@ export default function App() {
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Requirements</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedJob.requirements.map((r: string, i: number) => (
-                    <span key={i} className="px-4 py-2 bg-[#1A7A84]/5 text-[#1A7A84] rounded-xl text-xs font-black uppercase tracking-widest">{r}</span>
+                    <span key={i} className="px-4 py-2 bg-[#148F8B]/5 text-[#148F8B] rounded-xl text-xs font-black uppercase tracking-widest">{r}</span>
                   ))}
                 </div>
               </div>
@@ -2174,7 +2174,7 @@ export default function App() {
                 <ul className="space-y-2">
                   {selectedJob.responsibilities.map((r: string, i: number) => (
                     <li key={i} className="flex gap-3 items-start text-sm text-gray-600 font-medium">
-                      <div className="w-1.5 h-1.5 mt-2 rounded-full bg-[#1A7A84] shrink-0" />
+                      <div className="w-1.5 h-1.5 mt-2 rounded-full bg-[#148F8B] shrink-0" />
                       {r}
                     </li>
                   ))}
@@ -2188,7 +2188,7 @@ export default function App() {
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Benefits</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedJob.benefits.map((b: string, i: number) => (
-                    <span key={i} className="px-4 py-2 bg-[#D25B3A]/5 text-[#D25B3A] rounded-xl text-xs font-black uppercase tracking-widest">{b}</span>
+                    <span key={i} className="px-4 py-2 bg-[#A63F8E]/5 text-[#A63F8E] rounded-xl text-xs font-black uppercase tracking-widest">{b}</span>
                   ))}
                 </div>
               </div>
@@ -2196,7 +2196,7 @@ export default function App() {
 
             {/* CTA - Seeker actions */}
             {userRole !== 'employer' && !unlockedJobIds.includes(selectedJob.id) && (
-              <Button className="w-full h-20 text-xl rounded-3xl bg-[#1A7A84] hover:bg-[#136068] text-white shadow-2xl shadow-[#1A7A84]/25 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
+              <Button className="w-full h-20 text-xl rounded-3xl bg-[#148F8B] hover:bg-[#136068] text-white shadow-2xl shadow-[#148F8B]/25 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
   Apply & Reveal Business
 </Button>
             )}
@@ -2211,7 +2211,7 @@ export default function App() {
               <div className="space-y-8">
                 {/* Header for Unlocked State */}
                 <div className="flex flex-col sm:flex-row gap-6 items-center">
-                   <div className="w-24 h-24 rounded-[2rem] overflow-hidden bg-gray-100 shrink-0 border-4 border-[#1A7A84]/10 shadow-xl">
+                   <div className="w-24 h-24 rounded-[2rem] overflow-hidden bg-gray-100 shrink-0 border-4 border-[#148F8B]/10 shadow-xl">
                       <ImageWithFallback 
                         src={selectedCandidate.video_thumbnail_url} 
                         className="w-full h-full object-cover"
@@ -2219,7 +2219,7 @@ export default function App() {
                    </div>
                    <div className="space-y-1 flex-1 text-center sm:text-left">
                       <h3 className="text-4xl font-black tracking-tighter leading-none">{selectedCandidate.name}</h3>
-                      <p className="text-lg font-black text-[#1A7A84] uppercase tracking-[0.2em]">{selectedCandidate.location}</p>
+                      <p className="text-lg font-black text-[#148F8B] uppercase tracking-[0.2em]">{selectedCandidate.location}</p>
                    </div>
                 </div>
 
@@ -2236,7 +2236,7 @@ export default function App() {
                    </div>
                 </div>
 
-                <div className="flex gap-4 p-1 bg-[#F9EBDA]/30 rounded-2xl">
+                <div className="flex gap-4 p-1 bg-[#F3EAF5]/30 rounded-2xl">
                   <button className="flex-1 py-4 bg-white rounded-xl shadow-sm text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200">Video Intro</button>
                   <button className="flex-1 py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-gray-600 transition-colors hover:scale-105 active:scale-95 transition-all duration-200">Transcript</button>
                 </div>
@@ -2259,7 +2259,7 @@ export default function App() {
                       </div>
                    </div>
                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
-                      <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#D25B3A] text-white rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl">
+                      <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#A63F8E] text-white rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl">
                         ${INTERACTION_FEE.toFixed(2)}
                       </div>
                    </div>
@@ -2277,10 +2277,10 @@ export default function App() {
                     <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter leading-none break-words">
                       {selectedCandidate.display_title || "Verified Talent"}
                     </h3>
-                    <p className="text-xs font-black text-[#1A7A84] uppercase tracking-[0.2em]">{selectedCandidate.location}</p>
+                    <p className="text-xs font-black text-[#148F8B] uppercase tracking-[0.2em]">{selectedCandidate.location}</p>
                     <div className="flex flex-wrap gap-2 sm:gap-3">
                       <span className="px-3 py-1 bg-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest">{selectedCandidate.years_experience} YRS EXP</span>
-                      <span className="px-3 py-1 bg-[#D25B3A]/10 text-[#D25B3A] rounded-lg text-[10px] font-black uppercase tracking-widest">{selectedCandidate.availability}</span>
+                      <span className="px-3 py-1 bg-[#A63F8E]/10 text-[#A63F8E] rounded-lg text-[10px] font-black uppercase tracking-widest">{selectedCandidate.availability}</span>
                     </div>
                   </div>
                 </div>
@@ -2309,7 +2309,7 @@ export default function App() {
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center gap-2">
                     <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest">Availability</span>
-                    <span className="text-[10px] sm:text-xs font-black text-[#D25B3A] uppercase text-right">{selectedCandidate.availability}</span>
+                    <span className="text-[10px] sm:text-xs font-black text-[#A63F8E] uppercase text-right">{selectedCandidate.availability}</span>
                   </div>
                   <div className="flex justify-between items-center gap-2">
                     <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest">Experience</span>
@@ -2344,7 +2344,7 @@ export default function App() {
                   <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Industries Interested</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedCandidate.industries_interested.map((ind: string, i: number) => (
-                      <span key={i} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#1A7A84]/5 text-[#1A7A84] rounded-xl text-[10px] font-black uppercase tracking-widest">{ind}</span>
+                      <span key={i} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#148F8B]/5 text-[#148F8B] rounded-xl text-[10px] font-black uppercase tracking-widest">{ind}</span>
                     ))}
                   </div>
                 </div>
@@ -2364,34 +2364,34 @@ export default function App() {
 
               {/* Financial & Contact Info - Privacy Layer */}
               <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
-                 <div className="p-6 sm:p-8 bg-[#F9EBDA]/30 rounded-[1.5rem] sm:rounded-[2rem] space-y-2">
+                 <div className="p-6 sm:p-8 bg-[#F3EAF5]/30 rounded-[1.5rem] sm:rounded-[2rem] space-y-2">
                     <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Expectation</span>
                     <p className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">{selectedCandidate.preferred_pay_range}</p>
                  </div>
                  
                  {unlockedCandidateIds.includes(selectedCandidate.id) ? (
-                    <div className="p-6 sm:p-8 bg-[#1A7A84] rounded-[1.5rem] sm:rounded-[2rem] text-white space-y-2">
+                    <div className="p-6 sm:p-8 bg-[#148F8B] rounded-[1.5rem] sm:rounded-[2rem] text-white space-y-2">
                        <span className="text-[10px] font-black opacity-60 uppercase tracking-widest">Direct Phone</span>
                        <p className="text-lg sm:text-xl font-black tracking-tight">{selectedCandidate.phone}</p>
                     </div>
                  ) : (
-                    <div className="p-6 sm:p-8 bg-[#D25B3A]/5 rounded-[1.5rem] sm:rounded-[2rem] border border-[#D25B3A]/10 flex items-center justify-between gap-3">
+                    <div className="p-6 sm:p-8 bg-[#A63F8E]/5 rounded-[1.5rem] sm:rounded-[2rem] border border-[#A63F8E]/10 flex items-center justify-between gap-3">
                        <div className="space-y-1 min-w-0">
-                          <span className="text-[9px] sm:text-[10px] font-black text-[#D25B3A] uppercase tracking-widest">Contact Locked</span>
+                          <span className="text-[9px] sm:text-[10px] font-black text-[#A63F8E] uppercase tracking-widest">Contact Locked</span>
                           <p className="text-xs sm:text-sm font-bold text-gray-400 italic">Unlock to reveal identity</p>
                        </div>
-                       <Lock size={18} className="sm:w-5 sm:h-5 text-[#D25B3A] opacity-40 shrink-0" />
+                       <Lock size={18} className="sm:w-5 sm:h-5 text-[#A63F8E] opacity-40 shrink-0" />
                     </div>
                  )}
               </div>
               
               {unlockedCandidateIds.includes(selectedCandidate.id) && (
-                 <div className="p-6 sm:p-8 bg-[#D25B3A]/5 rounded-[1.5rem] sm:rounded-[2rem] border border-[#D25B3A]/10 flex items-center gap-4 sm:gap-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#D25B3A]/20 flex items-center justify-center shrink-0">
-                       <Mail className="text-[#D25B3A]" size={20} />
+                 <div className="p-6 sm:p-8 bg-[#A63F8E]/5 rounded-[1.5rem] sm:rounded-[2rem] border border-[#A63F8E]/10 flex items-center gap-4 sm:gap-6">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#A63F8E]/20 flex items-center justify-center shrink-0">
+                       <Mail className="text-[#A63F8E]" size={20} />
                     </div>
                     <div className="min-w-0">
-                       <span className="text-[10px] font-black text-[#D25B3A] uppercase tracking-widest">Verified Email</span>
+                       <span className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest">Verified Email</span>
                        <p className="text-base sm:text-lg md:text-xl font-black text-gray-900 tracking-tight break-all">{selectedCandidate.email}</p>
                     </div>
                  </div>
@@ -2399,7 +2399,7 @@ export default function App() {
             </div>
 
             {!unlockedCandidateIds.includes(selectedCandidate.id) && (
-              <Button className="w-full h-20 text-xl rounded-3xl bg-[#D25B3A] hover:bg-[#B84A2F] text-white font-black uppercase tracking-widest shadow-2xl shadow-[#D25B3A]/25 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
+              <Button className="w-full h-20 text-xl rounded-3xl bg-[#A63F8E] hover:bg-[#5C014A] text-white font-black uppercase tracking-widest shadow-2xl shadow-[#A63F8E]/25 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
   Unlock Full Video & Contact
 </Button>
             )}
