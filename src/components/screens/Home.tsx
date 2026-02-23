@@ -32,7 +32,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
         <div className="space-y-6 sm:space-y-10 text-center lg:text-left">
           <div className="space-y-4 sm:space-y-6">
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-gray-900 tracking-tight leading-none">
-              Hire the <span className="text-[#148F8B]">Person</span>,<br className="hidden sm:inline" />
+              Hire the <span className="text-[#148F8B]">Person</span>, <br className="hidden sm:inline" />
               Not the Paper
             </h1>
             <p className="text-lg sm:text-2xl md:text-4xl text-gray-800 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
