@@ -521,15 +521,15 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           onClick={() => onSelectCandidate(applicant)}
           className="flex-1 h-10 sm:h-11 rounded-xl bg-[#F3EAF5]/30 text-gray-600 flex items-center justify-center gap-1.5 hover:bg-gray-100 transition-all"
         >
-          <Eye size={16} />
-          <span className="font-black text-[10px] uppercase tracking-wider">Preview</span>
+          <Eye size={20} />
+          <span className="font-black text-[12px] uppercase tracking-wider">Preview</span>
         </button>
         <button
           onClick={() => onShowPayment({ type: 'employer', items: [applicant] })}
           className="flex-1 h-10 sm:h-11 rounded-xl bg-[#A63F8E] text-white flex items-center justify-center gap-1.5 hover:bg-[#A63F8E]/90 transition-all shadow-md shadow-[#A63F8E]/20"
         >
-          <Lock size={16} />
-          <span className="font-black text-[10px] uppercase tracking-wider">${interactionFee.toFixed(2)}</span>
+          <Lock size={18} />
+          <span className="font-black text-[12px] uppercase tracking-wider">Unlock</span>
         </button>
       </div>
     </motion.div>
