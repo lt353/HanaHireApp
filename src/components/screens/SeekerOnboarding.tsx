@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { User, Zap, CheckCircle, Video, Camera, ChevronRight, Sparkles, Edit3, Lock } from "lucide-react";
-import { Button } from "../ui/Button";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { User, Zap, CheckCircle, Video, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic } from "lucide-react";
+import { Button } from "../ui/Button.tsx";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
 import { ViewType } from '../../App';
 
@@ -22,6 +22,76 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [jobTypesSeeking, setJobTypesSeeking] = useState<string[]>([]);
   const [useCustomTitle, setUseCustomTitle] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
+
+  // Custom text entry for multi-select sections
+  const [customSkill, setCustomSkill] = useState("");
+  const [customIndustry, setCustomIndustry] = useState("");
+  const [customWorkStyle, setCustomWorkStyle] = useState("");
+  const [customJobType, setCustomJobType] = useState("");
+
+  // --- Speech to Text (Web Speech API) for "About You" bio ---
+  const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
+  const [isRecordingBio, setIsRecordingBio] = useState(false);
+  const bioRecognitionRef = useRef<any | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setHasSpeechSupport(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognition.onend = () => setIsRecordingBio(false);
+      bioRecognitionRef.current = recognition;
+      setHasSpeechSupport(true);
+    } catch {
+      setHasSpeechSupport(false);
+    }
+  }, []);
+
+  const toggleBioSpeechToText = () => {
+    if (!bioRecognitionRef.current || !hasSpeechSupport) return;
+
+    try {
+      const recognition = bioRecognitionRef.current as any;
+
+      if (isRecordingBio) {
+        recognition.stop();
+        setIsRecordingBio(false);
+        return;
+      }
+
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            transcript += result[0].transcript;
+          }
+        }
+
+        if (transcript) {
+          setBio(prev =>
+            prev ? `${prev.trim()} ${transcript.trim()}` : transcript.trim(),
+          );
+        }
+      };
+
+      recognition.start();
+      setIsRecordingBio(true);
+    } catch {
+      setIsRecordingBio(false);
+    }
+  };
 
   // System-generated title based on selected skills + experience
   const systemTitle = useMemo(() => {
@@ -47,6 +117,51 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   };
 
   const handleDemoFill = () => {
+    // Prefer a rich profile (demo candidate loaded from Supabase) when available
+    const isSeeker = userProfile && userProfile.role === "seeker";
+    const hasRichData =
+      isSeeker &&
+      (
+        userProfile.bio ||
+        (userProfile.skills && userProfile.skills.length > 0) ||
+        userProfile.experience !== undefined ||
+        userProfile.education ||
+        userProfile.availability ||
+        userProfile.targetPay ||
+        (userProfile.industries && userProfile.industries.length > 0)
+      );
+
+    if (hasRichData) {
+      // Map numeric years_experience into the labeled ranges used in CANDIDATE_CATEGORIES.experience
+      const mapExperience = (raw: any): string => {
+        if (raw === null || raw === undefined) return "";
+        const n = typeof raw === "number" ? raw : parseInt(String(raw), 10);
+        if (isNaN(n)) return String(raw);
+        if (n <= 2) return "0-2 years";
+        if (n <= 5) return "2-5 years";
+        if (n <= 10) return "5-10 years";
+        return "10+ years";
+      };
+
+      setBio(userProfile.bio || "");
+      setSelectedSkills(userProfile.skills || []);
+      setExperience(mapExperience(userProfile.experience));
+      // For education / availability / pay, keep the raw DB strings and let the user
+      // either pick a preset or type their own in the companion text inputs.
+      setEducation(userProfile.education || "");
+      setAvailability(userProfile.availability || "");
+      setTargetPay(userProfile.targetPay || "");
+      setSelectedIndustries(userProfile.industries || []);
+      setSelectedWorkStyles(userProfile.workStyles || []);
+      setJobTypesSeeking(userProfile.jobTypesSeeking || []);
+      setUseCustomTitle(true);
+      setCustomTitle(
+        (userProfile.displayTitle as string | undefined)?.trim() || systemTitle,
+      );
+      return;
+    }
+
+    // Fallback: local demo constants if we don't have a rich profile yet
     const d = DEMO_PROFILES.seeker;
     setBio(d.bio);
     setSelectedSkills(d.skills);
@@ -130,9 +245,27 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         <div className="space-y-8">
           {/* Bio */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              {bio.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">About You</h2>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                {bio.length > 0 && <CheckCircle size={18} className="text-[#A63F8B]" />}
+                <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
+                  About You
+                </h2>
+              </div>
+              {hasSpeechSupport && (
+                <button
+                  type="button"
+                  onClick={toggleBioSpeechToText}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black tracking-widest uppercase transition-all ${
+                    isRecordingBio
+                      ? "border-[#148F8B] bg-[#148F8B]/10 text-[#148F8B]"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-[#148F8B] hover:text-[#148F8B]"
+                  }`}
+                >
+                  <Mic size={12} />
+                  <span>{isRecordingBio ? "Stop" : "Speak"}</span>
+                </button>
+              )}
             </div>
             <textarea
               value={bio}
@@ -197,12 +330,35 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
               {selectedSkills.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Skills ({selectedSkills.length} selected)</h2>
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
+                Skills ({selectedSkills.length} selected)
+              </h2>
             </div>
-            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-              {CANDIDATE_CATEGORIES.skills.map(skill => (
+
+            {selectedSkills.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedSkills.map((skill) => (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => toggleItem(selectedSkills, setSelectedSkills, skill)}
+                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                  >
+                    <span>{skill}</span>
+                    <span className="text-[9px] opacity-80">×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+              Suggested Skills
+            </p>
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+              {CANDIDATE_CATEGORIES.skills.map((skill) => (
                 <button
                   key={skill}
+                  type="button"
                   onClick={() => toggleItem(selectedSkills, setSelectedSkills, skill)}
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     selectedSkills.includes(skill)
@@ -214,6 +370,30 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 </button>
               ))}
             </div>
+
+            <div className="mt-3 space-y-1">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customSkill}
+                  onChange={(e) => setCustomSkill(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && customSkill.trim()) {
+                      const trimmed = customSkill.trim();
+                      if (!selectedSkills.includes(trimmed)) {
+                        setSelectedSkills([...selectedSkills, trimmed]);
+                      }
+                      setCustomSkill("");
+                    }
+                  }}
+                  placeholder="Type your own skill and press Enter"
+                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                />
+              </div>
+              <p className="text-[10px] text-gray-400 font-medium">
+                Your custom skills will appear in the selected list above.
+              </p>
+            </div>
           </div>
 
           {/* Experience & Education Row */}
@@ -224,15 +404,22 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Experience</h2>
               </div>
               <select
-                value={experience}
+                value={CANDIDATE_CATEGORIES.experience.includes(experience) ? experience : ""}
                 onChange={(e) => setExperience(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
               >
                 <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.experienceLevels.map(level => (
+                {CANDIDATE_CATEGORIES.experience.map(level => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
+              <input
+                type="text"
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
+                placeholder="Or type your own (e.g. 7 years line cook)"
+                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+              />
             </div>
 
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
@@ -241,15 +428,22 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Education</h2>
               </div>
               <select
-                value={education}
+                value={CANDIDATE_CATEGORIES.education.includes(education) ? education : ""}
                 onChange={(e) => setEducation(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
               >
                 <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.educationLevels.map(level => (
+                {CANDIDATE_CATEGORIES.education.map(level => (
                   <option key={level} value={level}>{level}</option>
                 ))}
               </select>
+              <input
+                type="text"
+                value={education}
+                onChange={(e) => setEducation(e.target.value)}
+                placeholder="Or type your own (e.g. Culinary Arts Certificate...)"
+                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+              />
             </div>
           </div>
 
@@ -261,15 +455,22 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Availability</h2>
               </div>
               <select
-                value={availability}
+                value={CANDIDATE_CATEGORIES.availability.includes(availability) ? availability : ""}
                 onChange={(e) => setAvailability(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
               >
                 <option value="">Select...</option>
                 {CANDIDATE_CATEGORIES.availability.map(a => (
                   <option key={a} value={a}>{a}</option>
                 ))}
               </select>
+              <input
+                type="text"
+                value={availability}
+                onChange={(e) => setAvailability(e.target.value)}
+                placeholder="Or type your own (e.g. Two weeks notice)"
+                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+              />
             </div>
 
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
@@ -278,15 +479,22 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Target Pay</h2>
               </div>
               <select
-                value={targetPay}
+                value={CANDIDATE_CATEGORIES.targetPayRanges.includes(targetPay) ? targetPay : ""}
                 onChange={(e) => setTargetPay(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
               >
                 <option value="">Select...</option>
                 {CANDIDATE_CATEGORIES.targetPayRanges.map(p => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
+              <input
+                type="text"
+                value={targetPay}
+                onChange={(e) => setTargetPay(e.target.value)}
+                placeholder="Or type your own (e.g. $24-30/hr)"
+                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+              />
             </div>
           </div>
 
@@ -294,12 +502,35 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
               {selectedIndustries.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Industries of Interest ({selectedIndustries.length})</h2>
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
+                Industries of Interest ({selectedIndustries.length})
+              </h2>
             </div>
+
+            {selectedIndustries.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedIndustries.map((ind) => (
+                  <button
+                    key={ind}
+                    type="button"
+                    onClick={() => toggleItem(selectedIndustries, setSelectedIndustries, ind)}
+                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                  >
+                    <span>{ind}</span>
+                    <span className="text-[9px] opacity-80">×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+              Suggested Industries
+            </p>
             <div className="flex flex-wrap gap-2">
-              {CANDIDATE_CATEGORIES.industries.map(ind => (
+              {CANDIDATE_CATEGORIES.industries.map((ind) => (
                 <button
                   key={ind}
+                  type="button"
                   onClick={() => toggleItem(selectedIndustries, setSelectedIndustries, ind)}
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     selectedIndustries.includes(ind)
@@ -311,15 +542,62 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 </button>
               ))}
             </div>
+
+            <div className="mt-3 space-y-1">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customIndustry}
+                  onChange={(e) => setCustomIndustry(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && customIndustry.trim()) {
+                      const trimmed = customIndustry.trim();
+                      if (!selectedIndustries.includes(trimmed)) {
+                        setSelectedIndustries([...selectedIndustries, trimmed]);
+                      }
+                      setCustomIndustry("");
+                    }
+                  }}
+                  placeholder="Type your own industry and press Enter"
+                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                />
+              </div>
+              <p className="text-[10px] text-gray-400 font-medium">
+                Custom industries will appear in the selected list above.
+              </p>
+            </div>
           </div>
 
           {/* Work Styles */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Work Style ({selectedWorkStyles.length})</h2>
+            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
+              Work Style ({selectedWorkStyles.length})
+            </h2>
+
+            {selectedWorkStyles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedWorkStyles.map((style) => (
+                  <button
+                    key={style}
+                    type="button"
+                    onClick={() => toggleItem(selectedWorkStyles, setSelectedWorkStyles, style)}
+                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                  >
+                    <span>{style}</span>
+                    <span className="text-[9px] opacity-80">×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+              Suggested Work Styles
+            </p>
             <div className="flex flex-wrap gap-2">
-              {CANDIDATE_CATEGORIES.workStyles.map(style => (
+              {CANDIDATE_CATEGORIES.workStyles.map((style) => (
                 <button
                   key={style}
+                  type="button"
                   onClick={() => toggleItem(selectedWorkStyles, setSelectedWorkStyles, style)}
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     selectedWorkStyles.includes(style)
@@ -331,15 +609,62 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 </button>
               ))}
             </div>
+
+            <div className="mt-3 space-y-1">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customWorkStyle}
+                  onChange={(e) => setCustomWorkStyle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && customWorkStyle.trim()) {
+                      const trimmed = customWorkStyle.trim();
+                      if (!selectedWorkStyles.includes(trimmed)) {
+                        setSelectedWorkStyles([...selectedWorkStyles, trimmed]);
+                      }
+                      setCustomWorkStyle("");
+                    }
+                  }}
+                  placeholder="Type your own work style and press Enter"
+                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                />
+              </div>
+              <p className="text-[10px] text-gray-400 font-medium">
+                Custom work styles will appear in the selected list above.
+              </p>
+            </div>
           </div>
 
           {/* Job Types Seeking */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Job Types Seeking ({jobTypesSeeking.length})</h2>
+            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
+              Job Types Seeking ({jobTypesSeeking.length})
+            </h2>
+
+            {jobTypesSeeking.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {jobTypesSeeking.map((jt) => (
+                  <button
+                    key={jt}
+                    type="button"
+                    onClick={() => toggleItem(jobTypesSeeking, setJobTypesSeeking, jt)}
+                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                  >
+                    <span>{jt}</span>
+                    <span className="text-[9px] opacity-80">×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+              Suggested Job Types
+            </p>
             <div className="flex flex-wrap gap-2">
-              {CANDIDATE_CATEGORIES.jobTypesSeeking.map(jt => (
+              {CANDIDATE_CATEGORIES.jobTypesSeeking.map((jt) => (
                 <button
                   key={jt}
+                  type="button"
                   onClick={() => toggleItem(jobTypesSeeking, setJobTypesSeeking, jt)}
                   className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     jobTypesSeeking.includes(jt)
@@ -350,6 +675,30 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                   {jt}
                 </button>
               ))}
+            </div>
+
+            <div className="mt-3 space-y-1">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customJobType}
+                  onChange={(e) => setCustomJobType(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && customJobType.trim()) {
+                      const trimmed = customJobType.trim();
+                      if (!jobTypesSeeking.includes(trimmed)) {
+                        setJobTypesSeeking([...jobTypesSeeking, trimmed]);
+                      }
+                      setCustomJobType("");
+                    }
+                  }}
+                  placeholder="Type your own job type and press Enter"
+                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                />
+              </div>
+              <p className="text-[10px] text-gray-400 font-medium">
+                Custom job types will appear in the selected list above.
+              </p>
             </div>
           </div>
 

@@ -555,8 +555,16 @@ export default function App() {
       return <Home onSelectRole={selectRole} />;
     }
     
-    // For other views, show loading if data is still loading
-    if (isLoading) return <div className="h-screen flex items-center justify-center font-black text-gray-200 uppercase tracking-[0.5em]">Loading Market...</div>;
+    // Don't block onboarding flows on initial data loading (otherwise it can look like a white screen)
+    // Only block views that truly depend on marketplace data being present.
+    const nonBlockingViews: ViewType[] = ["seeker-onboarding", "employer-onboarding"];
+    if (isLoading && !nonBlockingViews.includes(currentView)) {
+      return (
+        <div className="h-screen flex items-center justify-center font-black text-gray-400 uppercase tracking-[0.5em]">
+          Loading Market...
+        </div>
+      );
+    }
 
     switch (currentView) {
       case "about":
@@ -1451,14 +1459,57 @@ export default function App() {
                       const isDemoAccount = signupFormData.email === DEMO_ACCOUNTS.candidate;
 
                       if (isDemoAccount) {
-                        // Demo account: skip DB insert, go straight to onboarding
-                        const profile: any = {
-                          role: signupRole,
-                          ...signupFormData,
-                          isDemoAccount: true, // Flag for onboarding handler
-                          candidateId: 71 // Demo candidate ID
-                        };
-                        setUserProfile(profile);
+                        // Demo account: fetch full candidate profile from Supabase (same as demo login)
+                        try {
+                          const demoEmail = DEMO_ACCOUNTS.candidate;
+                          const { data: candidate, error } = await supabase
+                            .from('candidates')
+                            .select('*')
+                            .eq('email', demoEmail)
+                            .single();
+
+                          if (error || !candidate) {
+                            console.error("Demo seeker not found during signup flow:", error);
+                            toast.error("Demo seeker not found in database; using local demo data.");
+                            const profile: any = {
+                              role: signupRole,
+                              ...signupFormData,
+                              isDemoAccount: true,
+                            };
+                            setUserProfile(profile);
+                          } else {
+                            const mappedProfile = {
+                              role: 'seeker',
+                              email: candidate.email,
+                              name: candidate.name,
+                              phone: candidate.phone,
+                              location: candidate.location,
+                              bio: candidate.bio,
+                              skills: candidate.skills || [],
+                              experience: candidate.years_experience,
+                              education: candidate.education,
+                              availability: candidate.availability,
+                              targetPay: candidate.preferred_pay_range || candidate.target_pay,
+                              industries: candidate.industries_interested || [],
+                              workStyles: candidate.work_style?.split(', ') || [],
+                              jobTypesSeeking: candidate.job_types_seeking || [],
+                              displayTitle: candidate.display_title,
+                              candidateId: candidate.id,
+                              id: candidate.id,
+                              isDemoAccount: true,
+                            };
+                            setUserProfile(mappedProfile);
+                          }
+                        } catch (err) {
+                          console.error("Unexpected error fetching demo seeker during signup:", err);
+                          const profileFallback: any = {
+                            role: signupRole,
+                            ...signupFormData,
+                            isDemoAccount: true,
+                          };
+                          setUserProfile(profileFallback);
+                        }
+
                         setUserRole(signupRole!);
                         setIsLoggedIn(true);
                         setShowAuthModal(false);

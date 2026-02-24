@@ -114,6 +114,12 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
   const [postedJob, setPostedJob] = useState<any>(null);
   const [previewMode, setPreviewMode] = useState<'public' | 'private'>('public');
 
+  // --- Speech to Text (Web Speech API) ---
+  // One recognizer instance; we switch which form field we append into.
+  const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
+  const [speechActiveField, setSpeechActiveField] = useState<"description" | "company_description" | null>(null);
+  const recognitionRef = useRef<any | null>(null);
+
   const [formData, setFormData] = useState<any>({
     title: "",
     industry: "Food & Beverage",
@@ -137,6 +143,84 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
     video_url: "",
     image_url: ""
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setHasSpeechSupport(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onend = () => {
+        setSpeechActiveField(null);
+      };
+
+      recognitionRef.current = recognition;
+      setHasSpeechSupport(true);
+    } catch {
+      setHasSpeechSupport(false);
+    }
+  }, []);
+
+  const handleStartSpeechToText = (field: "description" | "company_description") => {
+    if (!recognitionRef.current) return;
+    try {
+      const recognition = recognitionRef.current as any;
+
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            transcript += result[0].transcript;
+          }
+        }
+
+        if (transcript) {
+          setFormData((prev: any) => ({
+            ...prev,
+            [field]: prev[field]
+              ? `${String(prev[field]).trim()} ${transcript.trim()}`
+              : transcript.trim(),
+          }));
+        }
+      };
+
+      recognition.start();
+      setSpeechActiveField(field);
+    } catch {
+      setSpeechActiveField(null);
+    }
+  };
+
+  const handleStopSpeechToText = () => {
+    if (!recognitionRef.current) return;
+    try {
+      (recognitionRef.current as any).stop();
+    } catch {
+      // ignore
+    }
+    setSpeechActiveField(null);
+  };
+
+  const toggleSpeechToText = (field: "description" | "company_description") => {
+    if (!hasSpeechSupport) return;
+    if (speechActiveField) {
+      handleStopSpeechToText();
+    } else {
+      handleStartSpeechToText(field);
+    }
+  };
 
   console.log("🔷 Current formData state:", formData);
 
@@ -641,13 +725,18 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
                     <div className="space-y-1.5 sm:space-y-2">
                       <label className="text-[9px] sm:text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Job Title *</label>
-                      <input type="text" className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-[#F3EAF5]/30 border-2 border-transparent focus:border-[#148F8B]/20 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900" value={formData.title} onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))} />
+                      <input
+                        type="text"
+                        className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B]/30 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900 shadow-sm"
+                        value={formData.title}
+                        onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))}
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Industry *</label>
                       <div className="space-y-3">
                         <select
-                          className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 outline-none font-bold text-gray-900 appearance-none"
+                          className="w-full p-5 rounded-2xl bg-white border border-gray-200 outline-none font-bold text-gray-900 appearance-none shadow-sm"
                           value={formData.industry}
                           onChange={(e) => setFormData(prev => ({...prev, industry: e.target.value}))}
                         >
@@ -669,12 +758,17 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Location *</label>
-                      <input type="text" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 outline-none font-bold text-gray-900" value={formData.location} onChange={(e) => setFormData(prev => ({...prev, location: e.target.value}))} />
+                      <input
+                        type="text"
+                        className="w-full p-5 rounded-2xl bg-white border border-gray-200 outline-none font-bold text-gray-900 shadow-sm"
+                        value={formData.location}
+                        onChange={(e) => setFormData(prev => ({...prev, location: e.target.value}))}
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Pay Range *</label>
                       <div className="flex gap-3">
-                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#148F8B]/20 transition-all">
+                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-white rounded-2xl border-2 border-gray-100 focus-within:border-[#148F8B]/30 transition-all shadow-sm">
                           <span className="text-gray-400 font-black">$</span>
                           <input
                             type="text"
@@ -684,7 +778,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             placeholder="Min"
                           />
                         </div>
-                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-gray-100 rounded-2xl border-2 border-transparent focus-within:border-[#148F8B]/20 transition-all">
+                        <div className="flex-1 flex items-center gap-2 px-5 py-4 bg-white rounded-2xl border-2 border-gray-100 focus-within:border-[#148F8B]/30 transition-all shadow-sm">
                           <span className="text-gray-400 font-black">$</span>
                           <input
                             type="text"
@@ -694,7 +788,11 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             placeholder="Max"
                           />
                         </div>
-                        <select className="p-4 bg-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-900 outline-none cursor-pointer" value={formData.pay_type} onChange={(e) => setFormData(prev => ({...prev, pay_type: e.target.value}))}>
+                        <select
+                          className="p-4 bg-white rounded-2xl border border-gray-200 font-black text-xs uppercase tracking-widest text-gray-900 outline-none cursor-pointer shadow-sm"
+                          value={formData.pay_type}
+                          onChange={(e) => setFormData(prev => ({...prev, pay_type: e.target.value}))}
+                        >
                           <option>Hourly</option>
                           <option>Yearly</option>
                         </select>
@@ -703,81 +801,566 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Marketplace Description *</label>
-                    <textarea rows={4} className="w-full p-6 rounded-[2rem] bg-[#F3EAF5]/30 outline-none font-medium leading-relaxed text-gray-900" value={formData.description} onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))} />
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                        Marketplace Description *
+                      </label>
+                      {hasSpeechSupport && (
+                        <button
+                          type="button"
+                          onClick={() => toggleSpeechToText("description")}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black tracking-widest uppercase transition-all ${
+                            speechActiveField === "description"
+                              ? "border-[#A63F8E] bg-[#A63F8E]/10 text-[#A63F8E]"
+                              : "border-gray-200 bg-white text-gray-500 hover:border-[#148F8B] hover:text-[#148F8B]"
+                          }`}
+                        >
+                          <Mic size={12} />
+                          <span>{speechActiveField === "description" ? "Stop" : "Speak"}</span>
+                        </button>
+                      )}
+                    </div>
+                    <textarea
+                      rows={4}
+                      className="w-full p-6 rounded-[2rem] bg-white border border-gray-200 outline-none font-medium leading-relaxed text-gray-900 shadow-sm"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData((prev: any) => ({ ...prev, description: e.target.value }))
+                      }
+                    />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-8">
+                    {/* Responsibilities */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Responsibilities (Public)</label>
-                        <button onClick={() => setFormData(prev => ({...prev, responsibilities: [...prev.responsibilities, ""]}))} className="text-[#148F8B] hover:text-[#136068] transition-colors">
+                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                          Responsibilities (Public)
+                        </label>
+                        <button
+                          onClick={() =>
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              responsibilities: [...prev.responsibilities, ""],
+                            }))
+                          }
+                          className="text-[#148F8B] hover:text-[#136068] transition-colors"
+                        >
                           <Plus size={16} />
                         </button>
                       </div>
-                      {formData.responsibilities.map((r: string, idx: number) => (
-                        <div key={idx} className="flex gap-2">
-                          <input type="text" className="flex-1 p-4 bg-[#F3EAF5]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
-                            const n = [...formData.responsibilities]; n[idx] = e.target.value; setFormData(prev => ({...prev, responsibilities: n}));
-                          }} />
-                          {formData.responsibilities.length > 1 && (
-                            <button onClick={() => {
-                              const n = formData.responsibilities.filter((_:any, i:number) => i !== idx);
-                              setFormData(prev => ({...prev, responsibilities: n}));
-                            }} className="text-gray-500 hover:text-red-400">
-                              <X size={16} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
+
+                      {/* Preset responsibilities dropdown */}
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                          Quick Add from Common Responsibilities
+                        </p>
+                        <select
+                          className="w-full p-3 rounded-2xl bg-white border border-gray-200 text-[11px] font-bold text-gray-700 shadow-sm"
+                          value=""
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (!value) return;
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              responsibilities: prev.responsibilities.includes(value)
+                                ? prev.responsibilities
+                                : [...prev.responsibilities, value],
+                            }));
+                          }}
+                        >
+                          <option value="">Select a responsibility to add…</option>
+                          <optgroup label="Customer Service & Retail">
+                            <option value="Greet and assist customers on the floor">
+                              Greet and assist customers on the floor
+                            </option>
+                            <option value="Process sales and handle cash and card transactions">
+                              Process sales and handle cash and card transactions
+                            </option>
+                            <option value="Maintain product displays and restock shelves">
+                              Maintain product displays and restock shelves
+                            </option>
+                            <option value="Answer customer questions and resolve complaints">
+                              Answer customer questions and resolve complaints
+                            </option>
+                            <option value="Track inventory and flag low stock">
+                              Track inventory and flag low stock
+                            </option>
+                            <option value="Open and/or close the store">Open and/or close the store</option>
+                          </optgroup>
+                          <optgroup label="Food & Beverage">
+                            <option value="Deliver attentive service throughout the dining experience">
+                              Deliver attentive service throughout the dining experience
+                            </option>
+                            <option value="Guide guests through menu and daily specials">
+                              Guide guests through menu and daily specials
+                            </option>
+                            <option value="Make beverage and pairing recommendations">
+                              Make beverage and pairing recommendations
+                            </option>
+                            <option value="Coordinate with kitchen and bar for smooth service">
+                              Coordinate with kitchen and bar for smooth service
+                            </option>
+                            <option value="Handle guest questions and feedback professionally">
+                              Handle guest questions and feedback professionally
+                            </option>
+                            <option value="Support table turns and side work">
+                              Support table turns and side work
+                            </option>
+                            <option value="Attend pre-shift tastings and menu education">
+                              Attend pre-shift tastings and menu education
+                            </option>
+                            <option value="Process payments and manage cash drawer">
+                              Process payments and manage cash drawer
+                            </option>
+                            <option value="Prep ingredients daily to mise en place standards">
+                              Prep ingredients daily to mise en place standards
+                            </option>
+                            <option value="Execute service on assigned station">
+                              Execute service on assigned station
+                            </option>
+                            <option value="Maintain a clean and organized workstation">
+                              Maintain a clean and organized workstation
+                            </option>
+                            <option value="Follow all food safety and sanitation standards">
+                              Follow all food safety and sanitation standards
+                            </option>
+                            <option value="Receive and inspect deliveries">Receive and inspect deliveries</option>
+                          </optgroup>
+                          <optgroup label="Hospitality & Hotel">
+                            <option value="Check guests in and out efficiently and warmly">
+                              Check guests in and out efficiently and warmly
+                            </option>
+                            <option value="Handle reservations, cancellations, and special requests">
+                              Handle reservations, cancellations, and special requests
+                            </option>
+                            <option value="Coordinate with housekeeping and maintenance">
+                              Coordinate with housekeeping and maintenance
+                            </option>
+                            <option value="Respond to guest inquiries in person, by phone, and email">
+                              Respond to guest inquiries in person, by phone, and email
+                            </option>
+                            <option value="Maintain accurate guest records in PMS">
+                              Maintain accurate guest records in PMS
+                            </option>
+                            <option value="Assist with concierge and local recommendations">
+                              Assist with concierge and local recommendations
+                            </option>
+                          </optgroup>
+                          <optgroup label="Trades & Construction">
+                            <option value="Read and interpret blueprints and work orders">
+                              Read and interpret blueprints and work orders
+                            </option>
+                            <option value="Perform installations, repairs, and maintenance">
+                              Perform installations, repairs, and maintenance
+                            </option>
+                            <option value="Operate tools and equipment safely">
+                              Operate tools and equipment safely
+                            </option>
+                            <option value="Inspect completed work for quality and code compliance">
+                              Inspect completed work for quality and code compliance
+                            </option>
+                            <option value="Maintain a clean and safe job site">
+                              Maintain a clean and safe job site
+                            </option>
+                            <option value="Communicate progress and issues to supervisor">
+                              Communicate progress and issues to supervisor
+                            </option>
+                            <option value="Order and track materials and supplies">
+                              Order and track materials and supplies
+                            </option>
+                          </optgroup>
+                          <optgroup label="Services">
+                            <option value="Complete assigned jobs on schedule and to standard">
+                              Complete assigned jobs on schedule and to standard
+                            </option>
+                            <option value="Maintain and care for equipment and vehicles">
+                              Maintain and care for equipment and vehicles
+                            </option>
+                            <option value="Communicate with clients professionally">
+                              Communicate with clients professionally
+                            </option>
+                            <option value="Document work completed and report issues">
+                              Document work completed and report issues
+                            </option>
+                            <option value="Follow safety protocols at all times">
+                              Follow safety protocols at all times
+                            </option>
+                          </optgroup>
+                          <optgroup label="Office & Admin">
+                            <option value="Answer phones and respond to emails promptly">
+                              Answer phones and respond to emails promptly
+                            </option>
+                            <option value="Schedule appointments and manage calendars">
+                              Schedule appointments and manage calendars
+                            </option>
+                            <option value="Maintain filing systems and records">
+                              Maintain filing systems and records
+                            </option>
+                            <option value="Assist with invoicing, billing, and data entry">
+                              Assist with invoicing, billing, and data entry
+                            </option>
+                            <option value="Support team with general administrative tasks">
+                              Support team with general administrative tasks
+                            </option>
+                          </optgroup>
+                          <optgroup label="Healthcare & Wellness">
+                            <option value="Provide safe, high-quality care to clients and patients">
+                              Provide safe, high-quality care to clients and patients
+                            </option>
+                            <option value="Document sessions and maintain accurate records">
+                              Document sessions and maintain accurate records
+                            </option>
+                            <option value="Maintain a clean and sanitized workspace">
+                              Maintain a clean and sanitized workspace
+                            </option>
+                            <option value="Communicate clearly with clients about treatment plans">
+                              Communicate clearly with clients about treatment plans
+                            </option>
+                            <option value="Uphold client confidentiality at all times">
+                              Uphold client confidentiality at all times
+                            </option>
+                          </optgroup>
+                          <optgroup label="Management (Any Industry)">
+                            <option value="Train and mentor new team members">
+                              Train and mentor new team members
+                            </option>
+                            <option value="Create and manage staff schedules">
+                              Create and manage staff schedules
+                            </option>
+                            <option value="Handle opening and closing procedures">
+                              Handle opening and closing procedures
+                            </option>
+                            <option value="Monitor inventory and place orders">
+                              Monitor inventory and place orders
+                            </option>
+                            <option value="Resolve guest or client complaints and escalations">
+                              Resolve guest or client complaints and escalations
+                            </option>
+                            <option value="Ensure health and safety compliance">
+                              Ensure health and safety compliance
+                            </option>
+                            <option value="Report to ownership on performance and operations">
+                              Report to ownership on performance and operations
+                            </option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      {/* Editable responsibility lines */}
+                      <div className="flex flex-col gap-3">
+                        {formData.responsibilities.map((r: string, idx: number) => (
+                          <div key={idx} className="flex gap-2">
+                            <input
+                              type="text"
+                              className="flex-1 p-4 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm shadow-sm"
+                              value={r}
+                              onChange={(e) => {
+                                const n = [...formData.responsibilities];
+                                n[idx] = e.target.value;
+                                setFormData((prev: any) => ({ ...prev, responsibilities: n }));
+                              }}
+                            />
+                            {formData.responsibilities.length > 1 && (
+                              <button
+                                onClick={() => {
+                                  const n = formData.responsibilities.filter((_: any, i: number) => i !== idx);
+                                  setFormData((prev: any) => ({ ...prev, responsibilities: n }));
+                                }}
+                                className="text-gray-500 hover:text-red-400"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Requirements */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Requirements (Public)</label>
-                        <button onClick={() => setFormData(prev => ({...prev, requirements: [...prev.requirements, ""]}))} className="text-[#148F8B] hover:text-[#136068] transition-colors">
+                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                          Requirements (Public)
+                        </label>
+                        <button
+                          onClick={() =>
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              requirements: [...prev.requirements, ""],
+                            }))
+                          }
+                          className="text-[#148F8B] hover:text-[#136068] transition-colors"
+                        >
                           <Plus size={16} />
                         </button>
                       </div>
-                      {formData.requirements.map((r: string, idx: number) => (
-                        <div key={idx} className="flex gap-2">
-                          <input type="text" className="flex-1 p-4 bg-[#F3EAF5]/30 rounded-xl text-gray-900 text-sm" value={r} onChange={(e) => {
-                            const n = [...formData.requirements]; n[idx] = e.target.value; setFormData(prev => ({...prev, requirements: n}));
-                          }} />
-                          {formData.requirements.length > 1 && (
-                            <button onClick={() => {
-                              const n = formData.requirements.filter((_:any, i:number) => i !== idx);
-                              setFormData(prev => ({...prev, requirements: n}));
-                            }} className="text-gray-500 hover:text-red-400">
-                              <X size={16} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
+
+                      {/* Preset requirements dropdown */}
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                          Quick Add from Common Requirements
+                        </p>
+                        <select
+                          className="w-full p-3 rounded-2xl bg-white border border-gray-200 text-[11px] font-bold text-gray-700 shadow-sm"
+                          value=""
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (!value) return;
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              requirements: prev.requirements.includes(value)
+                                ? prev.requirements
+                                : [...prev.requirements, value],
+                            }));
+                          }}
+                        >
+                          <option value="">Select a requirement to add…</option>
+                          <optgroup label="Experience">
+                            <option value="1+ year experience in a similar role">
+                              1+ year experience in a similar role
+                            </option>
+                            <option value="2+ years experience in a relevant field">
+                              2+ years experience in a relevant field
+                            </option>
+                            <option value="Previous supervisory or management experience">
+                              Previous supervisory or management experience
+                            </option>
+                            <option value="Hotel or resort experience preferred">
+                              Hotel or resort experience preferred
+                            </option>
+                            <option value="Customer-facing experience required">
+                              Customer-facing experience required
+                            </option>
+                          </optgroup>
+                          <optgroup label="Certifications & Licenses">
+                            <option value="Food handlers card required">Food handlers card required</option>
+                            <option value="ServSafe certification">ServSafe certification</option>
+                            <option value="TIPS / RBS alcohol certification">TIPS / RBS alcohol certification</option>
+                            <option value="Valid Hawaii driver's license">Valid Hawaii driver's license</option>
+                            <option value="Clean driving record required">Clean driving record required</option>
+                            <option value="CPR and First Aid certified">CPR and First Aid certified</option>
+                            <option value="Cosmetology or esthetician license">
+                              Cosmetology or esthetician license
+                            </option>
+                            <option value="Contractor's license">Contractor's license</option>
+                            <option value="OSHA 10 certification">OSHA 10 certification</option>
+                          </optgroup>
+                          <optgroup label="Availability">
+                            <option value="Available weekends and holidays">
+                              Available weekends and holidays
+                            </option>
+                            <option value="Available for early morning shifts">
+                              Available for early morning shifts
+                            </option>
+                            <option value="Available for late night / closing shifts">
+                              Available for late night / closing shifts
+                            </option>
+                            <option value="Open availability preferred">Open availability preferred</option>
+                            <option value="Reliable transportation to job site">
+                              Reliable transportation to job site
+                            </option>
+                          </optgroup>
+                          <optgroup label="Skills & Traits">
+                            <option value="Warm and professional communication">
+                              Warm and professional communication
+                            </option>
+                            <option value="Comfortable in a fast-paced environment">
+                              Comfortable in a fast-paced environment
+                            </option>
+                            <option value="Strong attention to detail">Strong attention to detail</option>
+                            <option value="Ability to stand for extended periods">
+                              Ability to stand for extended periods
+                            </option>
+                            <option value="Ability to lift 30+ lbs">Ability to lift 30+ lbs</option>
+                            <option value="Ability to lift 50+ lbs">Ability to lift 50+ lbs</option>
+                            <option value="Comfortable working outdoors in Hawaii weather">
+                              Comfortable working outdoors in Hawaii weather
+                            </option>
+                            <option value="Team-oriented attitude">Team-oriented attitude</option>
+                            <option value="Ability to work independently with minimal supervision">
+                              Ability to work independently with minimal supervision
+                            </option>
+                            <option value="Bilingual English / Spanish preferred">
+                              Bilingual English / Spanish preferred
+                            </option>
+                            <option value="Bilingual English / Japanese preferred">
+                              Bilingual English / Japanese preferred
+                            </option>
+                            <option value="Bilingual English / Tagalog preferred">
+                              Bilingual English / Tagalog preferred
+                            </option>
+                            <option value="Basic computer skills required">Basic computer skills required</option>
+                            <option value="Proficiency with POS systems">Proficiency with POS systems</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      {/* Editable requirement lines */}
+                      <div className="flex flex-col gap-3">
+                        {formData.requirements.map((r: string, idx: number) => (
+                          <div key={idx} className="flex gap-2">
+                            <input
+                              type="text"
+                              className="flex-1 p-4 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm shadow-sm"
+                              value={r}
+                              onChange={(e) => {
+                                const n = [...formData.requirements];
+                                n[idx] = e.target.value;
+                                setFormData((prev: any) => ({ ...prev, requirements: n }));
+                              }}
+                            />
+                            {formData.requirements.length > 1 && (
+                              <button
+                                onClick={() => {
+                                  const n = formData.requirements.filter((_: any, i: number) => i !== idx);
+                                  setFormData((prev: any) => ({ ...prev, requirements: n }));
+                                }}
+                                className="text-gray-500 hover:text-red-400"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Intro Video URL</label>
-                      <input type="url" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 text-gray-900 font-bold" value={formData.video_url} onChange={(e) => setFormData(prev => ({...prev, video_url: e.target.value}))} placeholder="YouTube/Vimeo link" />
+                      <input
+                        type="url"
+                        className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
+                        value={formData.video_url}
+                        onChange={(e) => setFormData(prev => ({...prev, video_url: e.target.value}))}
+                        placeholder="YouTube/Vimeo link"
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Target Start Date</label>
-                      <input type="date" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 text-gray-900 font-bold" value={formData.start_date} onChange={(e) => setFormData(prev => ({...prev, start_date: e.target.value}))} />
+                      <input
+                        type="date"
+                        className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
+                        value={formData.start_date}
+                        onChange={(e) => setFormData(prev => ({...prev, start_date: e.target.value}))}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Benefits (Public)</label>
-                    <div className="flex flex-wrap gap-2">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                      Benefits (Public)
+                    </label>
+
+                    {/* Preset benefits dropdown */}
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                        Quick Add from Common Benefits
+                      </p>
+                      <select
+                        className="w-full p-4 rounded-2xl bg-white border border-gray-200 text-[11px] font-bold text-gray-700 shadow-sm"
+                        value=""
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (!value) return;
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            benefits: prev.benefits.includes(value)
+                              ? prev.benefits
+                              : [...prev.benefits, value],
+                          }));
+                        }}
+                      >
+                        <option value="">Select a benefit to add…</option>
+                        <optgroup label="Compensation">
+                          <option value="Tips included">Tips included</option>
+                          <option value="Tip pooling with kitchen">Tip pooling with kitchen</option>
+                          <option value="Commission">Commission</option>
+                          <option value="Performance bonuses">Performance bonuses</option>
+                          <option value="Annual merit review">Annual merit review</option>
+                          <option value="Overtime available">Overtime available</option>
+                        </optgroup>
+                        <optgroup label="Health & Wellness">
+                          <option value="Health insurance">Health insurance</option>
+                          <option value="Dental insurance">Dental insurance</option>
+                          <option value="Vision insurance">Vision insurance</option>
+                          <option value="Mental health coverage">Mental health coverage</option>
+                        </optgroup>
+                        <optgroup label="Time Off">
+                          <option value="Paid time off">Paid time off</option>
+                          <option value="Sick leave">Sick leave</option>
+                          <option value="Holiday pay">Holiday pay</option>
+                          <option value="Flexible scheduling">Flexible scheduling</option>
+                          <option value="Weekends off">Weekends off</option>
+                        </optgroup>
+                        <optgroup label="Food & Perks">
+                          <option value="Employee meal / family meal">Employee meal / family meal</option>
+                          <option value="Employee dining discount">Employee dining discount</option>
+                          <option value="Staff drinks">Staff drinks</option>
+                          <option value="Uniform provided">Uniform provided</option>
+                        </optgroup>
+                        <optgroup label="Growth">
+                          <option value="Promote from within">Promote from within</option>
+                          <option value="Training provided">Training provided</option>
+                          <option value="Professional development">Professional development</option>
+                          <option value="Certification reimbursement">Certification reimbursement</option>
+                        </optgroup>
+                        <optgroup label="Work Environment">
+                          <option value="Small tight-knit team">Small tight-knit team</option>
+                          <option value="Locally owned">Locally owned</option>
+                          <option value="Dog-friendly workplace">Dog-friendly workplace</option>
+                          <option value="Parking provided">Parking provided</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                          <option value="Retirement / 401k">Retirement / 401k</option>
+                          <option value="Relocation assistance">Relocation assistance</option>
+                          <option value="Housing assistance">Housing assistance</option>
+                          <option value="Transportation stipend">Transportation stipend</option>
+                        </optgroup>
+                      </select>
+                    </div>
+
+                    {/* Editable benefit lines (including custom) */}
+                    <div className="flex flex-col gap-3">
                       {formData.benefits.map((b: string, idx: number) => (
-                        <div key={idx} className="flex-1 min-w-[200px] flex gap-2">
-                          <input type="text" className="flex-1 p-4 bg-[#F3EAF5]/30 rounded-xl text-gray-900 text-sm" value={b} onChange={(e) => {
-                            const n = [...formData.benefits]; n[idx] = e.target.value; setFormData(prev => ({...prev, benefits: n}));
-                          }} placeholder="e.g. Health Insurance" />
+                        <div key={idx} className="flex flex-1 min-w-[260px] gap-2">
+                          <input
+                            type="text"
+                            className="flex-1 p-4 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm shadow-sm"
+                            value={b}
+                            onChange={(e) => {
+                              const n = [...formData.benefits];
+                              n[idx] = e.target.value;
+                              setFormData((prev: any) => ({ ...prev, benefits: n }));
+                            }}
+                            placeholder="e.g. Health insurance"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const n = formData.benefits.filter((_: any, i: number) => i !== idx);
+                              setFormData((prev: any) => ({ ...prev, benefits: n }));
+                            }}
+                            className="text-gray-400 hover:text-red-400"
+                          >
+                            <X size={16} />
+                          </button>
                         </div>
                       ))}
-                      <button onClick={() => setFormData(prev => ({...prev, benefits: [...prev.benefits, ""]}))} className="p-4 border-2 border-dashed border-gray-100 rounded-xl text-gray-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"><Plus size={16} /> Add Benefit</button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev: any) => ({
+                            ...prev,
+                            benefits: [...prev.benefits, ""],
+                          }))
+                        }
+                        className="p-4 border-2 border-dashed border-gray-100 rounded-xl text-gray-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+                      >
+                        <Plus size={16} /> Add Benefit
+                      </button>
                     </div>
                   </div>
                </div>
@@ -792,26 +1375,76 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Legal Company Name *</label>
-                      <input type="text" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.company_name} onChange={(e) => setFormData(prev => ({...prev, company_name: e.target.value}))} placeholder="Blue Hawaii Surf Co." />
+                      <input
+                        type="text"
+                        className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
+                        value={formData.company_name}
+                        onChange={(e) => setFormData(prev => ({...prev, company_name: e.target.value}))}
+                        placeholder="Blue Hawaii Surf Co."
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Contact Email *</label>
-                      <input type="email" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.contact_email} onChange={(e) => setFormData(prev => ({...prev, contact_email: e.target.value}))} placeholder="hiring@company.com" />
+                      <input
+                        type="email"
+                        className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
+                        value={formData.contact_email}
+                        onChange={(e) => setFormData(prev => ({...prev, contact_email: e.target.value}))}
+                        placeholder="hiring@company.com"
+                      />
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Hiring Phone *</label>
-                      <input type="tel" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.contact_phone} onChange={(e) => setFormData(prev => ({...prev, contact_phone: e.target.value}))} placeholder="(808) 555-0123" />
+                      <input
+                        type="tel"
+                        className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
+                        value={formData.contact_phone}
+                        onChange={(e) => setFormData(prev => ({...prev, contact_phone: e.target.value}))}
+                        placeholder="(808) 555-0123"
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Business Logo URL</label>
-                      <input type="url" className="w-full p-5 rounded-2xl bg-white text-gray-900 font-bold" value={formData.image_url} onChange={(e) => setFormData(prev => ({...prev, image_url: e.target.value}))} placeholder="https://..." />
+                      <input
+                        type="url"
+                        className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData(prev => ({...prev, image_url: e.target.value}))}
+                        placeholder="https://..."
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Private Mission/Culture</label>
-                    <textarea rows={3} className="w-full p-6 rounded-[2rem] bg-white text-gray-900 outline-none" value={formData.company_description} onChange={(e) => setFormData(prev => ({...prev, company_description: e.target.value}))} placeholder="Tell seekers why they should join you..." />
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                        Private Mission/Culture
+                      </label>
+                      {hasSpeechSupport && (
+                        <button
+                          type="button"
+                          onClick={() => toggleSpeechToText("company_description")}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black tracking-widest uppercase transition-all ${
+                            speechActiveField === "company_description"
+                              ? "border-[#A63F8E] bg-[#A63F8E]/10 text-[#A63F8E]"
+                              : "border-gray-200 bg-white text-gray-500 hover:border-[#148F8B] hover:text-[#148F8B]"
+                          }`}
+                        >
+                          <Mic size={12} />
+                          <span>{speechActiveField === "company_description" ? "Stop" : "Speak"}</span>
+                        </button>
+                      )}
+                    </div>
+                    <textarea
+                      rows={3}
+                      className="w-full p-6 rounded-[2rem] bg-white text-gray-900 outline-none"
+                      value={formData.company_description}
+                      onChange={(e) =>
+                        setFormData((prev: any) => ({ ...prev, company_description: e.target.value }))
+                      }
+                      placeholder="Tell seekers why they should join you..."
+                    />
                   </div>
                </div>
             </section>

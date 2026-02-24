@@ -1,8 +1,10 @@
-import React, { useState } from "react";
-import { Building2, Zap, CheckCircle, Upload, ChevronRight, Shield, Sparkles, BadgeCheck } from "lucide-react";
-import { Button } from "../ui/Button";
+import React, { useEffect, useRef, useState } from "react";
+import { Building2, Zap, CheckCircle, Upload, ChevronRight, Shield, Sparkles, BadgeCheck, Mic } from "lucide-react";
+import { Button } from "../ui/Button.tsx";
 import { JOB_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
 import { ViewType } from '../../App';
+import { supabase } from "../../utils/supabase/client";
+import { toast } from "sonner@2.0.3";
 
 const COMPANY_SIZES = [
   "Solo / 1 person",
@@ -28,15 +30,110 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
   const [wantsBadge, setWantsBadge] = useState(false);
 
-  const handleDemoFill = () => {
-    const d = DEMO_PROFILES.employer;
-    setBio(d.bio);
-    setIndustry(d.industry);
-    setCompanySize(d.companySize);
-    setLocation(d.location);
-    setPhone(d.phone);
-    setWebsite("www.alohabistro.com");
-    setBusinessLicense(d.businessLicense);
+  // --- Speech to Text (Web Speech API) for Business Description ---
+  const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
+  const [isRecordingBio, setIsRecordingBio] = useState(false);
+  const bioRecognitionRef = useRef<any | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setHasSpeechSupport(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognition.onend = () => setIsRecordingBio(false);
+      bioRecognitionRef.current = recognition;
+      setHasSpeechSupport(true);
+    } catch {
+      setHasSpeechSupport(false);
+    }
+  }, []);
+
+  const toggleBioSpeechToText = () => {
+    if (!bioRecognitionRef.current || !hasSpeechSupport) return;
+
+    try {
+      const recognition = bioRecognitionRef.current as any;
+
+      if (isRecordingBio) {
+        recognition.stop();
+        setIsRecordingBio(false);
+        return;
+      }
+
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            transcript += result[0].transcript;
+          }
+        }
+
+        if (transcript) {
+          setBio((prev) =>
+            prev ? `${prev.trim()} ${transcript.trim()}` : transcript.trim(),
+          );
+        }
+      };
+
+      recognition.start();
+      setIsRecordingBio(true);
+    } catch {
+      setIsRecordingBio(false);
+    }
+  };
+
+  const [isDemoFilling, setIsDemoFilling] = useState(false);
+  const handleDemoFill = async () => {
+    setIsDemoFilling(true);
+    try {
+      const demoEmployerId = userProfile?.employerId || userProfile?.id;
+      const demoEmployerEmail = userProfile?.email || DEMO_PROFILES.employer.email;
+
+      // Pull from the same source-of-truth as JobPostingFlow (employers table)
+      const query = supabase.from("employers").select("*");
+      const { data: employer, error } = demoEmployerId
+        ? await query.eq("id", demoEmployerId).single()
+        : await query.eq("email", demoEmployerEmail).single();
+
+      if (error || !employer) {
+        // Fallback to local demo constants if DB isn't available
+        const d = DEMO_PROFILES.employer;
+        setBio(d.bio);
+        setIndustry(d.industry);
+        setCompanySize(d.companySize);
+        setLocation(d.location);
+        setPhone(d.phone);
+        setWebsite("www.alohabistro.com");
+        setBusinessLicense(d.businessLicense);
+        toast.info("Using local demo data (demo employer not found in Supabase).");
+        return;
+      }
+
+      // Map DB fields → onboarding fields (keep consistent with App/JobPostingFlow mapping)
+      setBio(employer.company_description || "");
+      setIndustry(employer.industry || "");
+      setCompanySize(employer.company_size || "");
+      setLocation(employer.location || "");
+      setPhone(employer.phone || "");
+      setWebsite(employer.website || "");
+      setBusinessLicense(employer.business_license || "");
+
+      toast.success("Demo business info loaded from Supabase.");
+    } finally {
+      setIsDemoFilling(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -95,20 +192,37 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         {/* Demo Fill Button */}
         <button
           onClick={handleDemoFill}
+          disabled={isDemoFilling}
           className="w-full mb-8 p-4 rounded-2xl border-2 border-[#A63F8E]/20 bg-[#A63F8E]/5 hover:bg-[#A63F8E]/10 transition-all flex items-center justify-center gap-3 group"
         >
           <Zap size={18} className="text-[#A63F8E] group-hover:scale-110 transition-transform" />
           <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">
-            Auto-fill Demo Business
+            {isDemoFilling ? "Loading Demo Business..." : "Auto-fill Demo Business"}
           </span>
         </button>
 
         <div className="space-y-8">
           {/* Business Description */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              {bio.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Description</h2>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                {bio.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
+                <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Description</h2>
+              </div>
+              {hasSpeechSupport && (
+                <button
+                  type="button"
+                  onClick={toggleBioSpeechToText}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black tracking-widest uppercase transition-all ${
+                    isRecordingBio
+                      ? "border-[#A63F8E] bg-[#A63F8E]/10 text-[#A63F8E]"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-[#148F8B] hover:text-[#148F8B]"
+                  }`}
+                >
+                  <Mic size={12} />
+                  <span>{isRecordingBio ? "Stop" : "Speak"}</span>
+                </button>
+              )}
             </div>
             <textarea
               value={bio}

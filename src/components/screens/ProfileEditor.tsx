@@ -16,7 +16,7 @@ import {
   Video,
   Camera
 } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/Button.tsx";
 import { JOB_CATEGORIES, CANDIDATE_CATEGORIES } from '../../data/mockData';
 
 interface ProfileEditorProps {
@@ -51,6 +51,12 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [targetPay, setTargetPay] = useState(userProfile?.targetPay || "");
 
   const [isSaving, setIsSaving] = useState(false);
+
+  // Custom text entry for multi-select sections
+  const [customSkill, setCustomSkill] = useState("");
+  const [customIndustry, setCustomIndustry] = useState("");
+  const [customWorkStyle, setCustomWorkStyle] = useState("");
+  const [customJobType, setCustomJobType] = useState("");
 
   const toggleArrayItem = (array: string[], setArray: (arr: string[]) => void, item: string) => {
     if (array.includes(item)) {
@@ -209,48 +215,118 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Skills</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                  Skills
+                </label>
+
+                {selectedSkills.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedSkills.map((skill) => (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => toggleArrayItem(selectedSkills, setSelectedSkills, skill)}
+                        className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                      >
+                        <span>{skill}</span>
+                        <span className="text-[9px] opacity-80">×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+                  Suggested Skills
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {CANDIDATE_CATEGORIES.skills.map(skill => (
+                  {CANDIDATE_CATEGORIES.skills.map((skill) => (
                     <button
                       key={skill}
                       type="button"
                       onClick={() => toggleArrayItem(selectedSkills, setSelectedSkills, skill)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         selectedSkills.includes(skill)
-                          ? 'bg-[#148F8B] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? "bg-[#148F8B] text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
                       {skill}
                     </button>
                   ))}
                 </div>
+
+                <div className="mt-3 space-y-1">
+                  <input
+                    type="text"
+                    value={customSkill}
+                    onChange={(e) => setCustomSkill(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customSkill.trim()) {
+                        const trimmed = customSkill.trim();
+                        if (!selectedSkills.includes(trimmed)) {
+                          setSelectedSkills([...selectedSkills, trimmed]);
+                        }
+                        setCustomSkill("");
+                      }
+                    }}
+                    placeholder="Type your own skill and press Enter"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                  />
+                  <p className="text-[10px] text-gray-400 font-medium">
+                    Custom skills will appear in the selected list above.
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Experience</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                    Experience
+                  </label>
                   <select
-                    value={experience}
+                    value={CANDIDATE_CATEGORIES.experience.includes(experience) ? experience : ""}
                     onChange={(e) => setExperience(e.target.value)}
-                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#148F8B]/10 outline-none"
+                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#148F8B]/10 outline-none mb-2"
                   >
                     <option value="">Select experience...</option>
-                    {CANDIDATE_CATEGORIES.experience.map(exp => <option key={exp} value={exp}>{exp}</option>)}
+                    {CANDIDATE_CATEGORIES.experience.map((exp) => (
+                      <option key={exp} value={exp}>
+                        {exp}
+                      </option>
+                    ))}
                   </select>
+                  <input
+                    type="text"
+                    value={experience}
+                    onChange={(e) => setExperience(e.target.value)}
+                    placeholder="Or type your own (e.g. 7 years line cook)"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                  />
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Education</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                    Education
+                  </label>
                   <select
-                    value={education}
+                    value={CANDIDATE_CATEGORIES.education.includes(education) ? education : ""}
                     onChange={(e) => setEducation(e.target.value)}
-                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#148F8B]/10 outline-none"
+                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#148F8B]/10 outline-none mb-2"
                   >
                     <option value="">Select education...</option>
-                    {CANDIDATE_CATEGORIES.education.map(edu => <option key={edu} value={edu}>{edu}</option>)}
+                    {CANDIDATE_CATEGORIES.education.map((edu) => (
+                      <option key={edu} value={edu}>
+                        {edu}
+                      </option>
+                    ))}
                   </select>
+                  <input
+                    type="text"
+                    value={education}
+                    onChange={(e) => setEducation(e.target.value)}
+                    placeholder="Or type your own (e.g. Culinary Arts Certificate...)"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                  />
                 </div>
               </div>
             </div>
@@ -265,86 +341,245 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
             <div className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 space-y-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Interested Industries</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                  Interested Industries
+                </label>
+
+                {selectedIndustries.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedIndustries.map((industry) => (
+                      <button
+                        key={industry}
+                        type="button"
+                        onClick={() => toggleArrayItem(selectedIndustries, setSelectedIndustries, industry)}
+                        className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                      >
+                        <span>{industry}</span>
+                        <span className="text-[9px] opacity-80">×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+                  Suggested Industries
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {JOB_CATEGORIES.industries.map(industry => (
+                  {JOB_CATEGORIES.industries.map((industry) => (
                     <button
                       key={industry}
                       type="button"
                       onClick={() => toggleArrayItem(selectedIndustries, setSelectedIndustries, industry)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         selectedIndustries.includes(industry)
-                          ? 'bg-[#148F8B] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? "bg-[#148F8B] text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
                       {industry}
                     </button>
                   ))}
                 </div>
+
+                <div className="mt-3 space-y-1">
+                  <input
+                    type="text"
+                    value={customIndustry}
+                    onChange={(e) => setCustomIndustry(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customIndustry.trim()) {
+                        const trimmed = customIndustry.trim();
+                        if (!selectedIndustries.includes(trimmed)) {
+                          setSelectedIndustries([...selectedIndustries, trimmed]);
+                        }
+                        setCustomIndustry("");
+                      }
+                    }}
+                    placeholder="Type your own industry and press Enter"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                  />
+                  <p className="text-[10px] text-gray-400 font-medium">
+                    Custom industries will appear in the selected list above.
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Work Styles</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                  Work Styles
+                </label>
+
+                {selectedWorkStyles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedWorkStyles.map((style) => (
+                      <button
+                        key={style}
+                        type="button"
+                        onClick={() => toggleArrayItem(selectedWorkStyles, setSelectedWorkStyles, style)}
+                        className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                      >
+                        <span>{style}</span>
+                        <span className="text-[9px] opacity-80">×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+                  Suggested Work Styles
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {CANDIDATE_CATEGORIES.workStyles.map(style => (
+                  {CANDIDATE_CATEGORIES.workStyles.map((style) => (
                     <button
                       key={style}
                       type="button"
                       onClick={() => toggleArrayItem(selectedWorkStyles, setSelectedWorkStyles, style)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         selectedWorkStyles.includes(style)
-                          ? 'bg-[#148F8B] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? "bg-[#148F8B] text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
                       {style}
                     </button>
                   ))}
                 </div>
+
+                <div className="mt-3 space-y-1">
+                  <input
+                    type="text"
+                    value={customWorkStyle}
+                    onChange={(e) => setCustomWorkStyle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customWorkStyle.trim()) {
+                        const trimmed = customWorkStyle.trim();
+                        if (!selectedWorkStyles.includes(trimmed)) {
+                          setSelectedWorkStyles([...selectedWorkStyles, trimmed]);
+                        }
+                        setCustomWorkStyle("");
+                      }
+                    }}
+                    placeholder="Type your own work style and press Enter"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                  />
+                  <p className="text-[10px] text-gray-400 font-medium">
+                    Custom work styles will appear in the selected list above.
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Job Types Seeking</label>
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                  Job Types Seeking
+                </label>
+
+                {jobTypesSeeking.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {jobTypesSeeking.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => toggleArrayItem(jobTypesSeeking, setJobTypesSeeking, type)}
+                        className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                      >
+                        <span>{type}</span>
+                        <span className="text-[9px] opacity-80">×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+                  Suggested Job Types
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {JOB_CATEGORIES.jobTypes.map(type => (
+                  {JOB_CATEGORIES.jobTypes.map((type) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => toggleArrayItem(jobTypesSeeking, setJobTypesSeeking, type)}
                       className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
                         jobTypesSeeking.includes(type)
-                          ? 'bg-[#148F8B] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? "bg-[#148F8B] text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
                       {type}
                     </button>
                   ))}
                 </div>
+
+                <div className="mt-3 space-y-1">
+                  <input
+                    type="text"
+                    value={customJobType}
+                    onChange={(e) => setCustomJobType(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customJobType.trim()) {
+                        const trimmed = customJobType.trim();
+                        if (!jobTypesSeeking.includes(trimmed)) {
+                          setJobTypesSeeking([...jobTypesSeeking, trimmed]);
+                        }
+                        setCustomJobType("");
+                      }
+                    }}
+                    placeholder="Type your own job type and press Enter"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                  />
+                  <p className="text-[10px] text-gray-400 font-medium">
+                    Custom job types will appear in the selected list above.
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Availability</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                    Availability
+                  </label>
                   <select
-                    value={availability}
+                    value={CANDIDATE_CATEGORIES.availability.includes(availability) ? availability : ""}
                     onChange={(e) => setAvailability(e.target.value)}
-                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#148F8B]/10 outline-none"
+                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#148F8B]/10 outline-none mb-2"
                   >
                     <option value="">Select availability...</option>
-                    {CANDIDATE_CATEGORIES.availability.map(avail => <option key={avail} value={avail}>{avail}</option>)}
+                    {CANDIDATE_CATEGORIES.availability.map((avail) => (
+                      <option key={avail} value={avail}>
+                        {avail}
+                      </option>
+                    ))}
                   </select>
+                  <input
+                    type="text"
+                    value={availability}
+                    onChange={(e) => setAvailability(e.target.value)}
+                    placeholder="Or type your own (e.g. Two weeks notice)"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+                  />
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Target Pay</label>
+                  <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                    Target Pay
+                  </label>
+                  <select
+                    value={CANDIDATE_CATEGORIES.targetPayRanges.includes(targetPay) ? targetPay : ""}
+                    onChange={(e) => setTargetPay(e.target.value)}
+                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base focus:ring-4 ring-[#148F8B]/10 outline-none mb-2"
+                  >
+                    <option value="">Select target pay...</option>
+                    {CANDIDATE_CATEGORIES.targetPayRanges.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     type="text"
                     value={targetPay}
                     onChange={(e) => setTargetPay(e.target.value)}
-                    placeholder="e.g., $18-22/hr or $45k-55k/yr"
-                    className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base"
+                    placeholder="Or type your own (e.g. $24-30/hr)"
+                    className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
                   />
                 </div>
               </div>
