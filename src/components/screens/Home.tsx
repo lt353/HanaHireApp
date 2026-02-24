@@ -71,6 +71,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
       </section>
 
       {/* How It Works - Job Seekers */}
+      {/* Card bg: solid medium teal. Icon bg: solid light mint — clearly lighter */}
       <section className="py-12 sm:py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 sm:mb-16 space-y-3 sm:space-y-4">
@@ -78,9 +79,9 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             <p className="text-lg sm:text-xl text-gray-500 font-medium">Get hired faster with video intros</p>
           </div>
           <div className="flex flex-col md:flex-row gap-6 sm:gap-8 max-w-6xl mx-auto">
-            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: 'rgba(114, 213, 191, 0.4)' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center bg-white/30" style={{ backgroundColor: 'rgba(114, 213, 191, 0.4)' }}>
-                <Video size={28} className="sm:w-8 sm:h-8 text-[#148F8B]" />
+            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#c8f0e5' }}>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
+                <Video size={40} className="sm:w-11 sm:h-11 text-[#148F8B] drop-shadow-lg" />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -92,9 +93,9 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                 </p>
               </div>
             </div>
-            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: 'rgba(114, 213, 191, 0.4)' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center bg-white/30" style={{ backgroundColor: 'rgba(114, 213, 191, 0.4)' }}>
-                <Search size={28} className="sm:w-8 sm:h-8 text-[#148F8B]" />
+            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#c8f0e5' }}>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
+                <Search size={40} className="sm:w-11 sm:h-11 text-[#148F8B] drop-shadow-lg" />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -106,9 +107,9 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                 </p>
               </div>
             </div>
-            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: 'rgba(114, 213, 191, 0.4)' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center bg-white/30" style={{ backgroundColor: 'rgba(114, 213, 191, 0.4)' }}>
-                <DollarSign size={28} className="sm:w-8 sm:h-8 text-[#148F8B]" />
+            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#c8f0e5' }}>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
+                <DollarSign size={40} className="sm:w-11 sm:h-11 text-[#148F8B] drop-shadow-lg" />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -125,6 +126,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
       </section>
 
       {/* How It Works - Employers */}
+      {/* Card bg: solid medium purple. Icon bg: solid light lavender — clearly lighter */}
       <section className="py-12 sm:py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 sm:mb-16 space-y-3 sm:space-y-4">
@@ -132,9 +134,9 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             <p className="text-lg sm:text-xl text-gray-500 font-medium">Find the right fit in minutes, not weeks</p>
           </div>
           <div className="flex flex-col md:flex-row gap-6 sm:gap-8 max-w-6xl mx-auto">
-            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: 'rgba(214, 156, 234, 0.4)' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center bg-white/30">
-                <Sparkles size={28} className="sm:w-8 sm:h-8 text-[#A63F8E]" />
+            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#eecbf7' }}>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
+                <Sparkles size={40} className="sm:w-11 sm:h-11 text-[#A63F8E] drop-shadow-lg" />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -146,9 +148,9 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                 </p>
               </div>
             </div>
-            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: 'rgba(214, 156, 234, 0.4)' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center bg-white/30">
-                <Users size={28} className="sm:w-8 sm:h-8 text-[#A63F8E]" />
+            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#eecbf7' }}>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
+                <Users size={40} className="sm:w-11 sm:h-11 text-[#A63F8E] drop-shadow-lg" />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -160,9 +162,9 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                 </p>
               </div>
             </div>
-            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: 'rgba(214, 156, 234, 0.4)' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center bg-white/30">
-                <CheckCircle size={28} className="sm:w-8 sm:h-8 text-[#A63F8E]" />
+            <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#eecbf7' }}>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
+                <CheckCircle size={40} className="sm:w-11 sm:h-11 text-[#A63F8E] drop-shadow-lg" />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
