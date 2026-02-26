@@ -117,11 +117,14 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   const sortedCandidates = React.useMemo(() => {
     const arr = [...candidates];
 
-    const getCreatedTime = (c: any) => {
-      const raw = c.created_at || c.createdAt || c.joined_at;
-      if (!raw) return 0;
-      const t = Date.parse(raw);
-      return Number.isNaN(t) ? 0 : t;
+    /** Largest ID first (numeric id or trailing number in strings like "cand_42"). */
+    const getIdNum = (c: any) => {
+      const id = c?.id;
+      if (id == null) return 0;
+      const n = Number(id);
+      if (!Number.isNaN(n)) return n;
+      const match = String(id).match(/(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
     };
 
     const getYears = (c: any) => {
@@ -190,7 +193,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
           return getLocationScore(a.location) - getLocationScore(b.location);
         case "newest":
         default:
-          return getCreatedTime(b) - getCreatedTime(a);
+          return getIdNum(b) - getIdNum(a);
       }
     });
 

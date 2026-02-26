@@ -110,11 +110,14 @@ export const JobsList: React.FC<JobsListProps> = ({
   const sortedJobs = React.useMemo(() => {
     const arr = [...jobs];
 
-    const getPostedTime = (j: any) => {
-      const raw = j.posted_at || j.created_at || j.createdAt;
-      if (!raw) return 0;
-      const t = Date.parse(raw);
-      return Number.isNaN(t) ? 0 : t;
+    /** Largest ID first (numeric id or trailing number in strings like "job_42"). */
+    const getIdNum = (j: any) => {
+      const id = j?.id;
+      if (id == null) return 0;
+      const n = Number(id);
+      if (!Number.isNaN(n)) return n;
+      const match = String(id).match(/(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
     };
 
     const getLocationScore = (loc?: string | null) => {
@@ -150,7 +153,7 @@ export const JobsList: React.FC<JobsListProps> = ({
           return String(a.company_industry || "").localeCompare(String(b.company_industry || ""));
         case "newest":
         default:
-          return getPostedTime(b) - getPostedTime(a);
+          return getIdNum(b) - getIdNum(a);
       }
     });
 
