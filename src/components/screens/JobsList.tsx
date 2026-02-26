@@ -11,10 +11,17 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
-import { ViewType } from "../../App";
+
+type JobSortOption =
+  | "newest"
+  | "pay-high"
+  | "pay-low"
+  | "job-type"
+  | "closest"
+  | "applicants"
+  | "industry";
 
 interface JobsListProps {
-  onNavigate: (view: ViewType) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   filteredJobs: any;
@@ -27,6 +34,7 @@ interface JobsListProps {
   onShowFilters: () => void;
   onSelectJob: (job: any) => void;
   interactionFee: number;
+  viewerLocation?: string;
 }
 
 function useIsMobile(breakpointPx = 768) {
@@ -64,6 +72,8 @@ export const JobsList: React.FC<JobsListProps> = ({
   onShowPayment,
   onShowFilters,
   onSelectJob,
+  interactionFee,
+  viewerLocation,
 }) => {
   const isMobile = useIsMobile(768);
 
@@ -77,6 +87,7 @@ export const JobsList: React.FC<JobsListProps> = ({
   const [passedJobs, setPassedJobs] = React.useState<any[]>([]);
   const [recoveredQueue, setRecoveredQueue] = React.useState<any[]>([]);
   const [showPassedBin, setShowPassedBin] = React.useState(false);
+  const [sortOption, setSortOption] = React.useState<JobSortOption>("newest");
 
   React.useEffect(() => {
     setIndex(0);
@@ -84,8 +95,70 @@ export const JobsList: React.FC<JobsListProps> = ({
     setRecoveredQueue([]);
   }, [searchQuery, jobs.length]);
 
+  const parsePayValue = React.useCallback((pay: string | undefined | null): number => {
+    if (!pay) return 0;
+    const numbers = (pay.match(/\d+(\.\d+)?/g) || []).map(Number);
+    if (!numbers.length) {
+      const lower = pay.toLowerCase();
+      if (lower.includes("min")) return 15;
+      return 0;
+    }
+    if (numbers.length === 1) return numbers[0];
+    return numbers.reduce((a, b) => a + b, 0) / numbers.length;
+  }, []);
+
+  const sortedJobs = React.useMemo(() => {
+    const arr = [...jobs];
+
+    const getPostedTime = (j: any) => {
+      const raw = j.posted_at || j.created_at || j.createdAt;
+      if (!raw) return 0;
+      const t = Date.parse(raw);
+      return Number.isNaN(t) ? 0 : t;
+    };
+
+    const getLocationScore = (loc?: string | null) => {
+      if (!viewerLocation) return 0;
+      if (!loc) return 2;
+      const l = String(loc).toLowerCase();
+      const v = String(viewerLocation).toLowerCase();
+      if (l === v) return 0;
+      if (l.includes(v) || v.includes(l)) return 1;
+      return 2;
+    };
+
+    const getJobTypeWeight = (j: any) => {
+      const jt = (j.job_type || "").toLowerCase();
+      if (jt.startsWith("full-time")) return 0;
+      if (jt.startsWith("part-time")) return 1;
+      return 2;
+    };
+
+    arr.sort((a, b) => {
+      switch (sortOption) {
+        case "pay-high":
+          return parsePayValue(b.pay_range) - parsePayValue(a.pay_range);
+        case "pay-low":
+          return parsePayValue(a.pay_range) - parsePayValue(b.pay_range);
+        case "job-type":
+          return getJobTypeWeight(a) - getJobTypeWeight(b);
+        case "closest":
+          return getLocationScore(a.location) - getLocationScore(b.location);
+        case "applicants":
+          return (b.applicant_count || 0) - (a.applicant_count || 0);
+        case "industry":
+          return String(a.company_industry || "").localeCompare(String(b.company_industry || ""));
+        case "newest":
+        default:
+          return getPostedTime(b) - getPostedTime(a);
+      }
+    });
+
+    return arr;
+  }, [jobs, sortOption, viewerLocation, parsePayValue]);
+
   // Show recovered items first before continuing the main deck
-  const currentJob = recoveredQueue.length > 0 ? recoveredQueue[0] : jobs[index];
+  const currentJob = recoveredQueue.length > 0 ? recoveredQueue[0] : sortedJobs[index];
 
   const goNext = React.useCallback(() => {
     setIndex((prev) => {
@@ -235,7 +308,7 @@ export const JobsList: React.FC<JobsListProps> = ({
         </p>
       </div>
 
-      {/* Search + Filters */}
+      {/* Search + Filters + Sort */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -248,13 +321,31 @@ export const JobsList: React.FC<JobsListProps> = ({
           />
         </div>
 
-        <button
-          type="button"
-          className="h-16 px-8 bg-white rounded-lg border border-gray-200 font-black uppercase tracking-widest text-[10px] text-gray-700 inline-flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
-          onClick={onShowFilters}
-        >
-          <Filter size={20} /> Filters
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="h-16 px-8 bg-white rounded-lg border border-gray-200 font-black uppercase tracking-widest text-[10px] text-gray-700 inline-flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
+            onClick={onShowFilters}
+          >
+            <Filter size={20} /> Filters
+          </button>
+
+          <div className="h-16">
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as JobSortOption)}
+              className="h-full px-4 bg-white rounded-lg border border-gray-200 text-xs font-black uppercase tracking-widest text-gray-700 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
+            >
+              <option value="newest">Newest first</option>
+              <option value="pay-high">Pay: high to low</option>
+              <option value="pay-low">Pay: low to high</option>
+              <option value="job-type">Job type (full-time first)</option>
+              <option value="closest">Closest to me</option>
+              <option value="applicants">Most applicants</option>
+              <option value="industry">Industry</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* MOBILE: Swipe card */}
@@ -264,7 +355,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             <span>
               {recoveredQueue.length > 0
                 ? `Recovered · ${recoveredQueue.length} to review`
-                : `Job ${jobs.length === 0 ? 0 : index + 1} of ${jobs.length}`}
+                : `Job ${sortedJobs.length === 0 ? 0 : index + 1} of ${sortedJobs.length}`}
             </span>
             <span>Swipe left to skip, swipe right to save</span>
           </div>
@@ -432,12 +523,12 @@ export const JobsList: React.FC<JobsListProps> = ({
             </div>
           )}
 
-          {jobs.length === 0 ? (
+          {sortedJobs.length === 0 ? (
             <div className="p-16 bg-white border-4 border-dashed border-gray-100 rounded-3xl text-center">
               <p className="text-gray-400 font-black text-xl uppercase tracking-widest">No jobs found</p>
             </div>
           ) : (
-            jobs.map((job) => (
+            sortedJobs.map((job) => (
               <div
                 key={job.id}
                 className="p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all group"

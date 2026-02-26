@@ -12,10 +12,20 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "../ui/Button";
-import { ViewType } from '../../App';
+
+type CandidateSortOption =
+  | "newest"
+  | "experience-high"
+  | "experience-low"
+  | "pay-low"
+  | "pay-high"
+  | "availability"
+  | "views"
+  | "industry-match"
+  | "job-type-match"
+  | "closest";
 
 interface CandidatesListProps {
-  onNavigate: (view: ViewType) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   filteredCandidates: any;
@@ -27,6 +37,8 @@ interface CandidatesListProps {
   onShowFilters: () => void;
   onSelectCandidate: (candidate: any) => void;
   interactionFee: number;
+  viewerLocation?: string;
+  viewerIndustry?: string;
 }
 
 function useIsMobile(breakpointPx = 768) {
@@ -67,6 +79,9 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   onShowPayment,
   onShowFilters,
   onSelectCandidate,
+  interactionFee,
+  viewerLocation,
+  viewerIndustry,
 }) => {
   const isMobile = useIsMobile(768);
 
@@ -83,6 +98,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   const [passedCandidates, setPassedCandidates] = React.useState<any[]>([]);
   const [recoveredQueue, setRecoveredQueue] = React.useState<any[]>([]);
   const [showPassedBin, setShowPassedBin] = React.useState(false);
+  const [sortOption, setSortOption] = React.useState<CandidateSortOption>("newest");
 
   React.useEffect(() => {
     setIndex(0);
@@ -90,8 +106,99 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
     setRecoveredQueue([]);
   }, [searchQuery, candidates.length]);
 
+  const parsePayValue = React.useCallback((pay: string | undefined | null): number => {
+    if (!pay) return 0;
+    const numbers = (pay.match(/\d+(\.\d+)?/g) || []).map(Number);
+    if (!numbers.length) return 0;
+    if (numbers.length === 1) return numbers[0];
+    return numbers.reduce((a, b) => a + b, 0) / numbers.length;
+  }, []);
+
+  const sortedCandidates = React.useMemo(() => {
+    const arr = [...candidates];
+
+    const getCreatedTime = (c: any) => {
+      const raw = c.created_at || c.createdAt || c.joined_at;
+      if (!raw) return 0;
+      const t = Date.parse(raw);
+      return Number.isNaN(t) ? 0 : t;
+    };
+
+    const getYears = (c: any) => {
+      const y = c.years_experience;
+      if (typeof y === "string") {
+        const n = parseInt(y, 10);
+        return Number.isNaN(n) ? 0 : n;
+      }
+      return y || 0;
+    };
+
+    const getAvailabilityRank = (val?: string | null) => {
+      if (!val) return 3;
+      const lower = val.toLowerCase();
+      if (lower.includes("immediate") || lower.includes("asap")) return 0;
+      if (lower.includes("week")) return 1;
+      if (lower.includes("month")) return 2;
+      return 2;
+    };
+
+    const getViews = (c: any) => c.profile_views || c.view_count || 0;
+
+    const getLocationScore = (loc?: string | null) => {
+      if (!viewerLocation) return 0;
+      if (!loc) return 2;
+      const l = String(loc).toLowerCase();
+      const v = String(viewerLocation).toLowerCase();
+      if (l === v) return 0;
+      if (l.includes(v) || v.includes(l)) return 1;
+      return 2;
+    };
+
+    const getIndustryMatchScore = (c: any) => {
+      if (!viewerIndustry) return 1;
+      const industries: string[] = Array.isArray(c.industries_interested) ? c.industries_interested : [];
+      return industries.map(String).map(s => s.toLowerCase()).includes(String(viewerIndustry).toLowerCase()) ? 0 : 1;
+    };
+
+    const getJobTypeMatchScore = (c: any) => {
+      const types: string[] = Array.isArray(c.job_types_seeking) ? c.job_types_seeking : [];
+      const lowered = types.map(t => t.toLowerCase());
+      if (lowered.includes("full-time")) return 0;
+      if (lowered.includes("part-time")) return 1;
+      return 2;
+    };
+
+    arr.sort((a, b) => {
+      switch (sortOption) {
+        case "experience-high":
+          return getYears(b) - getYears(a);
+        case "experience-low":
+          return getYears(a) - getYears(b);
+        case "pay-low":
+          return parsePayValue(a.preferred_pay_range || a.target_pay) - parsePayValue(b.preferred_pay_range || b.target_pay);
+        case "pay-high":
+          return parsePayValue(b.preferred_pay_range || b.target_pay) - parsePayValue(a.preferred_pay_range || a.target_pay);
+        case "availability":
+          return getAvailabilityRank(a.availability) - getAvailabilityRank(b.availability);
+        case "views":
+          return getViews(b) - getViews(a);
+        case "industry-match":
+          return getIndustryMatchScore(a) - getIndustryMatchScore(b);
+        case "job-type-match":
+          return getJobTypeMatchScore(a) - getJobTypeMatchScore(b);
+        case "closest":
+          return getLocationScore(a.location) - getLocationScore(b.location);
+        case "newest":
+        default:
+          return getCreatedTime(b) - getCreatedTime(a);
+      }
+    });
+
+    return arr;
+  }, [candidates, sortOption, viewerLocation, viewerIndustry, parsePayValue]);
+
   // Show recovered items first before continuing the main deck
-  const currentCandidate = recoveredQueue.length > 0 ? recoveredQueue[0] : candidates[index];
+  const currentCandidate = recoveredQueue.length > 0 ? recoveredQueue[0] : sortedCandidates[index];
 
   const goNext = React.useCallback(() => {
     setIndex((prev) => {
@@ -239,7 +346,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
         </p>
       </div>
 
-      {/* Search + Filters */}
+      {/* Search + Filters + Sort */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search
@@ -255,13 +362,34 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
           />
         </div>
 
-        <Button
-          variant="outline"
-          className="h-16 px-8 bg-white rounded-lg hover:scale-105 active:scale-95 transition-all duration-200"
-          onClick={onShowFilters}
-        >
-          <Filter size={20} /> Filters
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            className="h-16 px-8 bg-white rounded-lg hover:scale-105 active:scale-95 transition-all duration-200"
+            onClick={onShowFilters}
+          >
+            <Filter size={20} /> Filters
+          </Button>
+
+          <div className="h-16">
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as CandidateSortOption)}
+              className="h-full px-4 bg-white rounded-lg border border-gray-200 text-xs font-black uppercase tracking-widest text-gray-700 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
+            >
+              <option value="newest">Newest profiles first</option>
+              <option value="experience-high">Most experienced</option>
+              <option value="experience-low">Least experienced</option>
+              <option value="pay-low">Pay range: low to high</option>
+              <option value="pay-high">Pay range: high to low</option>
+              <option value="availability">Availability (immediate first)</option>
+              <option value="views">Most viewed</option>
+              <option value="industry-match">Industry match</option>
+              <option value="job-type-match">Job type match</option>
+              <option value="closest">Closest to me</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* MOBILE: Swipe card */}
@@ -271,7 +399,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
             <span>
               {recoveredQueue.length > 0
                 ? `Recovered · ${recoveredQueue.length} to review`
-                : `Candidate ${candidates.length === 0 ? 0 : index + 1} of ${candidates.length}`}
+                : `Candidate ${sortedCandidates.length === 0 ? 0 : index + 1} of ${sortedCandidates.length}`}
             </span>
             <span>Swipe left to skip, swipe right to save</span>
           </div>
@@ -454,12 +582,12 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
             </div>
           )}
 
-          {candidates.length === 0 ? (
+          {sortedCandidates.length === 0 ? (
             <div className="p-16 bg-white border-4 border-dashed border-gray-100 rounded-3xl text-center">
               <p className="text-gray-400 font-black text-xl uppercase tracking-widest">No candidates found</p>
             </div>
           ) : (
-            candidates.map((c) => (
+            sortedCandidates.map((c) => (
               <div
                 key={c.id}
                 onClick={() => onSelectCandidate(c)}

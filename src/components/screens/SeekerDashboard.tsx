@@ -241,20 +241,6 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                     </div>
                   </div>
 
-                  {/* Job Description - FULL TEXT WHEN UNLOCKED */}
-                  <div className="pt-4 border-t border-gray-100">
-                    <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Job Description</p>
-                    <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{job.description}</p>
-                  </div>
-
-                  {/* Requirements - ONLY VISIBLE WHEN UNLOCKED */}
-                  {job.requirements && (
-                    <div className="pt-4 border-t border-gray-100">
-                      <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Requirements</p>
-                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{job.requirements}</p>
-                    </div>
-                  )}
-
                   {/* Contact Info - ONLY VISIBLE WHEN UNLOCKED */}
                   {(job.contact_email || job.contact_phone) && (
                     <div className="pt-4 border-t border-gray-100">

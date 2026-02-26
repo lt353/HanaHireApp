@@ -608,6 +608,7 @@ export default function App() {
       onSelectJob={(job) => setSelectedJob(job)}
       onNavigate={handleNavigate}
       interactionFee={INTERACTION_FEE}
+      viewerLocation={userProfile?.location}
     />
   );
       case "candidates":
@@ -663,6 +664,8 @@ export default function App() {
       onSelectCandidate={(c) => setSelectedCandidate(c)}
       onNavigate={handleNavigate}
       interactionFee={INTERACTION_FEE}
+      viewerLocation={userProfile?.location}
+      viewerIndustry={userProfile?.industry}
     />
   );
       case "cart":
@@ -2094,8 +2097,8 @@ export default function App() {
               </div>
             )}
 
-            {/* Company description */}
-            {selectedJob.company_description && (
+            {/* Company description - only visible once job is unlocked */}
+            {selectedJob.company_description && unlockedJobIds.includes(selectedJob.id) && (
               <div className="space-y-2">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">About the Business</h4>
                 <p className="text-sm text-gray-600 leading-relaxed font-medium">{selectedJob.company_description}</p>
@@ -2137,6 +2140,31 @@ export default function App() {
                   {selectedJob.benefits.map((b: string, i: number) => (
                     <span key={i} className="px-4 py-2 bg-[#A63F8E]/5 text-[#A63F8E] rounded-xl text-xs font-black uppercase tracking-widest">{b}</span>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Contact Info - only visible once job is unlocked */}
+            {unlockedJobIds.includes(selectedJob.id) && (selectedJob.contact_email || selectedJob.contact_phone) && (
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Contact Information</h4>
+                <div className="space-y-1">
+                  {selectedJob.contact_email && (
+                    <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                      Email:{" "}
+                      <a
+                        href={`mailto:${selectedJob.contact_email}`}
+                        className="text-[#148F8B] font-semibold hover:underline"
+                      >
+                        {selectedJob.contact_email}
+                      </a>
+                    </p>
+                  )}
+                  {selectedJob.contact_phone && (
+                    <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                      Phone: <span className="text-[#148F8B] font-semibold">{selectedJob.contact_phone}</span>
+                    </p>
+                  )}
                 </div>
               </div>
             )}
