@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { User, Zap, CheckCircle, Video, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic } from "lucide-react";
+import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
 import { ViewType } from '../../App';

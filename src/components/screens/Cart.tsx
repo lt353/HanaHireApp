@@ -3,12 +3,13 @@ import { Briefcase, User, Trash2, ChevronDown, ChevronUp, FolderOpen, Lock } fro
 import { motion } from "motion/react";
 import { Button } from "../ui/Button";
 import { formatCandidateTitle } from "../../utils/formatters";
+import { ViewType } from "../../App";
 
 interface CartProps {
   role: 'seeker' | 'employer';
   queue: any[];
   onRemoveFromQueue: (id: number) => void;
-  onNavigate: (tab: string) => void;
+  onNavigate: (tab: ViewType) => void;
   onShowPayment: (target: any) => void;
   interactionFee: number;
   isPaymentModalOpen?: boolean;

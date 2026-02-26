@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Plus, Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, Eye, FileText, BarChart3 } from "lucide-react";
+import { Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, BarChart3 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { ViewType } from '../../App';
@@ -34,7 +34,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16">
       {/* Browse anonymously banner */}
       {!isLoggedIn && (
-        <div className="p-6 sm:p-8 bg-gradient-to-r from-[#148F8B]/5 to-[#A63F8E]/5 rounded-[2rem] sm:rounded-[3rem] border border-[#148F8B]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="p-6 sm:p-8 bg-gradient-to-r from-[#148F8B]/5 to-[#780262]/5 rounded-[2rem] sm:rounded-[3rem] border border-[#148F8B]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-2 flex-1">
             <h3 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900">Browse Jobs Anonymously</h3>
             <p className="text-sm sm:text-base text-gray-600 font-medium">No sign-up required to explore. Create an account to save your info for future applications.</p>
@@ -68,7 +68,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
         </div>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
           <Button
-  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#A63F8E]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#780262]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#780262] hover:bg-[#780262]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
   onClick={() => onNavigate("jobs")}
 >
   <Briefcase size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Jobs
@@ -130,11 +130,11 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                 </div>
                 <div className="flex justify-between items-end border-b border-white/10 pb-4">
                   <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Applications</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#A63F8E]">{applicationCount}</span>
+                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#780262]">{applicationCount}</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-white/10 pb-4">
                   <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Unlocked Profiles</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#A63F8E]">{unlockedJobs?.length || 0}</span>
+                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
                 </div>
                 <div className="flex justify-between items-end">
                   <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Employers Seen You</span>
@@ -189,16 +189,16 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                 key={job.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-6 sm:p-8 md:p-10 bg-white border-2 border-[#A63F8E]/20 rounded-[2rem] sm:rounded-[3rem] shadow-lg hover:shadow-2xl transition-all group cursor-pointer"
+                className="p-6 sm:p-8 md:p-10 bg-white border-2 border-[#780262]/20 rounded-[2rem] sm:rounded-[3rem] shadow-lg hover:shadow-2xl transition-all group cursor-pointer"
                 onClick={() => onSelectJob && onSelectJob(job)}
               >
                 <div className="space-y-6">
                   {/* Header with company name - ONLY VISIBLE WHEN UNLOCKED */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-3 flex-1">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#A63F8E]/10 rounded-full">
-                        <div className="w-2 h-2 rounded-full bg-[#A63F8E] animate-pulse" />
-                        <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">Unlocked</span>
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#780262]/10 rounded-full">
+                        <div className="w-2 h-2 rounded-full bg-[#780262] animate-pulse" />
+                        <span className="text-xs font-black uppercase tracking-widest text-[#780262]">Unlocked</span>
                       </div>
                       <h4 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight group-hover:text-[#148F8B] transition-colors">
                         {job.title}

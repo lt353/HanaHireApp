@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   CreditCard,
   ArrowRight,
-  Settings as SettingsIcon,
   Video,
   Mic,
   FileText,
@@ -10,7 +9,6 @@ import {
   Eye,
   Briefcase,
   User,
-  FolderOpen,
   Lock,
   MapPin,
   DollarSign,
@@ -18,10 +16,8 @@ import {
   Mail,
   Zap,
   Shield,
-  BarChart3,
   Building2,
   CheckCircle,
-  UserPlus,
   ChevronDown,
   ChevronUp,
   X
@@ -35,7 +31,6 @@ import { supabase } from './utils/supabase/client';
 
 // Components
 import { Header } from './components/layout/Header';
-import { ImprovedPaymentModalContent } from './components/ui/ImprovedPaymentModal';
 import { Modal } from './components/ui/Modal';
 import { Button } from './components/ui/Button';
 import { CollapsibleFilter } from './components/CollapsibleFilter';
@@ -57,8 +52,6 @@ import { ImageWithFallback } from './components/figma/ImageWithFallback';
 // Data
 import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } from './data/mockData';
 
-// Utils
-import { formatCandidateTitle } from "./utils/formatters";
 
 export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
@@ -75,7 +68,6 @@ export default function App() {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [employers, setEmployers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasSeeded, setHasSeeded] = useState(false);
   const [userRole, setUserRole] = useState<'seeker' | 'employer'>('seeker');
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -449,15 +441,6 @@ export default function App() {
     }
   };
 
-  const educationLevels = [
-    'High School',
-    'Vocational Training',
-    'Associate Degree',
-    'Bachelor\'s Degree',
-    'Master\'s Degree',
-    'Doctorate'
-  ];
-
   const getEducationRank = (edu: string) => {
     if (!edu) return -1;
     // Handle cases where data might have slightly different strings
@@ -623,6 +606,7 @@ export default function App() {
       onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
       onShowFilters={() => setShowFilterModal(true)}
       onSelectJob={(job) => setSelectedJob(job)}
+      onNavigate={handleNavigate}
       interactionFee={INTERACTION_FEE}
     />
   );
@@ -677,6 +661,7 @@ export default function App() {
       onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
       onShowFilters={() => setShowFilterModal(true)}
       onSelectCandidate={(c) => setSelectedCandidate(c)}
+      onNavigate={handleNavigate}
       interactionFee={INTERACTION_FEE}
     />
   );
@@ -987,95 +972,6 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-  const handleDemoLogin = async (role: 'seeker' | 'employer') => {
-    const demoEmail = role === 'seeker' ? DEMO_ACCOUNTS.candidate : DEMO_ACCOUNTS.employer;
-
-    try {
-      // Fetch demo account from database with ALL fields
-      if (role === 'seeker') {
-        const { data: candidate, error } = await supabase
-          .from('candidates')
-          .select('*')
-          .eq('email', demoEmail)
-          .single();
-
-        if (error || !candidate) {
-          throw new Error(`Demo seeker not found: ${error?.message}`);
-        }
-
-        await fetchApplications(candidate.id);
-        await fetchUnlocks(demoEmail);
-        await fetchSavedItems(demoEmail, role);
-
-        // Map database fields to profile format
-        setUserProfile({
-          role: 'seeker',
-          email: candidate.email,
-          name: candidate.name,
-          phone: candidate.phone,
-          location: candidate.location,
-          bio: candidate.bio,
-          skills: candidate.skills || [],
-          experience: candidate.years_experience,
-          education: candidate.education,
-          availability: candidate.availability,
-          targetPay: candidate.preferred_pay_range || candidate.target_pay,
-          industries: candidate.industries_interested || [],
-          videoThumbnailUrl: candidate.video_thumbnail_url,
-          candidateId: candidate.id,
-          id: candidate.id
-        });
-      } else {
-        console.log("Fetching demo employer from database...");
-        const { data: employer, error } = await supabase
-          .from('employers')
-          .select('*')
-          .eq('email', demoEmail)
-          .single();
-
-        console.log("Demo employer fetch result:", { employer, error });
-
-        if (error || !employer) {
-          console.error("Demo employer not found!", error);
-          throw new Error(`Demo employer not found: ${error?.message}`);
-        }
-
-        console.log("Employer data from database:", employer);
-
-        await fetchUnlocks(demoEmail);
-        await fetchSavedItems(demoEmail, role);
-
-        // Map database fields to profile format
-        const mappedProfile = {
-          role: 'employer',
-          email: employer.email,
-          businessName: employer.business_name,
-          phone: employer.phone,
-          location: employer.location,
-          industry: employer.industry,
-          companySize: employer.company_size,
-          bio: employer.company_description,
-          companyLogoUrl: employer.company_logo_url,
-          businessVerified: employer.business_verified,
-          employerId: employer.id,
-          id: employer.id
-        };
-
-        console.log("Setting userProfile to:", mappedProfile);
-        setUserProfile(mappedProfile);
-      }
-
-      setUserRole(role);
-      setIsLoggedIn(true);
-      setShowAuthModal(false);
-      handleNavigate(role === 'seeker' ? 'seeker' : 'employer');
-      toast.success(`Demo ${role === 'seeker' ? 'Job Seeker' : 'Employer'} logged in!`);
-    } catch (error: any) {
-      console.error('Demo login error:', error);
-      toast.error(`Demo login failed: ${error.message || 'Make sure migration has been run!'}`);
-    }
-  };
-
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserProfile(null);
@@ -1098,7 +994,7 @@ export default function App() {
         onLogout={handleLogout}
         onShowAuth={handleShowAuth}
         onReset={() => { setCurrentView("landing"); }}
-        className={showPaymentModal ? 'hidden' : ''}
+        isPaymentModalOpen={showPaymentModal}
       />
 
       <main>
@@ -2295,26 +2191,31 @@ export default function App() {
             ) : (
               <div className="space-y-6 sm:space-y-8">
                 {/* Locked Video Preview */}
-                <div className="relative aspect-video bg-gray-100 rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-xl">
-                   <ImageWithFallback 
-                     src={selectedCandidate.video_thumbnail_url} 
-                     className="w-full h-full object-cover blur-[5px] opacity-70"
-                   />
-                   <div className="absolute inset-0 bg-black/10 flex flex-col items-center justify-center">
-                      <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border-2 border-white/40 shadow-2xl mb-4 sm:mb-6">
-                         <Lock size={32} className="sm:w-12 sm:h-12 text-white" />
-                      </div>
-                      <div className="text-center space-y-2 sm:space-y-3 px-4">
-                        <p className="text-white text-2xl sm:text-4xl font-black tracking-tighter drop-shadow-lg">Pay to Reveal</p>
-                        <p className="text-white/90 text-xs sm:text-sm font-black uppercase tracking-widest drop-shadow-md">Video Intro + Direct Contact</p>
-                      </div>
-                   </div>
-                   <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
-                      <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#A63F8E] text-white rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl">
-                        ${INTERACTION_FEE.toFixed(2)}
-                      </div>
-                   </div>
-                </div>
+               <div className="relative aspect-video bg-gray-100 rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-xl">
+   <ImageWithFallback 
+     src={selectedCandidate.video_thumbnail_url} 
+     className="w-full h-full object-cover blur-[5px] opacity-70"
+   />
+   <div className="absolute inset-0 bg-black/10 flex flex-col items-center justify-center">
+      <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border-2 border-white/40 shadow-2xl mb-4 sm:mb-6">
+         <Lock size={32} className="sm:w-12 sm:h-12 text-white" />
+      </div>
+      <div className="text-center space-y-2 sm:space-y-3 px-4">
+        <p className="text-white text-2xl sm:text-4xl font-black tracking-tighter drop-shadow-lg">Pay to Reveal</p>
+        <p className="text-white/90 text-xs sm:text-sm font-black uppercase tracking-widest drop-shadow-md">Video Intro + Direct Contact</p>
+      </div>
+   </div>
+   <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
+      <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#A63F8E] text-white rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl">
+        ${INTERACTION_FEE.toFixed(2)}
+      </div>
+   </div>
+   {/* Demo tag - remove once real videos are uploaded */}
+   <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
+     <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Visual Demo Only</p>
+     <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">No Real Video</p>
+   </div>
+</div>
 
                 {/* Candidate Header Info */}
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">

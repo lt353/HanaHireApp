@@ -1,6 +1,4 @@
-import React from "react";
-import { Zap, FolderOpen, Settings as SettingsIcon } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Zap, Settings as SettingsIcon } from "lucide-react";
 
 import { ViewType } from '../../App';
 
@@ -20,22 +18,24 @@ interface HeaderProps {
   isPaymentModalOpen?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header = ({
   isRoleSelected,
   role,
   currentTab,
   isLoggedIn,
-  seekerQueueCount,
-  employerQueueCount,
   onNavigate,
-  onSelectRole,
   onToggleRole,
   onLogout,
   onShowAuth,
   onReset,
   isPaymentModalOpen = false
-}) => {
-  const queueCount = role === "seeker" ? seekerQueueCount : employerQueueCount;
+}: HeaderProps) => {
+
+  const borderStyle = !isRoleSelected
+    ? 'linear-gradient(to right, #148F8B, #A63F8E)'
+    : role === 'seeker'
+      ? '#148F8B'
+      : '#A63F8E';
 
   if (isPaymentModalOpen) {
     return null;
@@ -46,14 +46,15 @@ export const Header: React.FC<HeaderProps> = ({
       className="hidden md:flex sticky top-0 z-40 px-3 sm:px-4 md:px-8 h-20 items-center justify-between gap-2 transition-colors duration-200 relative"
       style={{ backgroundColor: '#FAF9F7' }}
     >
-      {/* Gradient bottom border */}
+      {/* Bottom border — gradient on landing, solid on role pages */}
       <div style={{
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
         height: '5px',
-        background: 'linear-gradient(to right, #148F8B, #A63F8E)'
+        background: borderStyle,
+        transition: 'background 0.4s ease',
       }} />
 
       {/* Left */}
@@ -77,17 +78,13 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="hidden lg:flex items-center gap-6">
             {isLoggedIn && (
               <button
-                onClick={() =>
-                  onNavigate(role === "seeker" ? "seeker" : "employer")
-                }
+                onClick={() => onNavigate(role === "seeker" ? "seeker" : "employer")}
                 className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                   (currentTab === "seeker" || currentTab === "employer")
                     ? "font-black"
                     : "font-bold hover:text-gray-900"
                 }`}
-                style={{
-                  color: role === "seeker" ? "#148F8B" : "#A63F8E"
-                }}
+                style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
               >
                 Dashboard
               </button>
@@ -97,9 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => onNavigate("jobs")}
                 className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
-                  currentTab === "jobs"
-                    ? "font-black"
-                    : "font-bold hover:text-gray-900"
+                  currentTab === "jobs" ? "font-black" : "font-bold hover:text-gray-900"
                 }`}
                 style={{ color: "#148F8B" }}
               >
@@ -111,9 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => onNavigate("job-posting")}
                 className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
-                  currentTab === "job-posting"
-                    ? "font-black"
-                    : "font-bold hover:text-gray-900"
+                  currentTab === "job-posting" ? "font-black" : "font-bold hover:text-gray-900"
                 }`}
                 style={{ color: "#A63F8E" }}
               >
@@ -125,9 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => onNavigate("candidates")}
                 className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
-                  currentTab === "candidates"
-                    ? "font-black"
-                    : "font-bold hover:text-gray-900"
+                  currentTab === "candidates" ? "font-black" : "font-bold hover:text-gray-900"
                 }`}
                 style={{ color: "#A63F8E" }}
               >
@@ -138,17 +129,9 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => onNavigate("about")}
               className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
-                currentTab === "about"
-                  ? "font-black"
-                  : "font-bold hover:text-gray-900"
+                currentTab === "about" ? "font-black" : "font-bold hover:text-gray-900"
               }`}
-              style={{
-                color: !isRoleSelected
-                  ? "#A63F8E"
-                  : role === "seeker"
-                    ? "#148F8B"
-                    : "#A63F8E"
-              }}
+              style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
             >
               About
             </button>
@@ -156,22 +139,27 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => onNavigate("settings")}
               className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
-                currentTab === "settings"
-                  ? "font-black"
-                  : "font-bold hover:text-gray-900"
+                currentTab === "settings" ? "font-black" : "font-bold hover:text-gray-900"
               }`}
-              style={{
-                color: !isRoleSelected
-                  ? "#A63F8E"
-                  : role === "seeker"
-                    ? "#148F8B"
-                    : "#A63F8E"
-              }}
+              style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
             >
               <SettingsIcon size={20} className="sm:w-6 sm:h-6" />
             </button>
           </div>
-        ) : null}
+        ) : (
+          /* Landing page — show About link */
+          <div className="hidden lg:flex items-center gap-6">
+            <button
+              onClick={() => onNavigate("about")}
+              className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                currentTab === "about" ? "font-black" : "font-bold hover:text-gray-900"
+              }`}
+              style={{ color: "#A63F8E" }}
+            >
+              About
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Right */}

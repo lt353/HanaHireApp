@@ -6,8 +6,6 @@ import {
   MapPin,
   Lock,
   Play,
-  Eye,
-  FolderPlus,
   Briefcase,
   Trash2,
   RotateCcw,
@@ -69,7 +67,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   onShowPayment,
   onShowFilters,
   onSelectCandidate,
-  interactionFee,
 }) => {
   const isMobile = useIsMobile(768);
 
@@ -138,7 +135,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
   const handlePass = React.useCallback(() => {
     if (recoveredQueue.length > 0) {
-      // Re-passing a recovered item puts it back in the bin
       setPassedCandidates(prev => [...prev, recoveredQueue[0]]);
       setRecoveredQueue(prev => prev.slice(1));
       return;
@@ -151,7 +147,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
   const handleSave = React.useCallback(() => {
     if (recoveredQueue.length > 0) {
-      // Saving a recovered item adds it to queue without touching the main deck index
       onAddToQueue(recoveredQueue[0]);
       setRecoveredQueue(prev => prev.slice(1));
       return;
@@ -167,7 +162,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
     setPassedCandidates(prev => prev.slice(0, -1));
   }, [passedCandidates.length]);
 
-  // Recycle bin actions
   const handleRecover = React.useCallback((candidate: any) => {
     setPassedCandidates(prev => prev.filter(c => c.id !== candidate.id));
     setRecoveredQueue(prev => [...prev, candidate]);
@@ -209,7 +203,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
     resetCard();
   };
 
-  // iOS Safari touch handling - manual touch events
   const touchStartX = React.useRef(0);
   const isDragging = React.useRef(false);
 
@@ -285,7 +278,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
           {/* Recovered-item indicator */}
           {recoveredQueue.length > 0 && (
-            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#148F8B]">
+            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-[#148F8B]/20 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#148F8B]">
               <RotateCcw size={12} />
               Reviewing recovered candidate
             </div>
@@ -320,9 +313,9 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 Save
               </motion.div>
 
-              {/* Video preview with blur effect */}
+              {/* Video preview - MOBILE */}
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-gray-100 mb-6">
-                <ImageWithFallback 
+                <ImageWithFallback
                   src={currentCandidate.thumbnail || currentCandidate.video_thumbnail_url}
                   className={`w-full h-full object-cover transition-all duration-700 ${isUnlocked(currentCandidate.id) ? 'blur-0' : 'blur-[7px] opacity-80'}`}
                 />
@@ -335,9 +328,14 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* Demo tag - mobile swipe card */}
                 {!isUnlocked(currentCandidate.id) && (
-                  <div className="absolute bottom-3 left-3 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-[9px] font-black text-white uppercase tracking-widest">
-                    Pay to Reveal
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Pay to Reveal</p>
+                    <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">
+                      Visual Demo · No Real Video
+                    </p>
                   </div>
                 )}
               </div>
@@ -351,16 +349,12 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   <span className="flex items-center gap-2 shrink-0">
                     <MapPin size={14} /> <span className="truncate">{currentCandidate.location}</span>
                   </span>
-
                   <span className="flex items-center gap-2 shrink-0">
                     <Briefcase size={14} /> <span className="truncate">{currentCandidate.years_experience} YRS</span>
                   </span>
-
-                  {/* Schedule Preferences / Availability */}
                   <span className="flex items-center gap-2 shrink-0 text-[#A63F8E]">
                     <span className="truncate">{currentCandidate.availability || currentCandidate.schedule_preference || 'Immediate'}</span>
                   </span>
-
                   <span className="flex items-center gap-2 shrink-0">
                     <Lock size={14} /> {isUnlocked(currentCandidate.id) ? "Unlocked" : "Locked"}
                   </span>
@@ -381,37 +375,25 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 )}
               </div>
 
-              {/* Action buttons - Skip, Save (bookmark fills in), Undo */}
+              {/* Action buttons */}
               <div className="pt-4 space-y-3" onClick={(e) => e.stopPropagation()}>
-                {/* Main actions: Skip and Save */}
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      handlePass();
-                      resetCard();
-                    }}
+                    onClick={() => { handlePass(); resetCard(); }}
                     className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-[#F3EAF5]/30 transition-all hover:scale-105 active:scale-95 duration-200"
                   >
                     Skip
                   </button>
-
                   <button
                     type="button"
-                    onClick={() => {
-                      handleToggleBookmark(currentCandidate);
-                      resetCard();
-                    }}
+                    onClick={() => { handleToggleBookmark(currentCandidate); resetCard(); }}
                     className="h-14 rounded-xl bg-[#148F8B] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#148F8B]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                   >
-                    <svg 
+                    <svg
                       className="w-5 h-5 transition-all"
-                      style={{
-                        fill: isInQueue(currentCandidate.id) ? '#A63F8E' : 'none',
-                        stroke: 'white',
-                        strokeWidth: '2.5'
-                      }}
-                      strokeLinecap="round" 
+                      style={{ fill: isInQueue(currentCandidate.id) ? '#A63F8E' : 'none', stroke: 'white', strokeWidth: '2.5' }}
+                      strokeLinecap="round"
                       strokeLinejoin="round"
                       viewBox="0 0 24 24"
                     >
@@ -421,10 +403,8 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   </button>
                 </div>
 
-                {/* Undo + Passed Bin row */}
                 {passedCandidates.length > 0 && (
                   <div className="flex gap-2">
-                    {/* Undo — only for main deck swipes, not while reviewing recovered items */}
                     {recoveredQueue.length === 0 && (
                       <button
                         type="button"
@@ -437,8 +417,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                         Undo
                       </button>
                     )}
-
-                    {/* Passed bin trigger */}
                     <button
                       type="button"
                       onClick={() => setShowPassedBin(true)}
@@ -462,7 +440,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
       ) : (
         /* DESKTOP: Moderate-detail cards + floating Unlock button tied to bookmark queue */
         <div className="grid gap-6">
-          {/* Floating Unlock button — visible when candidates are bookmarked */}
+          {/* Floating Unlock button */}
           {queue.length > 0 && (
             <div className="fixed bottom-8 right-8 z-30">
               <button
@@ -487,7 +465,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 onClick={() => onSelectCandidate(c)}
                 className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col lg:flex-row items-center gap-6 lg:gap-8 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
               >
-                {/* Blurred video thumbnail */}
+                {/* Blurred video thumbnail - DESKTOP */}
                 <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-[#F3EAF5]/30 group-hover:scale-[1.02] transition-transform duration-500">
                   <ImageWithFallback
                     src={c.thumbnail || c.video_thumbnail_url || "/api/placeholder/800/450"}
@@ -498,9 +476,14 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       {isUnlocked(c.id) ? <Play size={24} className="text-white fill-white ml-1" /> : <Lock size={24} className="text-white" />}
                     </div>
                   </div>
+
+                  {/* Demo tag - desktop card */}
                   {!isUnlocked(c.id) && (
-                    <div className="absolute bottom-4 left-4 right-4 text-center">
-                      <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">Locked Preview</span>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Locked Preview</p>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">
+                        Visual Demo · No Real Video
+                      </p>
                     </div>
                   )}
                 </div>
@@ -556,7 +539,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
         </div>
       )}
 
-      {/* ── Passed Candidates Bin (slide-up panel) ── */}
+      {/* Passed Candidates Bin (slide-up panel) */}
       {showPassedBin && (
         <div
           className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 backdrop-blur-sm"

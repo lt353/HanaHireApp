@@ -7,12 +7,10 @@ import {
   DollarSign,
   Briefcase,
   Lock,
-  FolderPlus,
   Trash2,
   RotateCcw,
   X,
 } from "lucide-react";
-import { Button } from "../ui/Button";
 import { ViewType } from "../../App";
 
 interface JobsListProps {
@@ -66,7 +64,6 @@ export const JobsList: React.FC<JobsListProps> = ({
   onShowPayment,
   onShowFilters,
   onSelectJob,
-  interactionFee,
 }) => {
   const isMobile = useIsMobile(768);
 
@@ -274,7 +271,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 
           {/* Recovered-item indicator */}
           {recoveredQueue.length > 0 && (
-            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#148F8B]">
+            <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-[#148F8B]/20 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#148F8B]">
               <RotateCcw size={12} />
               Reviewing recovered job
             </div>

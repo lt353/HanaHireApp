@@ -71,7 +71,6 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
       </section>
 
       {/* How It Works - Job Seekers */}
-      {/* Card bg: solid medium teal. Icon bg: solid light mint — clearly lighter */}
       <section className="py-12 sm:py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 sm:mb-16 space-y-3 sm:space-y-4">
@@ -81,7 +80,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
           <div className="flex flex-col md:flex-row gap-6 sm:gap-8 max-w-6xl mx-auto">
             <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#c8f0e5' }}>
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
-                <Video size={40} className="sm:w-11 sm:h-11 text-[#148F8B] drop-shadow-lg" />
+                <Video size={40} className="sm:w-11 sm:h-11 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -95,7 +94,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             </div>
             <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#c8f0e5' }}>
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
-                <Search size={40} className="sm:w-11 sm:h-11 text-[#148F8B] drop-shadow-lg" />
+                <Search size={40} className="sm:w-11 sm:h-11 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -109,7 +108,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             </div>
             <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#c8f0e5' }}>
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
-                <DollarSign size={40} className="sm:w-11 sm:h-11 text-[#148F8B] drop-shadow-lg" />
+                <DollarSign size={40} className="sm:w-11 sm:h-11 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -126,7 +125,6 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
       </section>
 
       {/* How It Works - Employers */}
-      {/* Card bg: solid medium purple. Icon bg: solid light lavender — clearly lighter */}
       <section className="py-12 sm:py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 sm:mb-16 space-y-3 sm:space-y-4">
@@ -136,7 +134,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
           <div className="flex flex-col md:flex-row gap-6 sm:gap-8 max-w-6xl mx-auto">
             <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#eecbf7' }}>
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
-                <Sparkles size={40} className="sm:w-11 sm:h-11 text-[#A63F8E] drop-shadow-lg" />
+                <Sparkles size={40} className="sm:w-11 sm:h-11 text-[#A63F8E]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -150,7 +148,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             </div>
             <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#eecbf7' }}>
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
-                <Users size={40} className="sm:w-11 sm:h-11 text-[#A63F8E] drop-shadow-lg" />
+                <Users size={40} className="sm:w-11 sm:h-11 text-[#A63F8E]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -164,7 +162,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             </div>
             <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#eecbf7' }}>
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
-                <CheckCircle size={40} className="sm:w-11 sm:h-11 text-[#A63F8E] drop-shadow-lg" />
+                <CheckCircle size={40} className="sm:w-11 sm:h-11 text-[#A63F8E]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -189,29 +187,29 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div className="text-center space-y-3 sm:space-y-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-[#148F8B] mx-auto">
-                <Clock size={24} className="sm:w-7 sm:h-7" />
+              <div className="flex items-center justify-center mx-auto">
+                <Clock size={24} className="sm:w-7 sm:h-7 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
               </div>
               <h4 className="text-lg sm:text-xl font-black tracking-tight">No Wasted Time</h4>
               <p className="text-xs sm:text-sm text-gray-800 font-medium">Browse for free, pay only when you connect</p>
             </div>
             <div className="text-center space-y-3 sm:space-y-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-[#A63F8E] mx-auto">
-                <Shield size={24} className="sm:w-7 sm:h-7" />
+              <div className="flex items-center justify-center mx-auto">
+                <Shield size={24} className="sm:w-7 sm:h-7 text-[#A63F8E]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
               </div>
               <h4 className="text-lg sm:text-xl font-black tracking-tight">Privacy First</h4>
               <p className="text-xs sm:text-sm text-gray-800 font-medium">Stay anonymous until you choose to reveal</p>
             </div>
             <div className="text-center space-y-3 sm:space-y-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-[#148F8B] mx-auto">
-                <DollarSign size={24} className="sm:w-7 sm:h-7" />
+              <div className="flex items-center justify-center mx-auto">
+                <DollarSign size={24} className="sm:w-7 sm:h-7 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
               </div>
               <h4 className="text-lg sm:text-xl font-black tracking-tight">Simple Pricing</h4>
               <p className="text-xs sm:text-sm text-gray-700 font-medium">${INTERACTION_FEE.toFixed(2)} per unlock. No subscriptions.</p>
             </div>
             <div className="text-center space-y-3 sm:space-y-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center text-[#A63F8E] mx-auto">
-                <Video size={24} className="sm:w-7 sm:h-7" />
+              <div className="flex items-center justify-center mx-auto">
+                <Video size={24} className="sm:w-7 sm:h-7 text-[#A63F8E]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
               </div>
               <h4 className="text-lg sm:text-xl font-black tracking-tight">Video-Friendly</h4>
               <p className="text-xs sm:text-sm text-gray-700 font-medium">Video, voice, or text - your choice</p>

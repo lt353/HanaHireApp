@@ -1,30 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  Sparkles, 
-  Pencil, 
-  Mic, 
-  X, 
-  Plus, 
-  Eye, 
-  CheckCircle2, 
+import { useState, useEffect, useRef } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  Pencil,
+  Mic,
+  X,
+  Plus,
+  CheckCircle2,
   AlertCircle,
   Loader2,
-  ChevronDown,
   Building2,
   Lock,
   Globe,
-  Calendar,
-  Video,
-  Phone,
-  Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "../ui/Button";
 import { toast } from "sonner@2.0.3";
-import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { supabase } from '../../utils/supabase/client';
 import { ViewType } from '../../App';
 
@@ -690,8 +682,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                 </div>
               )}
               {formData.start_date && (
-                <div className="p-4 bg-blue-50/50 rounded-xl flex items-center justify-between border border-blue-100">
-                   <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Target Start Date</span>
+                <div className="p-4 bg-[#148F8B]/5 rounded-xl flex items-center justify-between border border-[#148F8B]/20">
+                   <span className="text-[10px] font-black text-[#148F8B] uppercase tracking-widest">Target Start Date</span>
                    <span className="text-xs font-bold text-gray-900">{formData.start_date}</span>
                 </div>
               )}
@@ -729,7 +721,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="text"
                         className="w-full p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B]/30 outline-none font-black text-base sm:text-lg md:text-xl text-gray-900 shadow-sm"
                         value={formData.title}
-                        onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, title: e.target.value}))}
                       />
                     </div>
                     <div className="space-y-2">
@@ -738,7 +730,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         <select
                           className="w-full p-5 rounded-2xl bg-white border border-gray-200 outline-none font-bold text-gray-900 appearance-none shadow-sm"
                           value={formData.industry}
-                          onChange={(e) => setFormData(prev => ({...prev, industry: e.target.value}))}
+                          onChange={(e) => setFormData((prev: any) => ({...prev, industry: e.target.value}))}
                         >
                           {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
                         </select>
@@ -748,7 +740,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             className="w-full p-5 rounded-2xl bg-white border-2 border-[#148F8B]/10 outline-none font-bold text-gray-900"
                             placeholder="Enter custom industry..."
                             value={formData.custom_industry}
-                            onChange={(e) => setFormData(prev => ({...prev, custom_industry: e.target.value}))}
+                            onChange={(e) => setFormData((prev: any) => ({...prev, custom_industry: e.target.value}))}
                           />
                         )}
                       </div>
@@ -762,7 +754,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="text"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 outline-none font-bold text-gray-900 shadow-sm"
                         value={formData.location}
-                        onChange={(e) => setFormData(prev => ({...prev, location: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, location: e.target.value}))}
                       />
                     </div>
                     <div className="space-y-2">
@@ -774,7 +766,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             type="text"
                             className="w-full bg-transparent font-black text-lg outline-none text-gray-900 placeholder:text-gray-300"
                             value={formData.pay_min}
-                            onChange={(e) => setFormData(prev => ({...prev, pay_min: e.target.value}))}
+                            onChange={(e) => setFormData((prev: any) => ({...prev, pay_min: e.target.value}))}
                             placeholder="Min"
                           />
                         </div>
@@ -784,14 +776,14 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                             type="text"
                             className="w-full bg-transparent font-black text-lg outline-none text-gray-900 placeholder:text-gray-300"
                             value={formData.pay_max}
-                            onChange={(e) => setFormData(prev => ({...prev, pay_max: e.target.value}))}
+                            onChange={(e) => setFormData((prev: any) => ({...prev, pay_max: e.target.value}))}
                             placeholder="Max"
                           />
                         </div>
                         <select
                           className="p-4 bg-white rounded-2xl border border-gray-200 font-black text-xs uppercase tracking-widest text-gray-900 outline-none cursor-pointer shadow-sm"
                           value={formData.pay_type}
-                          onChange={(e) => setFormData(prev => ({...prev, pay_type: e.target.value}))}
+                          onChange={(e) => setFormData((prev: any) => ({...prev, pay_type: e.target.value}))}
                         >
                           <option>Hourly</option>
                           <option>Yearly</option>
@@ -1234,7 +1226,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="url"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
                         value={formData.video_url}
-                        onChange={(e) => setFormData(prev => ({...prev, video_url: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, video_url: e.target.value}))}
                         placeholder="YouTube/Vimeo link"
                       />
                     </div>
@@ -1244,7 +1236,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="date"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
                         value={formData.start_date}
-                        onChange={(e) => setFormData(prev => ({...prev, start_date: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, start_date: e.target.value}))}
                       />
                     </div>
                   </div>
@@ -1379,7 +1371,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="text"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
                         value={formData.company_name}
-                        onChange={(e) => setFormData(prev => ({...prev, company_name: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, company_name: e.target.value}))}
                         placeholder="Blue Hawaii Surf Co."
                       />
                     </div>
@@ -1389,7 +1381,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="email"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
                         value={formData.contact_email}
-                        onChange={(e) => setFormData(prev => ({...prev, contact_email: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, contact_email: e.target.value}))}
                         placeholder="hiring@company.com"
                       />
                     </div>
@@ -1401,7 +1393,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="tel"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
                         value={formData.contact_phone}
-                        onChange={(e) => setFormData(prev => ({...prev, contact_phone: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, contact_phone: e.target.value}))}
                         placeholder="(808) 555-0123"
                       />
                     </div>
@@ -1411,7 +1403,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="url"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
                         value={formData.image_url}
-                        onChange={(e) => setFormData(prev => ({...prev, image_url: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, image_url: e.target.value}))}
                         placeholder="https://..."
                       />
                     </div>
@@ -1470,7 +1462,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                  </motion.div>
               </AnimatePresence>
            </div>
-           <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
+           <div className="p-6 bg-[#148F8B]/5 rounded-2xl border border-[#148F8B]/20 flex gap-4">
               <AlertCircle size={20} className="text-[#148F8B] shrink-0" /><p className="text-[10px] text-[#148F8B]/70 font-medium leading-relaxed">Identity revealed only after interaction fee.</p>
            </div>
         </aside>

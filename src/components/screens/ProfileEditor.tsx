@@ -1,20 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import React, { useState } from "react";
 import { toast } from "sonner@2.0.3";
-import { ViewType } from '../../App';
 import {
   ArrowLeft,
   User,
   Briefcase,
-  DollarSign,
-  MapPin,
-  Mail,
-  Phone,
-  GraduationCap,
-  Calendar,
   Target,
-  Video,
-  Camera
 } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
 import { JOB_CATEGORIES, CANDIDATE_CATEGORIES } from '../../data/mockData';

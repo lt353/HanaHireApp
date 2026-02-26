@@ -100,8 +100,8 @@ export const DEMO_PROFILES = {
 
 export const TEAM_MEMBERS = [
   { name: "Tea", role: "Co-Founder" },
-  { name: "Lindsay", role: "Engineering" },
-  { name: "Brisa", role: "Operations" },
-  { name: "DJ", role: "Design" },
-  { name: "Ethan", role: "Support" }
+  { name: "Lindsay", role: "Co-Founder" },
+  { name: "Brisa", role: "Co-Founder" },
+  { name: "DJ", role: "Co-Founder" },
+  { name: "Ethan", role: "Co-Founder" }
 ];

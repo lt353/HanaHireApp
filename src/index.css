@@ -1273,7 +1273,7 @@
     border-color: oklab(71.1607% .167013 .0703394 / .1);
   }
 
-  .border-blue-100 {
+  .border-[#148F8B]/20 {
     border-color: var(--color-blue-100);
   }
 
@@ -1932,7 +1932,7 @@
     color: #A63F8E;
   }
 
-  .text-blue-600 {
+  .text-[#148F8B] {
     color: var(--color-blue-600);
   }
 
