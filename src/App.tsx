@@ -109,7 +109,8 @@ export default function App() {
     payRanges: [] as string[],
     experience: [] as string[],
     education: [] as string[],
-    skills: [] as string[]
+    skills: [] as string[],
+    jobCategories: [] as string[],
   });
   const [userVisibility, setUserVisibility] = useState("broader");
   const [mediaType, setMediaType] = useState<"video" | "voice">("video");
@@ -491,6 +492,7 @@ export default function App() {
     (filters.industries.length === 0 || filters.industries.includes(j.company_industry)) &&
     (filters.locations.length === 0 || filters.locations.includes(j.location)) &&
     (filters.payRanges.length === 0 || filters.payRanges.includes(j.pay_range)) &&
+    (filters.jobCategories.length === 0 || (j.job_category && filters.jobCategories.includes(j.job_category))) &&
     (searchQuery === "" || 
       (j.title?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || 
       (j.location?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
@@ -529,6 +531,7 @@ export default function App() {
       experience: [],
       education: [],
       skills: [],
+      jobCategories: [],
     });
   };
 
@@ -606,7 +609,6 @@ export default function App() {
       onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
       onShowFilters={() => setShowFilterModal(true)}
       onSelectJob={(job) => setSelectedJob(job)}
-      onNavigate={handleNavigate}
       interactionFee={INTERACTION_FEE}
       viewerLocation={userProfile?.location}
     />
@@ -662,7 +664,6 @@ export default function App() {
       onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
       onShowFilters={() => setShowFilterModal(true)}
       onSelectCandidate={(c) => setSelectedCandidate(c)}
-      onNavigate={handleNavigate}
       interactionFee={INTERACTION_FEE}
       viewerLocation={userProfile?.location}
       viewerIndustry={userProfile?.industry}
@@ -793,6 +794,7 @@ export default function App() {
                     industries: existingCandidate.industries_interested || [],
                     workStyles: existingCandidate.work_style?.split(', ') || [],
                     jobTypesSeeking: existingCandidate.job_types_seeking || [],
+                    preferredJobCategories: existingCandidate.preferred_job_categories || [],
                     displayTitle: existingCandidate.display_title,
                     candidateId: existingCandidate.id,
                     id: existingCandidate.id
@@ -818,6 +820,7 @@ export default function App() {
                       industries_interested: profileData.industries || [],
                       work_style: profileData.workStyles?.join(', ') || null,
                       job_types_seeking: profileData.jobTypesSeeking || [],
+                      preferred_job_categories: profileData.preferredJobCategories || [],
                       display_title: profileData.displayTitle || null,
                       is_profile_complete: true,
                       updated_at: new Date().toISOString()
@@ -889,6 +892,8 @@ export default function App() {
                       phone: profileData.phone || null,
                       industry: profileData.industry || null,
                       company_logo_url: profileData.companyLogoUrl || null,
+                      website: profileData.website || null,
+                      business_license_number: profileData.businessLicense || null,
                       updated_at: new Date().toISOString()
                     })
                     .eq('id', profileData.employerId);
@@ -1052,6 +1057,7 @@ export default function App() {
                       availability: candidate.availability,
                       targetPay: candidate.preferred_pay_range || candidate.target_pay,
                       industries: candidate.industries_interested || [],
+                      preferredJobCategories: candidate.preferred_job_categories || [],
                       videoThumbnailUrl: candidate.video_thumbnail_url,
                       candidateId: candidate.id,
                       id: candidate.id
@@ -1081,6 +1087,8 @@ export default function App() {
                         bio: employer.company_description,
                         companyLogoUrl: employer.company_logo_url,
                         businessVerified: employer.business_verified,
+                        website: employer.website,
+                        businessLicense: employer.business_license_number,
                         employerId: employer.id,
                         id: employer.id
                       };
@@ -1949,17 +1957,31 @@ export default function App() {
 
             {/* Role Specific Filters */}
             {userRole === 'seeker' ? (
-              <CollapsibleFilter title="Pay Range">
-                {JOB_CATEGORIES.payRanges.map(p => (
-                  <button
-                    key={p}
-                    onClick={() => toggleFilter('payRanges', p)}
-                    className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </CollapsibleFilter>
+              <>
+                <CollapsibleFilter title="Job Category">
+                  {JOB_CATEGORIES.jobCategories.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => toggleFilter('jobCategories', cat)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.jobCategories.includes(cat) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </CollapsibleFilter>
+
+                <CollapsibleFilter title="Pay Range">
+                  {JOB_CATEGORIES.payRanges.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => toggleFilter('payRanges', p)}
+                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </CollapsibleFilter>
+              </>
             ) : (
               <>
                 <CollapsibleFilter title="Experience Level" isOpen={true}>
@@ -2141,6 +2163,23 @@ export default function App() {
                     <span key={i} className="px-4 py-2 bg-[#A63F8E]/5 text-[#A63F8E] rounded-xl text-xs font-black uppercase tracking-widest">{b}</span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Business website - only visible once job is unlocked */}
+            {unlockedJobIds.includes(selectedJob.id) && selectedJob.website && (
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Business Website</h4>
+                <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                  <a
+                    href={selectedJob.website.startsWith('http') ? selectedJob.website : `https://${selectedJob.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#148F8B] font-semibold hover:underline break-all"
+                  >
+                    {selectedJob.website.replace(/^https?:\/\//i, '')}
+                  </a>
+                </p>
               </div>
             )}
 

@@ -12,6 +12,7 @@ export interface Job {
   location: string;
   pay_range: string;
   job_type: string;
+  job_category?: string;
   description: string;
   requirements: string[];
   responsibilities: string[];
@@ -38,6 +39,7 @@ export interface Employer {
   company_description?: string;
   company_logo_url?: string;
   business_verified: boolean;
+  website?: string | null;
 }
 
 export interface JobWithEmployer extends Job {
@@ -51,6 +53,7 @@ export interface JobWithEmployer extends Job {
   contact_phone: string;        // from employers.phone
   employer_location?: string;   // from employers.location
   business_verified?: boolean;  // from employers.business_verified
+  website?: string | null;      // from employers.website
   employer?: Employer;          // full employer object if needed
 }
 
@@ -70,6 +73,7 @@ export function mergeJobWithEmployer(job: Job, employers: Employer[]): JobWithEm
       company_size: 'Unknown',
       contact_email: '',
       contact_phone: '',
+      website: null,
       employer
     };
   }
@@ -86,6 +90,7 @@ export function mergeJobWithEmployer(job: Job, employers: Employer[]): JobWithEm
     contact_phone: employer.phone,
     employer_location: employer.location,
     business_verified: employer.business_verified,
+    website: employer.website ?? null,
     employer // include full employer object if needed
   };
 }

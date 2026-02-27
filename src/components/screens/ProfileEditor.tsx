@@ -39,6 +39,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [jobTypesSeeking, setJobTypesSeeking] = useState<string[]>(userProfile?.jobTypesSeeking || []);
   const [availability, setAvailability] = useState(userProfile?.availability || "");
   const [targetPay, setTargetPay] = useState(userProfile?.targetPay || "");
+  const [preferredJobCategories, setPreferredJobCategories] = useState<string[]>(userProfile?.preferredJobCategories || []);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -81,6 +82,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
         jobTypesSeeking,
         availability,
         targetPay,
+        preferredJobCategories,
       };
       onSave(updatedProfile);
       setIsSaving(false);
@@ -391,6 +393,51 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   <p className="text-[10px] text-gray-400 font-medium">
                     Custom industries will appear in the selected list above.
                   </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                  Preferred Job Types
+                </label>
+                <p className="text-xs text-gray-500 font-medium ml-2">
+                  What type of work are you looking for?
+                </p>
+
+                {preferredJobCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {preferredJobCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => toggleArrayItem(preferredJobCategories, setPreferredJobCategories, cat)}
+                        className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                      >
+                        <span>{cat}</span>
+                        <span className="text-[9px] opacity-80">×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+                  Job Categories
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {JOB_CATEGORIES.jobCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleArrayItem(preferredJobCategories, setPreferredJobCategories, cat)}
+                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
+                        preferredJobCategories.includes(cat)
+                          ? "bg-[#148F8B] text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
               </div>
 

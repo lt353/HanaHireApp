@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
-import { CANDIDATE_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
+import { CANDIDATE_CATEGORIES, DEMO_PROFILES, JOB_CATEGORIES } from "../../data/mockData";
 import { ViewType } from '../../App';
 
 interface SeekerOnboardingProps {
@@ -20,6 +20,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedWorkStyles, setSelectedWorkStyles] = useState<string[]>([]);
   const [jobTypesSeeking, setJobTypesSeeking] = useState<string[]>([]);
+  const [preferredJobCategories, setPreferredJobCategories] = useState<string[]>([]);
   const [useCustomTitle, setUseCustomTitle] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
 
@@ -154,6 +155,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       setSelectedIndustries(userProfile.industries || []);
       setSelectedWorkStyles(userProfile.workStyles || []);
       setJobTypesSeeking(userProfile.jobTypesSeeking || []);
+      setPreferredJobCategories(userProfile.preferredJobCategories || []);
       setUseCustomTitle(true);
       setCustomTitle(
         (userProfile.displayTitle as string | undefined)?.trim() || systemTitle,
@@ -172,6 +174,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
     setSelectedIndustries(d.industries);
     setSelectedWorkStyles(["Collaborative", "Outgoing", "Energetic"]);
     setJobTypesSeeking(["Full-time", "Part-time"]);
+    setPreferredJobCategories(['Food Service', 'Hospitality Services']);
     setUseCustomTitle(true);
     setCustomTitle("Experienced Bartender & Hospitality Pro");
   };
@@ -188,6 +191,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       industries: selectedIndustries,
       workStyles: selectedWorkStyles,
       jobTypesSeeking,
+      preferredJobCategories,
       displayTitle: useCustomTitle && customTitle.trim() ? customTitle.trim() : systemTitle,
     };
     onComplete(profileData);
@@ -565,6 +569,55 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
               <p className="text-[10px] text-gray-400 font-medium">
                 Custom industries will appear in the selected list above.
               </p>
+            </div>
+          </div>
+
+          {/* Preferred Job Types / Categories */}
+          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              {preferredJobCategories.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
+                Preferred Job Types ({preferredJobCategories.length})
+              </h2>
+            </div>
+            <p className="text-xs text-gray-500 font-medium">
+              What type of work are you looking for?
+            </p>
+
+            {preferredJobCategories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {preferredJobCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => toggleItem(preferredJobCategories, setPreferredJobCategories, cat)}
+                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                  >
+                    <span>{cat}</span>
+                    <span className="text-[9px] opacity-80">×</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
+              Job Categories
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {JOB_CATEGORIES.jobCategories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => toggleItem(preferredJobCategories, setPreferredJobCategories, cat)}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    preferredJobCategories.includes(cat)
+                      ? "bg-[#148F8B] text-white shadow-md"
+                      : "bg-[#F3EAF5]/30 text-gray-400 border border-gray-100 hover:border-[#148F8B]/30"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
           </div>
 

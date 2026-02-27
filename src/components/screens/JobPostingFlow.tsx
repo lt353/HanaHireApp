@@ -19,6 +19,7 @@ import { Button } from "../ui/Button";
 import { toast } from "sonner@2.0.3";
 import { supabase } from '../../utils/supabase/client';
 import { ViewType } from '../../App';
+import { JOB_CATEGORIES } from "../../data/mockData";
 
 // API disabled - jobs stored locally
 // const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
@@ -121,6 +122,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
     pay_max: "25",
     pay_type: "Hourly",
     job_type: "Full-time",
+    job_category: "",
     description: "",
     responsibilities: ["", "", ""],
     requirements: ["", ""],
@@ -250,6 +252,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         pay_max: payMatch ? payMatch[2] : "25",
         pay_type: payMatch?.[3] === 'yr' ? 'Yearly' : 'Hourly',
         job_type: existingJob.job_type || "Full-time",
+        job_category: existingJob.job_category || "",
         description: existingJob.description || "",
         responsibilities: Array.isArray(existingJob.responsibilities) ? existingJob.responsibilities : ["", "", ""],
         requirements: Array.isArray(existingJob.requirements) ? existingJob.requirements : ["", ""],
@@ -382,6 +385,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
     if (!formData.title) return "Job title is required";
     if (formData.industry === "Other" && !formData.custom_industry) return "Please specify your industry";
     if (!formData.industry) return "Industry is required";
+    if (!formData.job_category) return "Job category is required";
     if (!formData.location) return "Location is required";
     if (formData.description.length < 20) return "Description is too short";
     if (!formData.company_name) return "Legal company name is required (private)";
@@ -439,6 +443,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         location: formData.location,
         pay_range: payRangeStr,
         job_type: formData.job_type,
+        job_category: formData.job_category,
         requirements: formData.requirements.filter((r:string) => r),
         description: formData.description,
         responsibilities: formData.responsibilities.filter((r:string) => r),
@@ -745,6 +750,27 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         )}
                       </div>
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                      Job Category *
+                    </label>
+                    <p className="text-[11px] text-gray-500 font-medium mb-1">
+                      What type of work does this job entail?
+                    </p>
+                    <select
+                      className="w-full p-5 rounded-2xl bg-white border border-gray-200 outline-none font-bold text-gray-900 appearance-none shadow-sm"
+                      value={formData.job_category}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, job_category: e.target.value }))}
+                    >
+                      <option value="">Select a category…</option>
+                      {JOB_CATEGORIES.jobCategories.map(cat => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-8">

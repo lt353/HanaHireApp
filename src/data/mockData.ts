@@ -8,7 +8,27 @@ export const JOB_CATEGORIES = {
     'Plumbing', 'Solar', 'Logistics', 'Agriculture', 'Ranching', 'Fishing', 'Marine'
   ],
   jobTypes: [
+    // Standardized job types
     'Full-time', 'Part-time', 'Contract', 'Seasonal', 'Freelance', 'Commission'
+  ],
+  // Standardized job categories (mirrors jobs.job_category check constraint)
+  jobCategories: [
+    'Food Service',
+    'Retail & Sales',
+    'Customer Service',
+    'Hospitality Services',
+    'Tourism & Recreation',
+    'Trades & Construction',
+    'Office & Admin',
+    'Accounting & Finance',
+    'Healthcare & Wellness',
+    'Marketing & Creative',
+    'Tech & IT',
+    'Management & Leadership',
+    'Maintenance & Facilities',
+    'Transportation & Logistics',
+    'Education',
+    'Fitness & Recreation'
   ],
   locations: [
     'Honolulu, HI', 'Kailua, HI', 'Kapolei, HI', 'Pearl City, HI', 'Aiea, HI', 
@@ -63,7 +83,8 @@ export const CANDIDATE_CATEGORIES = {
     'Adventurous', 'Cultural Ambassador', 'Precise', 'Compassionate'
   ],
   jobTypesSeeking: [
-    'Full-time', 'Part-time', 'Contract', 'Seasonal', 'Freelance', 'Remote', 'Commission'
+    // Standardized job types for candidates' preferences (no separate "Remote" type)
+    'Full-time', 'Part-time', 'Contract', 'Seasonal', 'Freelance', 'Commission'
   ],
   locations: JOB_CATEGORIES.locations
 };

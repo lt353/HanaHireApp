@@ -26,7 +26,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
   const [companySize, setCompanySize] = useState("");
   const [location, setLocation] = useState(userProfile?.location || "");
   const [phone, setPhone] = useState(userProfile?.phone || "");
-  const [website, setWebsite] = useState("");
+  const [website, setWebsite] = useState(userProfile?.website || "");
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
   const [wantsBadge, setWantsBadge] = useState(false);
 
@@ -128,7 +128,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
       setLocation(employer.location || "");
       setPhone(employer.phone || "");
       setWebsite(employer.website || "");
-      setBusinessLicense(employer.business_license || "");
+      setBusinessLicense(employer.business_license_number || "");
 
       toast.success("Demo business info loaded from Supabase.");
     } finally {
@@ -137,6 +137,11 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
   };
 
   const handleSubmit = () => {
+    if (website && !/^https?:\/\//i.test(website)) {
+      toast.error("Website must start with http:// or https://");
+      return;
+    }
+
     const profileData = {
       ...userProfile,
       bio,
@@ -311,7 +316,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
               type="url"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
-              placeholder="www.yourbusiness.com"
+              placeholder="https://yourcompany.com"
               className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base"
             />
           </div>

@@ -30,6 +30,22 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   onSelectJob,
   applicationCount = 0
 }) => {
+  const getMatchMeta = (job: any) => {
+    const preferredCategories: string[] = userProfile?.preferredJobCategories || [];
+    const interestedIndustries: string[] = userProfile?.industries || [];
+
+    const hasCategoryMatch = job?.job_category && preferredCategories.includes(job.job_category);
+    const hasIndustryMatch = job?.company_industry && interestedIndustries.includes(job.company_industry);
+
+    if (hasCategoryMatch) {
+      return { label: "Strong Match", tone: "strong" as const };
+    }
+    if (hasIndustryMatch) {
+      return { label: "Industry Match", tone: "industry" as const };
+    }
+    return null;
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16">
       {/* Browse anonymously banner */}
@@ -184,7 +200,9 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           </div>
 
           <div className="grid gap-6">
-            {unlockedJobs.map((job) => (
+            {unlockedJobs.map((job) => {
+              const matchMeta = getMatchMeta(job);
+              return (
               <motion.div
                 key={job.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -199,6 +217,17 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                       <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#780262]/10 rounded-full">
                         <div className="w-2 h-2 rounded-full bg-[#780262] animate-pulse" />
                         <span className="text-xs font-black uppercase tracking-widest text-[#780262]">Unlocked</span>
+                        {matchMeta && (
+                          <span
+                            className={`ml-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                              matchMeta.tone === "strong"
+                                ? "bg-[#148F8B]/10 text-[#148F8B]"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {matchMeta.label}
+                          </span>
+                        )}
                       </div>
                       <h4 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight group-hover:text-[#148F8B] transition-colors">
                         {job.title}
@@ -234,6 +263,12 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                         <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Industry</p>
                         <p className="font-bold text-gray-900">{job.company_industry}</p>
                       </div>
+                      {job.job_category && (
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Job Category</p>
+                          <p className="font-bold text-[#A63F8E]">{job.job_category}</p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Company Size</p>
                         <p className="font-bold text-gray-900">{job.company_size || 'Not specified'}</p>
@@ -261,7 +296,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                   )}
                 </div>
               </motion.div>
-            ))}
+            );})}
           </div>
         </div>
       )}

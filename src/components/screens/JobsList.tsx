@@ -11,6 +11,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
+import { getJobCategoryStyle } from "../../utils/jobCategoryStyles";
 
 type JobSortOption =
   | "newest"
@@ -72,7 +73,6 @@ export const JobsList: React.FC<JobsListProps> = ({
   onShowPayment,
   onShowFilters,
   onSelectJob,
-  interactionFee,
   viewerLocation,
 }) => {
   const isMobile = useIsMobile(768);
@@ -378,125 +378,84 @@ export const JobsList: React.FC<JobsListProps> = ({
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.18}
               data-swipe-card="true"
-              style={{ x, rotate, opacity: cardOpacity }}
-              className="relative p-6 bg-white border border-gray-100 rounded-lg shadow-xl space-y-6 overflow-hidden select-none"
+              style={{
+                x,
+                rotate,
+                opacity: cardOpacity,
+                background: "#FAFAFA",
+                borderLeft: `6px solid ${getJobCategoryStyle(currentJob.job_category).borderColor}`,
+              }}
+              className="relative p-4 border border-gray-100 rounded-xl shadow-xl overflow-hidden select-none"
               onClick={() => onSelectJob(currentJob)}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
               {/* Swipe badges */}
-              <motion.div
-                style={{ opacity: passOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#A63F8E] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
-              >
-                Skip
-              </motion.div>
+              <motion.div style={{ opacity: passOpacity, scale: badgeScale }} className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#A63F8E] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none">Skip</motion.div>
+              <motion.div style={{ opacity: saveOpacity, scale: badgeScale }} className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#148F8B] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none">Save</motion.div>
 
-              <motion.div
-                style={{ opacity: saveOpacity, scale: badgeScale }}
-                className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#148F8B] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none"
-              >
-                Save
-              </motion.div>
+              {/* Layout: [ Left: illustration + metadata ] [ Middle: title + description + tap ] [ Right: Save ] */}
+              <div className="flex gap-4 items-stretch">
+                {/* Left: illustration + info centered under it, no outline */}
+                <div className="shrink-0 flex flex-col gap-2.5 items-center" style={{ width: 124 }}>
+                  {getJobCategoryStyle(currentJob.job_category).svgPath ? (
+                    <div className="rounded-lg overflow-hidden opacity-90 flex items-center justify-center bg-white/60 border border-white/80 p-1" style={{ width: 108, height: 108 }}>
+                      <img src={`${import.meta.env.BASE_URL}${getJobCategoryStyle(currentJob.job_category).svgPath}`} alt="" className="w-full h-full object-contain" />
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {currentJob.company_industry && <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: "rgba(20, 143, 139, 0.15)", color: "#0D7377" }}>{currentJob.company_industry}</span>}
+                    {currentJob.job_category && (() => {
+                      const s = getJobCategoryStyle(currentJob.job_category);
+                      return <span className="inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded w-fit" style={{ background: s.badgeBackground ?? "rgba(249, 115, 22, 0.1)", color: s.textColor ?? "#C05621" }}>{currentJob.job_category}</span>;
+                    })()}
+                    {currentJob.company_size && <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: "rgba(139, 92, 246, 0.18)", color: "#5B21B6" }}>{currentJob.company_size}</span>}
+                  </div>
+                </div>
 
-              {/* Job summary */}
-              <div className="space-y-3">
-                <h3 className="text-3xl font-black tracking-tight leading-none break-words">
-                  {currentJob.title}
-                </h3>
+                {/* Middle: title, location/pay/type line, description, tap — with padding */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center gap-3 px-4 py-2 cursor-pointer" onClick={() => onSelectJob(currentJob)}>
+                  <h3 className="text-lg font-black tracking-tight leading-snug break-words">{currentJob.title}</h3>
+                  <div className="flex flex-wrap text-[11px] font-semibold text-gray-500" style={{ gap: "0.75rem 1.25rem" }}>
+                    <span className="flex items-center gap-1"><MapPin size={10} /> {currentJob.location}</span>
+                    <span className="flex items-center gap-1 text-[#148F8B]"><DollarSign size={10} /> {currentJob.pay_range}</span>
+                    <span className="flex items-center gap-1"><Briefcase size={10} /> {currentJob.job_type}</span>
+                    <span className="text-gray-400"><Lock size={10} /> {isApplied(currentJob.id) ? "Applied" : isUnlocked(currentJob.id) ? "Unlocked" : "Locked"}</span>
+                  </div>
+                  {currentJob.description && <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{currentJob.description}</p>}
+                  <p className="text-xs font-black text-[#148F8B] uppercase tracking-widest">Tap for details →</p>
+                </div>
 
-                <div className="flex flex-wrap gap-3 text-xs font-black uppercase tracking-widest text-gray-400">
-                  <span className="flex items-center gap-2 shrink-0">
-                    <MapPin size={14} /> <span className="truncate">{currentJob.location}</span>
-                  </span>
-
-                  <span className="flex items-center gap-2 shrink-0">
-                    <DollarSign size={14} /> <span className="truncate">{currentJob.pay_range}</span>
-                  </span>
-
-                  <span className="flex items-center gap-2 shrink-0">
-                    <Briefcase size={14} /> <span className="truncate">{currentJob.job_type}</span>
-                  </span>
-
-                  <span className="flex items-center gap-2 shrink-0">
-                    <Lock size={14} /> {isApplied(currentJob.id) ? "Applied" : isUnlocked(currentJob.id) ? "Unlocked" : "Locked"}
-                  </span>
+                {/* Right: larger Save button */}
+                <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => { handleToggleBookmark(currentJob); resetCard(); }}
+                    className="flex flex-col items-center justify-center gap-2 py-4 px-5 rounded-xl border-2 border-gray-200 bg-white hover:bg-[#F3EAF5]/50 hover:border-[#148F8B]/30 transition-all hover:scale-105 active:scale-95"
+                    title={isInQueue(currentJob.id) ? "Remove from saved" : "Save job"}
+                  >
+                    <svg className="w-7 h-7" style={{ fill: isInQueue(currentJob.id) ? '#A63F8E' : 'none', stroke: isInQueue(currentJob.id) ? '#A63F8E' : '#9CA3AF', strokeWidth: '2' }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                    <span className="text-xs font-black uppercase" style={{ color: isInQueue(currentJob.id) ? '#A63F8E' : '#6B7280' }}>{isInQueue(currentJob.id) ? 'Saved' : 'Save'}</span>
+                  </button>
                 </div>
               </div>
 
-              {currentJob.description && (
-                <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
-                  {currentJob.description}
-                </p>
-              )}
-
-              {/* Action buttons - Skip, Save (bookmark fills in), Undo */}
-              <div className="pt-4 space-y-3" onClick={(e) => e.stopPropagation()}>
-                {/* Main actions: Skip and Save */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handlePass();
-                      resetCard();
-                    }}
-                    className="h-14 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-700 hover:border-gray-300 hover:bg-[#F3EAF5]/30 transition-all hover:scale-105 active:scale-95 duration-200"
-                  >
-                    Skip
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleToggleBookmark(currentJob);
-                      resetCard();
-                    }}
-                    className="h-14 rounded-xl bg-[#148F8B] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#148F8B]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
-                  >
-                    <svg 
-                      className="w-5 h-5 transition-all"
-                      style={{
-                        fill: isInQueue(currentJob.id) ? '#A63F8E' : 'none',
-                        stroke: 'white',
-                        strokeWidth: '2.5'
-                      }}
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </svg>
+              {/* Action buttons - Skip, Save, Undo */}
+              <div className="pt-2.5 mt-0.5 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { handlePass(); resetCard(); }} className="h-9 rounded-lg border-2 border-gray-200 bg-white font-bold uppercase text-[11px] text-gray-700 hover:border-gray-300 hover:bg-[#F3EAF5]/30 transition-all active:scale-95">Skip</button>
+                  <button type="button" onClick={() => { handleToggleBookmark(currentJob); resetCard(); }} className="h-9 rounded-lg bg-[#148F8B] text-white font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 hover:bg-[#006aa8] transition-all active:scale-95">
+                    <svg className="w-4 h-4" style={{ fill: isInQueue(currentJob.id) ? '#A63F8E' : 'none', stroke: 'white', strokeWidth: '2.5' }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
                     Save
                   </button>
                 </div>
-
-                {/* Undo + Passed Bin row */}
                 {passedJobs.length > 0 && (
-                  <div className="flex gap-2">
-                    {/* Undo — only for main deck swipes, not while reviewing recovered items */}
+                  <div className="flex gap-1.5">
                     {recoveredQueue.length === 0 && (
-                      <button
-                        type="button"
-                        onClick={handleUndo}
-                        className="flex-1 h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-sm text-gray-600 hover:border-[#148F8B] hover:text-[#148F8B] hover:bg-[#F3EAF5]/30 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                        </svg>
-                        Undo
-                      </button>
+                      <button type="button" onClick={handleUndo} className="flex-1 h-8 rounded-lg border border-gray-200 bg-white font-bold uppercase text-[10px] text-gray-600 hover:border-[#148F8B] hover:text-[#148F8B] flex items-center justify-center gap-1">Undo</button>
                     )}
-
-                    {/* Passed bin trigger */}
-                    <button
-                      type="button"
-                      onClick={() => setShowPassedBin(true)}
-                      className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-12 rounded-xl border-2 border-gray-200 bg-white font-bold uppercase tracking-wide text-[11px] text-gray-500 hover:border-[#A63F8E] hover:text-[#A63F8E] hover:bg-red-50 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200`}
-                    >
-                      <Trash2 size={14} />
-                      {passedJobs.length} Passed
-                    </button>
+                    <button type="button" onClick={() => setShowPassedBin(true)} className={`${recoveredQueue.length > 0 ? 'w-full' : 'flex-1'} h-8 rounded-lg border border-gray-200 bg-white font-bold uppercase text-[10px] text-gray-500 hover:border-[#A63F8E] hover:text-[#A63F8E] flex items-center justify-center gap-1`}><Trash2 size={11} /> {passedJobs.length} Passed</button>
                   </div>
                 )}
               </div>
@@ -510,11 +469,11 @@ export const JobsList: React.FC<JobsListProps> = ({
           )}
         </div>
       ) : (
-        /* DESKTOP: Moderate-detail cards + floating Apply button tied to bookmark queue */
-        <div className="space-y-6">
+        /* DESKTOP: Compact cards + floating Apply button tied to bookmark queue */
+        <div className="space-y-3">
           {/* Floating Apply button — visible when items are bookmarked */}
           {queue.length > 0 && (
-            <div className="fixed bottom-8 right-8 z-30">
+            <div className="fixed bottom-8 right-8 z-50">
               <button
                 type="button"
                 onClick={() => onShowPayment({ type: 'seeker', items: queue })}
@@ -531,70 +490,61 @@ export const JobsList: React.FC<JobsListProps> = ({
               <p className="text-gray-400 font-black text-xl uppercase tracking-widest">No jobs found</p>
             </div>
           ) : (
-            sortedJobs.map((job) => (
+            sortedJobs.map((job) => {
+              const categoryStyle = getJobCategoryStyle(job.job_category);
+              return (
               <div
                 key={job.id}
-                className="p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-lg transition-all group"
+                className="relative p-4 border border-gray-100 rounded-xl hover:shadow-lg transition-all group overflow-hidden flex"
+                style={{
+                  background: "#FAFAFA",
+                  borderLeft: `6px solid ${categoryStyle.borderColor}`,
+                }}
               >
-                <div className="flex items-start gap-6">
-                  {/* Job Info - clickable to open full detail modal */}
-                  <div
-                    className="flex-1 min-w-0 cursor-pointer space-y-3"
-                    onClick={() => onSelectJob(job)}
-                  >
-                   <h3 className="text-2xl font-black tracking-tight leading-tight">{job.title}</h3>
-
-<div className="flex flex-wrap gap-2 text-sm font-bold uppercase tracking-wider">
-  <span className="flex items-center gap-1.5 text-gray-500"><MapPin size={14} /> {job.location}</span>
-  <span className="flex items-center gap-1.5 text-[#148F8B]"><DollarSign size={14} /> {job.pay_range}</span>
-  <span className="flex items-center gap-1.5 text-gray-500"><Briefcase size={14} /> {job.job_type}</span>
-  {job.company_industry && (
-    <span className="inline-flex items-center px-3 py-1 bg-[#148F8B]/8 text-[#148F8B] rounded-lg whitespace-nowrap">{job.company_industry}</span>
-  )}
-  {job.company_size && (
-    <span className="inline-flex items-center px-3 py-1 bg-gray-50 text-gray-500 rounded-lg border border-gray-100 whitespace-nowrap">{job.company_size}</span>
-  )}
-</div>
-
-{job.description && (
-  <p className="text-base text-gray-600 leading-relaxed line-clamp-2">{job.description}</p>
-)}
-
-<p className="text-xs font-black text-[#148F8B] uppercase tracking-widest">Tap to see full details →</p>
+                {/* Layout: [ Left: illustration + metadata ] [ Middle: title + description + tap ] [ Right: Save ] */}
+                <div className="flex gap-4 items-stretch flex-1 min-w-0">
+                  {/* Left: illustration + info centered under it, no outline */}
+                  <div className="shrink-0 flex flex-col gap-2.5 items-center" style={{ width: 148 }}>
+                    {categoryStyle.svgPath ? (
+                      <div className="rounded-lg overflow-hidden opacity-90 flex items-center justify-center bg-white/60 border border-white/80 p-1" style={{ width: 132, height: 132 }}>
+                        <img src={`${import.meta.env.BASE_URL}${categoryStyle.svgPath}`} alt="" className="w-full h-full object-contain" />
+                      </div>
+                    ) : null}
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {job.company_industry && <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: "rgba(20, 143, 139, 0.15)", color: "#0D7377" }}>{job.company_industry}</span>}
+                      {job.job_category && <span className="inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded w-fit" style={{ background: categoryStyle.badgeBackground ?? "rgba(249, 115, 22, 0.1)", color: categoryStyle.textColor ?? "#C05621" }}>{job.job_category}</span>}
+                      {job.company_size && <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: "rgba(139, 92, 246, 0.18)", color: "#5B21B6" }}>{job.company_size}</span>}
+                    </div>
                   </div>
 
-                  {/* Bookmark button */}
-                  <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+                  {/* Middle: title, location/pay/type, description, tap */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-center gap-3 px-4 py-2 cursor-pointer" onClick={() => onSelectJob(job)}>
+                    <h3 className="text-lg font-black tracking-tight leading-snug break-words">{job.title}</h3>
+                    <div className="flex flex-wrap text-[11px] font-semibold text-gray-500" style={{ gap: "0.75rem 1.25rem" }}>
+                      <span className="flex items-center gap-1"><MapPin size={10} /> {job.location}</span>
+                      <span className="flex items-center gap-1 text-[#148F8B]"><DollarSign size={10} /> {job.pay_range}</span>
+                      <span className="flex items-center gap-1"><Briefcase size={10} /> {job.job_type}</span>
+                    </div>
+                    {job.description && <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{job.description}</p>}
+                    <p className="text-xs font-black text-[#148F8B] uppercase tracking-widest">Tap to see full details →</p>
+                  </div>
+
+                  {/* Right: larger Save button */}
+                  <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex items-center">
                     <button
                       type="button"
                       onClick={() => handleToggleBookmark(job)}
-                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-[#F3EAF5]/30 transition-all hover:scale-105 active:scale-95 duration-200"
+                      className="flex flex-col items-center justify-center gap-2 py-4 px-5 rounded-xl border-2 border-gray-200 bg-white hover:bg-[#F3EAF5]/50 hover:border-[#148F8B]/30 transition-all hover:scale-105 active:scale-95"
                       title={isInQueue(job.id) ? "Remove from saved" : "Save job"}
                     >
-                      <svg
-                        className="w-6 h-6 transition-all"
-                        style={{
-                          fill: isInQueue(job.id) ? '#A63F8E' : 'none',
-                          stroke: isInQueue(job.id) ? '#A63F8E' : '#9CA3AF',
-                          strokeWidth: '2'
-                        }}
-                        viewBox="0 0 24 24"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                      </svg>
-                      <span
-                        className="text-xs font-bold uppercase tracking-wide transition-all"
-                        style={{ color: isInQueue(job.id) ? '#A63F8E' : '#6B7280' }}
-                      >
-                        {isInQueue(job.id) ? 'Saved' : 'Save'}
-                      </span>
+                      <svg className="w-7 h-7" style={{ fill: isInQueue(job.id) ? '#A63F8E' : 'none', stroke: isInQueue(job.id) ? '#A63F8E' : '#9CA3AF', strokeWidth: '2' }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                      <span className="text-xs font-black uppercase" style={{ color: isInQueue(job.id) ? '#A63F8E' : '#6B7280' }}>{isInQueue(job.id) ? 'Saved' : 'Save'}</span>
                     </button>
                   </div>
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       )}
