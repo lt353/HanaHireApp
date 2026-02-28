@@ -4,6 +4,7 @@ import { Button } from "../ui/Button.tsx";
 import { JOB_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
 import { ViewType } from '../../App';
 import { supabase } from "../../utils/supabase/client";
+import { formatPhoneInput } from "../../utils/formatters";
 import { toast } from "sonner@2.0.3";
 
 const COMPANY_SIZES = [
@@ -25,7 +26,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
   const [industry, setIndustry] = useState(userProfile?.industry || "");
   const [companySize, setCompanySize] = useState("");
   const [location, setLocation] = useState(userProfile?.location || "");
-  const [phone, setPhone] = useState(userProfile?.phone || "");
+  const [phone, setPhone] = useState(formatPhoneInput(userProfile?.phone || ""));
   const [website, setWebsite] = useState(userProfile?.website || "");
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
   const [wantsBadge, setWantsBadge] = useState(false);
@@ -126,7 +127,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
       setIndustry(employer.industry || "");
       setCompanySize(employer.company_size || "");
       setLocation(employer.location || "");
-      setPhone(employer.phone || "");
+      setPhone(formatPhoneInput(employer.phone || ""));
       setWebsite(employer.website || "");
       setBusinessLicense(employer.business_license_number || "");
 
@@ -302,7 +303,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
                 placeholder="(808) 555-0000"
                 className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base"
               />

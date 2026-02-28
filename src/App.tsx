@@ -27,6 +27,7 @@ import { toast } from "sonner@2.0.3";
 import { mergeJobsWithEmployers } from "./utils/jobHelpers";
 import { projectId, publicAnonKey } from './utils/supabase/info';
 import { supabase } from './utils/supabase/client';
+import { formatPhoneInput } from './utils/formatters';
 
 
 // Components
@@ -55,6 +56,9 @@ import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } 
 
 export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
+
+const STORAGE_KEY_ANON_SAVED_JOB_IDS = "hanahire_anon_saved_job_ids";
+const STORAGE_KEY_PENDING_UNLOCK_JOB_IDS = "hanahire_pending_unlock_job_ids";
 
 // Demo account emails for demo flow (go through onboarding but don't create new records)
 const DEMO_ACCOUNTS = {
@@ -114,6 +118,16 @@ export default function App() {
   });
   const [userVisibility, setUserVisibility] = useState("broader");
   const [mediaType, setMediaType] = useState<"video" | "voice">("video");
+  // Anonymous flow: job IDs paid for but user not yet signed up — show signup modal and process after onboarding
+  const [pendingUnlockJobIds, setPendingUnlockJobIds] = useState<number[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     // Load data in background, don't block UI
@@ -323,6 +337,31 @@ export default function App() {
     toast.success(`Switched to ${newRole === 'seeker' ? 'Job Seeker' : 'Employer'} view`);
   };
 
+  // Hydrate seeker queue from localStorage when anonymous and jobs are available
+  useEffect(() => {
+    if (isLoggedIn || userProfile?.email || !jobs?.length) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_ANON_SAVED_JOB_IDS);
+      if (!raw) return;
+      const ids: number[] = JSON.parse(raw);
+      if (!ids.length) return;
+      const merged = mergeJobsWithEmployers(jobs.filter((j: any) => ids.includes(j.id)), employers);
+      setSeekerQueue(merged);
+    } catch {
+      // ignore
+    }
+  }, [jobs, employers, isLoggedIn, userProfile?.email]);
+
+  // Sync pendingUnlockJobIds to localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (pendingUnlockJobIds.length) {
+      localStorage.setItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS, JSON.stringify(pendingUnlockJobIds));
+    } else {
+      localStorage.removeItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
+    }
+  }, [pendingUnlockJobIds]);
+
   // Sync local editable items list whenever a new payment is initiated
   useEffect(() => {
     if (paymentTarget?.items) {
@@ -340,54 +379,63 @@ export default function App() {
       const itemIds = paymentItems.map((i: any) => i.id);
 
       if (paymentTarget.type === 'seeker') {
-        // Save unlocks and applications to database
-        if (userProfile?.email) {
-          const unlockRecords = itemIds.map(jobId => ({
-            user_email: userProfile.email,
-            user_role: 'seeker',
-            target_type: 'job',
-            target_id: jobId,
-            amount_paid: INTERACTION_FEE,
-            payment_method: 'card',
-            payment_status: 'completed'
+        // Anonymous: require signup first; process unlocks after onboarding. Skip role-select (they already applied as seeker).
+        if (!userProfile?.email) {
+          setPendingUnlockJobIds(itemIds);
+          setShowPaymentModal(false);
+          setPaymentTarget(null);
+          setAuthMode('signup');
+          setSignupStep('form');
+          setSignupRole('seeker');
+          setShowAuthModal(true);
+          toast.success("Payment successful! Create your profile to access the job(s).");
+          return;
+        }
+
+        // Logged-in seeker: save unlocks and applications to database
+        const unlockRecords = itemIds.map((jobId: number) => ({
+          user_email: userProfile.email,
+          user_role: 'seeker',
+          target_type: 'job',
+          target_id: jobId,
+          amount_paid: INTERACTION_FEE,
+          payment_method: 'card',
+          payment_status: 'completed'
+        }));
+
+        const { error: unlockError } = await supabase
+          .from('unlocks')
+          .insert(unlockRecords);
+
+        if (unlockError) {
+          console.error("Error saving unlock:", unlockError);
+        }
+
+        if (userProfile?.id) {
+          const applicationRecords = itemIds.map((jobId: number) => ({
+            candidate_id: userProfile.id,
+            job_id: jobId,
+            status: 'submitted'
           }));
 
-          const { error: unlockError } = await supabase
-            .from('unlocks')
-            .insert(unlockRecords);
+          const { error: applicationError } = await supabase
+            .from('applications')
+            .insert(applicationRecords);
 
-          if (unlockError) {
-            console.error("Error saving unlock:", unlockError);
+          if (applicationError) {
+            console.error("Error saving application:", applicationError);
           }
+        }
 
-          // Save applications to database
-          if (userProfile?.id) {
-            const applicationRecords = itemIds.map(jobId => ({
-              candidate_id: userProfile.id,
-              job_id: jobId,
-              status: 'submitted'
-            }));
+        const { error: deleteError } = await supabase
+          .from('saved_items')
+          .delete()
+          .eq('user_email', userProfile.email)
+          .eq('item_type', 'job')
+          .in('item_id', itemIds);
 
-            const { error: applicationError } = await supabase
-              .from('applications')
-              .insert(applicationRecords);
-
-            if (applicationError) {
-              console.error("Error saving application:", applicationError);
-            }
-          }
-
-          // Remove from saved_items after unlocking
-          const { error: deleteError } = await supabase
-            .from('saved_items')
-            .delete()
-            .eq('user_email', userProfile.email)
-            .eq('item_type', 'job')
-            .in('item_id', itemIds);
-
-          if (deleteError) {
-            console.error("Error removing from saved items:", deleteError);
-          }
+        if (deleteError) {
+          console.error("Error removing from saved items:", deleteError);
         }
 
         setUnlockedJobIds([...unlockedJobIds, ...itemIds]);
@@ -569,7 +617,6 @@ export default function App() {
       onAddToQueue={async (j) => {
         if (seekerQueue.find(q => q.id === j.id)) return;
 
-        // Save to database
         if (userProfile?.email) {
           const { error } = await supabase
             .from('saved_items')
@@ -579,17 +626,23 @@ export default function App() {
               item_type: 'job',
               item_id: j.id
             }]);
-
-          if (error && error.code !== '23505') { // Ignore unique constraint violations
+          if (error && error.code !== '23505') {
             console.error("Error saving item:", error);
           }
         }
 
-        setSeekerQueue([...seekerQueue, j]);
+        const nextQueue = [...seekerQueue, j];
+        setSeekerQueue(nextQueue);
+        if (!userProfile?.email && typeof window !== "undefined") {
+          try {
+            localStorage.setItem(STORAGE_KEY_ANON_SAVED_JOB_IDS, JSON.stringify(nextQueue.map((q: any) => q.id)));
+          } catch {
+            // ignore
+          }
+        }
         toast.success("Added to Queue");
       }}
       onRemoveFromQueue={async (id) => {
-        // Remove from database
         if (userProfile?.email) {
           const { error } = await supabase
             .from('saved_items')
@@ -597,13 +650,20 @@ export default function App() {
             .eq('user_email', userProfile.email)
             .eq('item_type', 'job')
             .eq('item_id', id);
-
           if (error) {
             console.error("Error removing saved item:", error);
           }
         }
 
-        setSeekerQueue(seekerQueue.filter(q => q.id !== id));
+        const nextQueue = seekerQueue.filter(q => q.id !== id);
+        setSeekerQueue(nextQueue);
+        if (!userProfile?.email && typeof window !== "undefined") {
+          try {
+            localStorage.setItem(STORAGE_KEY_ANON_SAVED_JOB_IDS, JSON.stringify(nextQueue.map((q: any) => q.id)));
+          } catch {
+            // ignore
+          }
+        }
         toast.success("Removed from saved");
       }}
       onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
@@ -763,9 +823,55 @@ export default function App() {
           <SeekerOnboarding
             userProfile={userProfile}
             onComplete={async (profileData) => {
+              const seekerEmail = profileData.email;
+              const candidateId = profileData.candidateId ?? profileData.id;
+
+              const migrateAnonSavedAndPendingUnlocks = async () => {
+                if (typeof window === "undefined" || !seekerEmail) return;
+                try {
+                  const anonRaw = localStorage.getItem(STORAGE_KEY_ANON_SAVED_JOB_IDS);
+                  const anonIds: number[] = anonRaw ? JSON.parse(anonRaw) : [];
+                  if (anonIds.length) {
+                    for (const itemId of anonIds) {
+                      await supabase.from('saved_items').insert([{
+                        user_email: seekerEmail,
+                        user_role: 'seeker',
+                        item_type: 'job',
+                        item_id: itemId
+                      }]);
+                    }
+                    await fetchSavedItems(seekerEmail, 'seeker');
+                    localStorage.removeItem(STORAGE_KEY_ANON_SAVED_JOB_IDS);
+                  }
+                  const pendingRaw = localStorage.getItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
+                  const pendingIds: number[] = pendingRaw ? JSON.parse(pendingRaw) : [];
+                  if (pendingIds.length && candidateId) {
+                    await supabase.from('unlocks').insert(pendingIds.map((jobId: number) => ({
+                      user_email: seekerEmail,
+                      user_role: 'seeker',
+                      target_type: 'job',
+                      target_id: jobId,
+                      amount_paid: INTERACTION_FEE,
+                      payment_method: 'card',
+                      payment_status: 'completed'
+                    })));
+                    await supabase.from('applications').insert(pendingIds.map((jobId: number) => ({
+                      candidate_id: candidateId,
+                      job_id: jobId,
+                      status: 'submitted'
+                    })));
+                    setUnlockedJobIds(prev => [...prev, ...pendingIds]);
+                    setAppliedJobIds(prev => [...prev, ...pendingIds]);
+                    setPendingUnlockJobIds([]);
+                    localStorage.removeItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
+                  }
+                } catch (e) {
+                  console.error("Migration of saved jobs or pending unlocks failed:", e);
+                }
+              };
+
               // Check if this is a demo account
               if (profileData.isDemoAccount) {
-                // Demo account: fetch existing profile instead of updating
                 const { data: existingCandidate } = await supabase
                   .from('candidates')
                   .select('*')
@@ -773,6 +879,7 @@ export default function App() {
                   .single();
 
                 if (existingCandidate) {
+                  await migrateAnonSavedAndPendingUnlocks();
                   await Promise.all([
                     fetchApplications(existingCandidate.id),
                     fetchUnlocks(existingCandidate.email),
@@ -805,6 +912,9 @@ export default function App() {
                 return;
               }
 
+              // Regular account: migrate anon saved + pending unlocks, then update candidates table
+              await migrateAnonSavedAndPendingUnlocks();
+
               // Regular account: update candidates table with onboarding data
               if (profileData.candidateId) {
                 try {
@@ -822,6 +932,9 @@ export default function App() {
                       job_types_seeking: profileData.jobTypesSeeking || [],
                       preferred_job_categories: profileData.preferredJobCategories || [],
                       display_title: profileData.displayTitle || null,
+                      video_url: profileData.video_url || null,
+                      video_thumbnail_url: profileData.video_thumbnail_url || null,
+                      visibility_preference: profileData.visibility_preference || 'broad',
                       is_profile_complete: true,
                       updated_at: new Date().toISOString()
                     })
@@ -1030,15 +1143,27 @@ export default function App() {
                   let detectedRole: 'seeker' | 'employer' = 'seeker';
                   let fullProfile: any = null;
 
-                  // First check candidates table
+                  // First check candidates table (explicit select + maybeSingle avoids 406 when no row)
                   const { data: candidate } = await supabase
                     .from('candidates')
-                    .select('*')
+                    .select('id, name, email, phone, location, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
                     .eq('email', email)
-                    .single();
+                    .maybeSingle();
 
                   if (candidate) {
                     detectedRole = 'seeker';
+                    try {
+                      const anonRaw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY_ANON_SAVED_JOB_IDS) : null;
+                      const anonIds: number[] = anonRaw ? JSON.parse(anonRaw) : [];
+                      if (anonIds.length) {
+                        for (const itemId of anonIds) {
+                          await supabase.from('saved_items').insert([{ user_email: email, user_role: 'seeker', item_type: 'job', item_id: itemId }]);
+                        }
+                        localStorage.removeItem(STORAGE_KEY_ANON_SAVED_JOB_IDS);
+                      }
+                    } catch {
+                      // ignore
+                    }
                     await Promise.all([
                       fetchApplications(candidate.id),
                       fetchUnlocks(email),
@@ -1055,7 +1180,7 @@ export default function App() {
                       experience: candidate.years_experience,
                       education: candidate.education,
                       availability: candidate.availability,
-                      targetPay: candidate.preferred_pay_range || candidate.target_pay,
+                      targetPay: candidate.preferred_pay_range,
                       industries: candidate.industries_interested || [],
                       preferredJobCategories: candidate.preferred_job_categories || [],
                       videoThumbnailUrl: candidate.video_thumbnail_url,
@@ -1063,12 +1188,12 @@ export default function App() {
                       id: candidate.id
                     };
                   } else {
-                    // If not a candidate, check employers table
+                    // If not a candidate, check employers table (maybeSingle avoids 406 when no row)
                     const { data: employer } = await supabase
                       .from('employers')
                       .select('*')
                       .eq('email', email)
-                      .single();
+                      .maybeSingle();
 
                     if (employer) {
                       detectedRole = 'employer';
@@ -1182,6 +1307,13 @@ export default function App() {
             ) : signupStep === 'role-select' ? (
               /* Signup Step 1: Role Selection */
               <div className="space-y-8">
+                {pendingUnlockJobIds.length > 0 && (
+                  <div className="p-4 rounded-2xl bg-[#148F8B]/10 border border-[#148F8B]/20">
+                    <p className="text-center text-[#148F8B] font-bold text-base">
+                      Create your account to access {pendingUnlockJobIds.length === 1 ? "this job" : "these jobs"} and apply.
+                    </p>
+                  </div>
+                )}
                 <p className="text-center text-gray-700 font-medium text-lg">What brings you to HanaHire?</p>
 
                 <div className="space-y-4">
@@ -1239,12 +1371,21 @@ export default function App() {
             ) : (
               /* Signup Step 2: Registration Form */
               <div className="space-y-8">
-                <button
-                  onClick={() => { setSignupStep('role-select'); setSignupRole(null); setSignupFormData({}); }}
-                  className="text-xs font-black text-gray-600 uppercase tracking-widest hover:text-[#148F8B] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
-                >
-                  &larr; Back to role selection
-                </button>
+                {pendingUnlockJobIds.length === 0 && (
+                  <button
+                    onClick={() => { setSignupStep('role-select'); setSignupRole(null); setSignupFormData({}); }}
+                    className="text-xs font-black text-gray-600 uppercase tracking-widest hover:text-[#148F8B] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+                  >
+                    &larr; Back to role selection
+                  </button>
+                )}
+                {pendingUnlockJobIds.length > 0 && (
+                  <div className="p-4 rounded-2xl bg-[#148F8B]/10 border border-[#148F8B]/20">
+                    <p className="text-center text-[#148F8B] font-bold text-base">
+                      Payment successful! Create your profile to access {pendingUnlockJobIds.length === 1 ? "this job" : "these jobs"}.
+                    </p>
+                  </div>
+                )}
 
                 {/* Demo Auto-Fill Button */}
                 <button
@@ -1427,12 +1568,12 @@ export default function App() {
                         return;
                       }
 
-                      // Check if email already exists — if so, just log them in
+                      // Check if email already exists — if so, just log them in (maybeSingle avoids 406 when no row)
                       const { data: existingCandidate } = await supabase
                         .from('candidates')
-                        .select('*')
+                        .select('id, name, email, phone, location, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
                         .eq('email', signupFormData.email)
-                        .single();
+                        .maybeSingle();
 
                       if (existingCandidate) {
                         await Promise.all([fetchApplications(existingCandidate.id), fetchUnlocks(signupFormData.email), fetchSavedItems(signupFormData.email, 'seeker')]);
@@ -1448,7 +1589,7 @@ export default function App() {
                           experience: existingCandidate.years_experience,
                           education: existingCandidate.education,
                           availability: existingCandidate.availability,
-                          targetPay: existingCandidate.preferred_pay_range || existingCandidate.target_pay,
+                          targetPay: existingCandidate.preferred_pay_range,
                           industries: existingCandidate.industries_interested || [],
                           candidateId: existingCandidate.id,
                           id: existingCandidate.id
@@ -1471,12 +1612,12 @@ export default function App() {
                           phone: signupFormData.phone || null,
                           location: signupFormData.location || null,
                         }])
-                        .select()
+                        .select('id')
                         .single();
 
                       if (candidateError) {
                         console.error("Error creating candidate:", candidateError);
-                        toast.error(`Failed to create candidate account: ${candidateError.message}`);
+                        toast.error(`Failed to create account: ${candidateError.message}`);
                         setIsSignupLoading(false);
                         return;
                       }
@@ -1520,7 +1661,7 @@ export default function App() {
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
-                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base" />
+                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: formatPhoneInput(e.target.value) }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Location</label>
@@ -1549,7 +1690,7 @@ export default function App() {
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
-                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: e.target.value }))} placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base" />
+                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: formatPhoneInput(e.target.value) }))} placeholder="(808) 555-9876" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base" />
                          </div>
                          <div className="space-y-3">
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Industry</label>

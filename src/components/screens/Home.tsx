@@ -62,7 +62,6 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
               alt="Job Seeker Filming" 
               className="w-full h-full object-cover transition-transform duration-[5s] group-hover:scale-110" 
               loading="eager"
-              fetchPriority="high"
               decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>

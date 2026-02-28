@@ -20,6 +20,7 @@ import { toast } from "sonner@2.0.3";
 import { supabase } from '../../utils/supabase/client';
 import { ViewType } from '../../App';
 import { JOB_CATEGORIES } from "../../data/mockData";
+import { formatPhoneInput } from "../../utils/formatters";
 
 // API disabled - jobs stored locally
 // const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
@@ -262,7 +263,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         is_anonymous: existingJob.is_anonymous !== false,
         company_name: userProfile?.businessName || "",  // From employers table via userProfile
         contact_email: userProfile?.email || "",  // From employers table via userProfile
-        contact_phone: userProfile?.phone || "",  // From employers table via userProfile
+        contact_phone: formatPhoneInput(userProfile?.phone || ""),  // From employers table via userProfile
         company_description: userProfile?.bio || "",  // From employers table via userProfile
         video_url: existingJob.video_url || "",
         image_url: userProfile?.companyLogoUrl || ""  // From employers table via userProfile
@@ -286,7 +287,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
           ...prev,
           company_name: userProfile.businessName || prev.company_name || "",
           contact_email: userProfile.email || prev.contact_email || "",
-          contact_phone: userProfile.phone || prev.contact_phone || "",
+          contact_phone: formatPhoneInput(userProfile.phone || prev.contact_phone || ""),
           industry: userProfile.industry || prev.industry,
           company_size: userProfile.companySize || prev.company_size,
           location: userProfile.location || prev.location,
@@ -1419,7 +1420,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                         type="tel"
                         className="w-full p-5 rounded-2xl bg-white border border-gray-200 text-gray-900 font-bold shadow-sm"
                         value={formData.contact_phone}
-                        onChange={(e) => setFormData((prev: any) => ({...prev, contact_phone: e.target.value}))}
+                        onChange={(e) => setFormData((prev: any) => ({...prev, contact_phone: formatPhoneInput(e.target.value)}))}
                         placeholder="(808) 555-0123"
                       />
                     </div>

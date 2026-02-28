@@ -69,8 +69,10 @@ export const CANDIDATE_CATEGORIES = {
     'High School', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Vocational Training'
   ],
   targetPayRanges: [
-    '$15-20/hr', '$20-25/hr', '$25-30/hr', '$30-35/hr', '$35-40/hr', '$40+/hr', 
-    '$30-40k/year', '$40-50k/year', '$50-60k/year', '$60k+/year'
+    '$15-18/hr', '$18-22/hr', '$20-25/hr', '$22-28/hr', '$25-30/hr', '$28-35/hr',
+    '$30-35/hr', '$35-40/hr', '$40-45/hr', '$40+/hr', '$45+/hr', '$50+/hr',
+    '$30-40k/year', '$40-50k/year', '$50-60k/year', '$60-75k/year', '$60k+/year', '$75k+/year',
+    'Commission-based', 'Negotiable'
   ],
   availability: [
     'Immediate', '2 weeks notice', 'Flexible', 'Remote preferred', 

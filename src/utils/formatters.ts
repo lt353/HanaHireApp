@@ -1,3 +1,12 @@
+/** Format phone as (XXX) XXX-XXXX. Input: raw string (digits or existing formatted). Output: formatted, max 10 digits. */
+export function formatPhoneInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+  if (digits.length === 0) return "";
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 // Utility function to format candidate titles based on Supabase table fields
 export const formatCandidateTitle = (candidate: any): string => {
   if (!candidate) return "Verified Talent";

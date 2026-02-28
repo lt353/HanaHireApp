@@ -1,8 +1,123 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic } from "lucide-react";
+import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic, ChevronDown, Check, X, Loader2 } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
+import { Progress } from "../ui/progress.tsx";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES, JOB_CATEGORIES } from "../../data/mockData";
 import { ViewType } from '../../App';
+import { VideoIntroModal } from "./VideoIntroModal";
+
+/** Multi-select dropdown: trigger opens menu with checkboxes; selected items appear as removable pills outside; custom input below. */
+function MultiSelectDropdown({
+  label,
+  selectedCount,
+  options,
+  selected,
+  onToggle,
+  onRemove,
+  customPlaceholder,
+  customValue,
+  onCustomChange,
+  onCustomKeyDown,
+  id,
+}: {
+  label: string;
+  selectedCount: number;
+  options: string[];
+  selected: string[];
+  onToggle: (item: string) => void;
+  onRemove: (item: string) => void;
+  customPlaceholder: string;
+  customValue: string;
+  onCustomChange: (v: string) => void;
+  onCustomKeyDown: (e: React.KeyboardEvent) => void;
+  id: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="space-y-3">
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">{label}</p>
+      {/* Pills outside dropdown */}
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selected.map((item) => (
+            <span
+              key={item}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md"
+            >
+              <span>{item}</span>
+              <button
+                type="button"
+                onClick={() => onRemove(item)}
+                className="p-0.5 rounded hover:bg-white/20 transition-colors"
+                aria-label={`Remove ${item}`}
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      {/* Dropdown trigger */}
+      <button
+        type="button"
+        id={id}
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 hover:border-[#148F8B]/30 font-bold text-base text-left"
+      >
+        <span className={selected.length > 0 ? "text-gray-800" : "text-gray-500"}>
+          {selected.length > 0 ? `${selectedCount} selected` : "Select..."}
+        </span>
+        <ChevronDown size={18} className={`text-gray-500 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {/* Dropdown panel - multi-column grid */}
+      {open && (
+        <div className="border border-[#148F8B]/20 rounded-xl bg-white shadow-xl shadow-[#148F8B]/5 max-h-64 overflow-y-auto p-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+            {options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => onToggle(opt)}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all ${
+                  selected.includes(opt)
+                    ? "bg-[#148F8B]/15 text-[#148F8B] font-semibold"
+                    : "hover:bg-[#148F8B]/5 text-gray-700 font-medium"
+                }`}
+              >
+                <span className="w-5 h-5 rounded-md border-2 border-current flex items-center justify-center shrink-0">
+                  {selected.includes(opt) ? <Check size={12} strokeWidth={3} /> : null}
+                </span>
+                <span className="text-xs truncate">{opt}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Custom input below */}
+      <div className="space-y-1">
+        <input
+          type="text"
+          value={customValue}
+          onChange={(e) => onCustomChange(e.target.value)}
+          onKeyDown={onCustomKeyDown}
+          placeholder={customPlaceholder}
+          className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+        />
+        <p className="text-[10px] text-gray-400 font-medium">Custom entries will appear as pills above.</p>
+      </div>
+    </div>
+  );
+}
 
 interface SeekerOnboardingProps {
   userProfile: any;
@@ -14,9 +129,9 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [bio, setBio] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [experience, setExperience] = useState("");
-  const [education, setEducation] = useState("");
   const [availability, setAvailability] = useState("");
-  const [targetPay, setTargetPay] = useState("");
+  const [selectedTargetPays, setSelectedTargetPays] = useState<string[]>([]);
+  const [selectedEducation, setSelectedEducation] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedWorkStyles, setSelectedWorkStyles] = useState<string[]>([]);
   const [jobTypesSeeking, setJobTypesSeeking] = useState<string[]>([]);
@@ -29,6 +144,25 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [customIndustry, setCustomIndustry] = useState("");
   const [customWorkStyle, setCustomWorkStyle] = useState("");
   const [customJobType, setCustomJobType] = useState("");
+  const [customJobCategory, setCustomJobCategory] = useState("");
+  const [customTargetPay, setCustomTargetPay] = useState("");
+  const [customEducation, setCustomEducation] = useState("");
+
+  // Video intro (required)
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState("");
+  const [videoDuration, setVideoDuration] = useState<number>(0);
+  const [videoUploadStatus, setVideoUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0); // 0–1 (estimated)
+  const [videoUploadEstimateSeconds, setVideoUploadEstimateSeconds] = useState(0);
+  const videoUploadTimerRef = useRef<number | null>(null);
+  const [visibilityPreference, setVisibilityPreference] = useState<"broad" | "limited">("broad");
+  const [showVideoModal, setShowVideoModal] = useState(false);
+
+  // Validation: highlight first missing required field
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // --- Speech to Text (Web Speech API) for "About You" bio ---
   const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
@@ -147,11 +281,9 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       setBio(userProfile.bio || "");
       setSelectedSkills(userProfile.skills || []);
       setExperience(mapExperience(userProfile.experience));
-      // For education / availability / pay, keep the raw DB strings and let the user
-      // either pick a preset or type their own in the companion text inputs.
-      setEducation(userProfile.education || "");
       setAvailability(userProfile.availability || "");
-      setTargetPay(userProfile.targetPay || "");
+      setSelectedTargetPays(userProfile.targetPay ? (Array.isArray(userProfile.targetPay) ? userProfile.targetPay : [userProfile.targetPay]) : []);
+      setSelectedEducation(userProfile.education ? (Array.isArray(userProfile.education) ? userProfile.education : [userProfile.education]) : []);
       setSelectedIndustries(userProfile.industries || []);
       setSelectedWorkStyles(userProfile.workStyles || []);
       setJobTypesSeeking(userProfile.jobTypesSeeking || []);
@@ -168,9 +300,9 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
     setBio(d.bio);
     setSelectedSkills(d.skills);
     setExperience(d.experience);
-    setEducation(d.education);
     setAvailability(d.availability);
-    setTargetPay(d.targetPay);
+    setSelectedTargetPays(d.targetPay ? [d.targetPay] : []);
+    setSelectedEducation(d.education ? [d.education] : []);
     setSelectedIndustries(d.industries);
     setSelectedWorkStyles(["Collaborative", "Outgoing", "Energetic"]);
     setJobTypesSeeking(["Full-time", "Part-time"]);
@@ -180,31 +312,67 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   };
 
   const handleSubmit = () => {
+    setValidationError(null);
+
+    const required = [
+      { key: "video", ok: !!videoUrl, ref: "video" },
+      { key: "bio", ok: bio.length > 0, ref: "bio" },
+      { key: "skills", ok: selectedSkills.length > 0, ref: "skills" },
+      { key: "experience", ok: experience.length > 0, ref: "experience" },
+      { key: "industries", ok: selectedIndustries.length > 0, ref: "industries" },
+      { key: "preferredJobTypes", ok: preferredJobCategories.length > 0, ref: "preferredJobTypes" },
+      { key: "availability", ok: availability.length > 0, ref: "availability" },
+      { key: "targetPay", ok: selectedTargetPays.length > 0, ref: "targetPay" },
+      { key: "jobTypesSeeking", ok: jobTypesSeeking.length > 0, ref: "jobTypesSeeking" },
+    ];
+    const firstMissing = required.find((r) => !r.ok);
+    if (firstMissing) {
+      const labels: Record<string, string> = {
+        video: "Video Intro",
+        bio: "About You",
+        skills: "Skills",
+        experience: "Experience",
+        industries: "Industries of Interest",
+        preferredJobTypes: "Preferred Job Types",
+        availability: "Availability",
+        targetPay: "Target Pay",
+        jobTypesSeeking: "Job Types Seeking",
+      };
+      setValidationError(`Please complete: ${labels[firstMissing.key] || firstMissing.key}`);
+      sectionRefs.current[firstMissing.ref]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     const profileData = {
       ...userProfile,
       bio,
       skills: selectedSkills,
       experience,
-      education,
+      education: selectedEducation.join(", ") || undefined,
       availability,
-      targetPay,
+      targetPay: selectedTargetPays.join(", ") || undefined,
       industries: selectedIndustries,
       workStyles: selectedWorkStyles,
       jobTypesSeeking,
       preferredJobCategories,
       displayTitle: useCustomTitle && customTitle.trim() ? customTitle.trim() : systemTitle,
+      video_url: videoUrl || undefined,
+      video_thumbnail_url: videoThumbnailUrl || undefined,
+      visibility_preference: visibilityPreference,
     };
     onComplete(profileData);
   };
 
   const filledSections = [
+    !!videoUrl,
     bio.length > 0,
     selectedSkills.length > 0,
     experience.length > 0,
-    education.length > 0,
-    availability.length > 0,
-    targetPay.length > 0,
     selectedIndustries.length > 0,
+    preferredJobCategories.length > 0,
+    availability.length > 0,
+    selectedTargetPays.length > 0,
+    jobTypesSeeking.length > 0,
   ].filter(Boolean).length;
 
   return (
@@ -225,12 +393,17 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Profile Progress</span>
-            <span className="text-sm font-black text-[#148F8B]">{filledSections}/7 sections</span>
+            <span className="text-sm font-black text-[#148F8B]">{filledSections} of 9 sections complete</span>
           </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#148F8B] rounded-full transition-all duration-500"
-              style={{ width: `${(filledSections / 7) * 100}%` }}
+              className="h-full bg-[#148F8B] rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${(filledSections / 9) * 100}%` }}
+              role="progressbar"
+              aria-valuenow={filledSections}
+              aria-valuemin={0}
+              aria-valuemax={9}
+              aria-label="Profile sections complete"
             />
           </div>
         </div>
@@ -247,8 +420,125 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         </button>
 
         <div className="space-y-8">
-          {/* Bio */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
+          {/* Video Intro (Required) - first */}
+          <div
+            ref={(el) => { sectionRefs.current["video"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && !videoUrl ? "border-red-400" : "border-gray-100"}`}
+          >
+            <div className="flex items-center gap-3">
+              {videoUrl && <CheckCircle size={18} className="text-[#148F8B]" />}
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Video Intro (Required)</h2>
+            </div>
+            <p className="text-sm text-gray-600 font-medium">
+              Here is where you sell yourself as an applicant—make it count!
+            </p>
+            {videoUrl ? (
+              <div className="space-y-3">
+                <div className="flex gap-4 items-start">
+                  {videoThumbnailUrl && (
+                    <div className="w-32 aspect-video rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                      <img src={videoThumbnailUrl} alt="Intro thumbnail" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                      {videoDuration >= 60 ? "1:00" : `${Math.floor(videoDuration / 60)}:${String(videoDuration % 60).padStart(2, "0")}`} video
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVideoUploadStatus("idle");
+                        setVideoUploadError(null);
+                        setShowVideoModal(true);
+                      }}
+                      className="mt-2 text-sm font-bold text-[#148F8B] hover:underline"
+                    >
+                      Re-record
+                    </button>
+                  </div>
+                </div>
+                {videoUploadStatus === "uploading" && (
+                  <div className="mt-3 p-4 rounded-2xl border-2 border-[#148F8B]/40 bg-[#148F8B]/10 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#148F8B]">
+                      <Loader2 size={16} className="animate-spin shrink-0" />
+                      <span>
+                        Uploading video…{" "}
+                        {videoUploadEstimateSeconds > 0 && (
+                          <span className="normal-case font-medium text-gray-700">
+                            (~{Math.max(1, Math.round((1 - videoUploadProgress) * videoUploadEstimateSeconds))}s left)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <Progress
+                      value={videoUploadProgress <= 0 ? 8 : Math.min(100, videoUploadProgress * 100)}
+                      className="h-3 w-full shrink-0 bg-gray-200 [&_[data-slot=progress-indicator]]:bg-[#148F8B]"
+                    />
+                    <p className="text-xs text-gray-700 font-medium">
+                      This runs in the background — keep filling out the rest of your profile.
+                    </p>
+                  </div>
+                )}
+                {videoUploadStatus === "error" && videoUploadError && (
+                  <p className="mt-2 text-xs text-red-500 font-medium">
+                    We couldn&apos;t save your latest video: {videoUploadError}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideoUploadStatus("idle");
+                    setVideoUploadError(null);
+                    setShowVideoModal(true);
+                  }}
+                  className="w-full py-12 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#148F8B] hover:border-[#148F8B]/50 hover:bg-[#148F8B]/5 transition-all"
+                >
+                  <Camera size={36} />
+                  <span className="font-black text-xs uppercase tracking-widest">Record or upload your 30–60 second intro</span>
+                  <span className="text-[10px] text-gray-400 font-medium">Tap to get started</span>
+                </button>
+                <p className="text-xs text-gray-500">
+                  You can record with your camera or upload a video file (up to 60 seconds, max 50 MB).
+                </p>
+                {videoUploadStatus === "uploading" && (
+                  <div className="mt-3 p-4 rounded-2xl border-2 border-[#148F8B]/40 bg-[#148F8B]/10 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#148F8B]">
+                      <Loader2 size={16} className="animate-spin shrink-0" />
+                      <span>
+                        Uploading video…{" "}
+                        {videoUploadEstimateSeconds > 0 && (
+                          <span className="normal-case font-medium text-gray-700">
+                            (~{Math.max(1, Math.round((1 - videoUploadProgress) * videoUploadEstimateSeconds))}s left)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <Progress
+                      value={videoUploadProgress <= 0 ? 8 : Math.min(100, videoUploadProgress * 100)}
+                      className="h-3 w-full shrink-0 bg-gray-200 [&_[data-slot=progress-indicator]]:bg-[#148F8B]"
+                    />
+                    <p className="text-xs text-gray-700 font-medium">
+                      This runs in the background — keep filling out the rest of your profile.
+                    </p>
+                  </div>
+                )}
+                {videoUploadStatus === "error" && videoUploadError && (
+                  <p className="mt-2 text-xs text-red-500 font-medium">
+                    We couldn&apos;t save your video: {videoUploadError}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* About You (Bio) */}
+          <div
+            ref={(el) => { sectionRefs.current["bio"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && !bio.length ? "border-red-400" : "border-gray-100"}`}
+          >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {bio.length > 0 && <CheckCircle size={18} className="text-[#A63F8B]" />}
@@ -331,445 +621,347 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
           </div>
 
           {/* Skills */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
+          <div
+            ref={(el) => { sectionRefs.current["skills"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && selectedSkills.length === 0 ? "border-red-400" : "border-gray-100"}`}
+          >
             <div className="flex items-center gap-3">
               {selectedSkills.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
               <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
-                Skills ({selectedSkills.length} selected)
+                Skills
               </h2>
             </div>
+            <MultiSelectDropdown
+              id="skills"
+              label="Select or add skills"
+              selectedCount={selectedSkills.length}
+              options={CANDIDATE_CATEGORIES.skills}
+              selected={selectedSkills}
+              onToggle={(item) => toggleItem(selectedSkills, setSelectedSkills, item)}
+              onRemove={(item) => setSelectedSkills(selectedSkills.filter((s) => s !== item))}
+              customPlaceholder="Type your own skill and press Enter"
+              customValue={customSkill}
+              onCustomChange={setCustomSkill}
+              onCustomKeyDown={(e) => {
+                if (e.key === "Enter" && customSkill.trim()) {
+                  e.preventDefault();
+                  const trimmed = customSkill.trim();
+                  if (!selectedSkills.includes(trimmed)) setSelectedSkills([...selectedSkills, trimmed]);
+                  setCustomSkill("");
+                }
+              }}
+            />
+          </div>
 
-            {selectedSkills.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {selectedSkills.map((skill) => (
+          {/* Experience - single select, shows as tag when selected */}
+          <div
+            ref={(el) => { sectionRefs.current["experience"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && !experience.length ? "border-red-400" : "border-gray-100"}`}
+          >
+            <div className="flex items-center gap-3">
+              {experience.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Experience</h2>
+            </div>
+            {experience.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md">
+                  <span>{experience}</span>
                   <button
-                    key={skill}
                     type="button"
-                    onClick={() => toggleItem(selectedSkills, setSelectedSkills, skill)}
-                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
+                    onClick={() => setExperience("")}
+                    className="p-0.5 rounded hover:bg-white/20 transition-colors"
+                    aria-label="Remove experience"
                   >
-                    <span>{skill}</span>
-                    <span className="text-[9px] opacity-80">×</span>
+                    <X size={12} />
                   </button>
-                ))}
+                </span>
               </div>
             )}
-
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
-              Suggested Skills
-            </p>
-            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-              {CANDIDATE_CATEGORIES.skills.map((skill) => (
-                <button
-                  key={skill}
-                  type="button"
-                  onClick={() => toggleItem(selectedSkills, setSelectedSkills, skill)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    selectedSkills.includes(skill)
-                      ? "bg-[#148F8B] text-white shadow-md"
-                      : "bg-[#F3EAF5]/30 text-gray-400 border border-gray-100 hover:border-[#148F8B]/30"
-                  }`}
-                >
-                  {skill}
-                </button>
+            <select
+              value={CANDIDATE_CATEGORIES.experience.includes(experience) ? experience : ""}
+              onChange={(e) => setExperience(e.target.value)}
+              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
+            >
+              <option value="">Select...</option>
+              {CANDIDATE_CATEGORIES.experience.map(level => (
+                <option key={level} value={level}>{level}</option>
               ))}
-            </div>
-
-            <div className="mt-3 space-y-1">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customSkill}
-                  onChange={(e) => setCustomSkill(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && customSkill.trim()) {
-                      const trimmed = customSkill.trim();
-                      if (!selectedSkills.includes(trimmed)) {
-                        setSelectedSkills([...selectedSkills, trimmed]);
-                      }
-                      setCustomSkill("");
-                    }
-                  }}
-                  placeholder="Type your own skill and press Enter"
-                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-                />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium">
-                Your custom skills will appear in the selected list above.
-              </p>
-            </div>
+            </select>
+            <input
+              type="text"
+              value={experience}
+              onChange={(e) => setExperience(e.target.value)}
+              placeholder="Or type your own (e.g. 7 years line cook)"
+              className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+            />
           </div>
 
-          {/* Experience & Education Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                {experience.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Experience</h2>
-              </div>
-              <select
-                value={CANDIDATE_CATEGORIES.experience.includes(experience) ? experience : ""}
-                onChange={(e) => setExperience(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
-              >
-                <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.experience.map(level => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
-                placeholder="Or type your own (e.g. 7 years line cook)"
-                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-              />
+          {/* Availability - single select, shows as tag when selected */}
+          <div
+            ref={(el) => { sectionRefs.current["availability"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && !availability.length ? "border-red-400" : "border-gray-100"}`}
+          >
+            <div className="flex items-center gap-3">
+              {availability.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Availability</h2>
             </div>
-
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                {education.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Education</h2>
+            {availability.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md">
+                  <span>{availability}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAvailability("")}
+                    className="p-0.5 rounded hover:bg-white/20 transition-colors"
+                    aria-label="Remove availability"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
               </div>
-              <select
-                value={CANDIDATE_CATEGORIES.education.includes(education) ? education : ""}
-                onChange={(e) => setEducation(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
-              >
-                <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.education.map(level => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={education}
-                onChange={(e) => setEducation(e.target.value)}
-                placeholder="Or type your own (e.g. Culinary Arts Certificate...)"
-                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-              />
-            </div>
+            )}
+            <select
+              value={CANDIDATE_CATEGORIES.availability.includes(availability) ? availability : ""}
+              onChange={(e) => setAvailability(e.target.value)}
+              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
+            >
+              <option value="">Select...</option>
+              {CANDIDATE_CATEGORIES.availability.map(a => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              value={availability}
+              onChange={(e) => setAvailability(e.target.value)}
+              placeholder="Or type your own (e.g. Two weeks notice)"
+              className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
+            />
           </div>
 
-          {/* Availability & Target Pay Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                {availability.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Availability</h2>
-              </div>
-              <select
-                value={CANDIDATE_CATEGORIES.availability.includes(availability) ? availability : ""}
-                onChange={(e) => setAvailability(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
-              >
-                <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.availability.map(a => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={availability}
-                onChange={(e) => setAvailability(e.target.value)}
-                placeholder="Or type your own (e.g. Two weeks notice)"
-                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-              />
+          {/* Target Pay - multi-select */}
+          <div
+            ref={(el) => { sectionRefs.current["targetPay"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && selectedTargetPays.length === 0 ? "border-red-400" : "border-gray-100"}`}
+          >
+            <div className="flex items-center gap-3">
+              {selectedTargetPays.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Target Pay</h2>
             </div>
-
-            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                {targetPay.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Target Pay</h2>
-              </div>
-              <select
-                value={CANDIDATE_CATEGORIES.targetPayRanges.includes(targetPay) ? targetPay : ""}
-                onChange={(e) => setTargetPay(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base mb-2"
-              >
-                <option value="">Select...</option>
-                {CANDIDATE_CATEGORIES.targetPayRanges.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                value={targetPay}
-                onChange={(e) => setTargetPay(e.target.value)}
-                placeholder="Or type your own (e.g. $24-30/hr)"
-                className="w-full p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-              />
-            </div>
+            <p className="text-xs text-gray-500 font-medium">Select one or more pay ranges you’re open to.</p>
+            <MultiSelectDropdown
+              id="target-pay"
+              label="Select or add pay ranges"
+              selectedCount={selectedTargetPays.length}
+              options={CANDIDATE_CATEGORIES.targetPayRanges}
+              selected={selectedTargetPays}
+              onToggle={(item) => toggleItem(selectedTargetPays, setSelectedTargetPays, item)}
+              onRemove={(item) => setSelectedTargetPays(selectedTargetPays.filter((p) => p !== item))}
+              customPlaceholder="Type your own (e.g. $24-30/hr) and press Enter"
+              customValue={customTargetPay}
+              onCustomChange={setCustomTargetPay}
+              onCustomKeyDown={(e) => {
+                if (e.key === "Enter" && customTargetPay.trim()) {
+                  e.preventDefault();
+                  const trimmed = customTargetPay.trim();
+                  if (!selectedTargetPays.includes(trimmed)) setSelectedTargetPays([...selectedTargetPays, trimmed]);
+                  setCustomTargetPay("");
+                }
+              }}
+            />
           </div>
 
-          {/* Industries */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
+          {/* Industries of Interest */}
+          <div
+            ref={(el) => { sectionRefs.current["industries"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && selectedIndustries.length === 0 ? "border-red-400" : "border-gray-100"}`}
+          >
             <div className="flex items-center gap-3">
               {selectedIndustries.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
               <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
-                Industries of Interest ({selectedIndustries.length})
+                Industries of Interest
               </h2>
             </div>
-
-            {selectedIndustries.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {selectedIndustries.map((ind) => (
-                  <button
-                    key={ind}
-                    type="button"
-                    onClick={() => toggleItem(selectedIndustries, setSelectedIndustries, ind)}
-                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
-                  >
-                    <span>{ind}</span>
-                    <span className="text-[9px] opacity-80">×</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
-              Suggested Industries
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {CANDIDATE_CATEGORIES.industries.map((ind) => (
-                <button
-                  key={ind}
-                  type="button"
-                  onClick={() => toggleItem(selectedIndustries, setSelectedIndustries, ind)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    selectedIndustries.includes(ind)
-                      ? "bg-[#148F8B] text-white shadow-md"
-                      : "bg-[#F3EAF5]/30 text-gray-400 border border-gray-100 hover:border-[#148F8B]/30"
-                  }`}
-                >
-                  {ind}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-3 space-y-1">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customIndustry}
-                  onChange={(e) => setCustomIndustry(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && customIndustry.trim()) {
-                      const trimmed = customIndustry.trim();
-                      if (!selectedIndustries.includes(trimmed)) {
-                        setSelectedIndustries([...selectedIndustries, trimmed]);
-                      }
-                      setCustomIndustry("");
-                    }
-                  }}
-                  placeholder="Type your own industry and press Enter"
-                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-                />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium">
-                Custom industries will appear in the selected list above.
-              </p>
-            </div>
+            <MultiSelectDropdown
+              id="industries"
+              label="Select or add industries"
+              selectedCount={selectedIndustries.length}
+              options={CANDIDATE_CATEGORIES.industries}
+              selected={selectedIndustries}
+              onToggle={(item) => toggleItem(selectedIndustries, setSelectedIndustries, item)}
+              onRemove={(item) => setSelectedIndustries(selectedIndustries.filter((i) => i !== item))}
+              customPlaceholder="Type your own industry and press Enter"
+              customValue={customIndustry}
+              onCustomChange={setCustomIndustry}
+              onCustomKeyDown={(e) => {
+                if (e.key === "Enter" && customIndustry.trim()) {
+                  e.preventDefault();
+                  const trimmed = customIndustry.trim();
+                  if (!selectedIndustries.includes(trimmed)) setSelectedIndustries([...selectedIndustries, trimmed]);
+                  setCustomIndustry("");
+                }
+              }}
+            />
           </div>
 
-          {/* Preferred Job Types / Categories */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
+          {/* Preferred Job Types (job categories) */}
+          <div
+            ref={(el) => { sectionRefs.current["preferredJobTypes"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && preferredJobCategories.length === 0 ? "border-red-400" : "border-gray-100"}`}
+          >
             <div className="flex items-center gap-3">
               {preferredJobCategories.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
               <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
-                Preferred Job Types ({preferredJobCategories.length})
+                Preferred Job Types
               </h2>
             </div>
             <p className="text-xs text-gray-500 font-medium">
               What type of work are you looking for?
             </p>
-
-            {preferredJobCategories.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {preferredJobCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => toggleItem(preferredJobCategories, setPreferredJobCategories, cat)}
-                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
-                  >
-                    <span>{cat}</span>
-                    <span className="text-[9px] opacity-80">×</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
-              Job Categories
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {JOB_CATEGORIES.jobCategories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => toggleItem(preferredJobCategories, setPreferredJobCategories, cat)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    preferredJobCategories.includes(cat)
-                      ? "bg-[#148F8B] text-white shadow-md"
-                      : "bg-[#F3EAF5]/30 text-gray-400 border border-gray-100 hover:border-[#148F8B]/30"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            <MultiSelectDropdown
+              id="job-categories"
+              label="Select job categories"
+              selectedCount={preferredJobCategories.length}
+              options={JOB_CATEGORIES.jobCategories}
+              selected={preferredJobCategories}
+              onToggle={(item) => toggleItem(preferredJobCategories, setPreferredJobCategories, item)}
+              onRemove={(item) => setPreferredJobCategories(preferredJobCategories.filter((c) => c !== item))}
+              customPlaceholder="Type your own and press Enter"
+              customValue={customJobCategory}
+              onCustomChange={setCustomJobCategory}
+              onCustomKeyDown={(e) => {
+                if (e.key === "Enter" && customJobCategory.trim()) {
+                  e.preventDefault();
+                  const trimmed = customJobCategory.trim();
+                  if (!preferredJobCategories.includes(trimmed)) setPreferredJobCategories([...preferredJobCategories, trimmed]);
+                  setCustomJobCategory("");
+                }
+              }}
+            />
           </div>
 
-          {/* Work Styles */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
-              Work Style ({selectedWorkStyles.length})
+          {/* Job Types Seeking (full-time, part-time, etc.) */}
+          <div
+            ref={(el) => { sectionRefs.current["jobTypesSeeking"] = el; }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && jobTypesSeeking.length === 0 ? "border-red-400" : "border-gray-100"}`}
+          >
+            <div className="flex items-center gap-3">
+              {jobTypesSeeking.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
+                Job Types Seeking
+              </h2>
+            </div>
+            <MultiSelectDropdown
+              id="job-types-seeking"
+              label="Select job types (e.g. full-time, part-time)"
+              selectedCount={jobTypesSeeking.length}
+              options={CANDIDATE_CATEGORIES.jobTypesSeeking}
+              selected={jobTypesSeeking}
+              onToggle={(item) => toggleItem(jobTypesSeeking, setJobTypesSeeking, item)}
+              onRemove={(item) => setJobTypesSeeking(jobTypesSeeking.filter((j) => j !== item))}
+              customPlaceholder="Type your own job type and press Enter"
+              customValue={customJobType}
+              onCustomChange={setCustomJobType}
+              onCustomKeyDown={(e) => {
+                if (e.key === "Enter" && customJobType.trim()) {
+                  e.preventDefault();
+                  const trimmed = customJobType.trim();
+                  if (!jobTypesSeeking.includes(trimmed)) setJobTypesSeeking([...jobTypesSeeking, trimmed]);
+                  setCustomJobType("");
+                }
+              }}
+            />
+          </div>
+
+          {/* Additional Information (Optional) */}
+          <div className="bg-gray-50/80 rounded-[2rem] border border-gray-100 p-6 space-y-6 shadow-sm">
+            <h2 className="text-xs font-black text-gray-500 uppercase tracking-[0.3em]">
+              Additional Information <span className="text-gray-400 font-bold normal-case">(Optional)</span>
             </h2>
-
-            {selectedWorkStyles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {selectedWorkStyles.map((style) => (
-                  <button
-                    key={style}
-                    type="button"
-                    onClick={() => toggleItem(selectedWorkStyles, setSelectedWorkStyles, style)}
-                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
-                  >
-                    <span>{style}</span>
-                    <span className="text-[9px] opacity-80">×</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
-              Suggested Work Styles
+            <p className="text-xs text-gray-500 -mt-2">
+              Not required for matching. Add if you’d like.
             </p>
-            <div className="flex flex-wrap gap-2">
-              {CANDIDATE_CATEGORIES.workStyles.map((style) => (
-                <button
-                  key={style}
-                  type="button"
-                  onClick={() => toggleItem(selectedWorkStyles, setSelectedWorkStyles, style)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    selectedWorkStyles.includes(style)
-                      ? "bg-[#148F8B] text-white shadow-md"
-                      : "bg-[#F3EAF5]/30 text-gray-400 border border-gray-100 hover:border-[#148F8B]/30"
-                  }`}
-                >
-                  {style}
-                </button>
-              ))}
+
+            {/* Education - Optional, multi-select with pills */}
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                Education <span className="text-gray-400 font-bold normal-case">(Optional)</span>
+              </h3>
+              <MultiSelectDropdown
+                id="education"
+                label="Select or add education"
+                selectedCount={selectedEducation.length}
+                options={CANDIDATE_CATEGORIES.education}
+                selected={selectedEducation}
+                onToggle={(item) => toggleItem(selectedEducation, setSelectedEducation, item)}
+                onRemove={(item) => setSelectedEducation(selectedEducation.filter((e) => e !== item))}
+                customPlaceholder="Type your own (e.g. Culinary Arts Certificate) and press Enter"
+                customValue={customEducation}
+                onCustomChange={setCustomEducation}
+                onCustomKeyDown={(e) => {
+                  if (e.key === "Enter" && customEducation.trim()) {
+                    e.preventDefault();
+                    const trimmed = customEducation.trim();
+                    if (!selectedEducation.includes(trimmed)) setSelectedEducation([...selectedEducation, trimmed]);
+                    setCustomEducation("");
+                  }
+                }}
+              />
             </div>
 
-            <div className="mt-3 space-y-1">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customWorkStyle}
-                  onChange={(e) => setCustomWorkStyle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && customWorkStyle.trim()) {
-                      const trimmed = customWorkStyle.trim();
-                      if (!selectedWorkStyles.includes(trimmed)) {
-                        setSelectedWorkStyles([...selectedWorkStyles, trimmed]);
-                      }
-                      setCustomWorkStyle("");
-                    }
-                  }}
-                  placeholder="Type your own work style and press Enter"
-                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-                />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium">
-                Custom work styles will appear in the selected list above.
-              </p>
+            {/* Work Styles - Optional */}
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                Work Styles <span className="text-gray-400 font-bold normal-case">(Optional)</span>
+              </h3>
+              <MultiSelectDropdown
+                id="work-styles"
+                label="Select or add work styles"
+                selectedCount={selectedWorkStyles.length}
+                options={CANDIDATE_CATEGORIES.workStyles}
+                selected={selectedWorkStyles}
+                onToggle={(item) => toggleItem(selectedWorkStyles, setSelectedWorkStyles, item)}
+                onRemove={(item) => setSelectedWorkStyles(selectedWorkStyles.filter((s) => s !== item))}
+                customPlaceholder="Type your own work style and press Enter"
+                customValue={customWorkStyle}
+                onCustomChange={setCustomWorkStyle}
+                onCustomKeyDown={(e) => {
+                  if (e.key === "Enter" && customWorkStyle.trim()) {
+                    e.preventDefault();
+                    const trimmed = customWorkStyle.trim();
+                    if (!selectedWorkStyles.includes(trimmed)) setSelectedWorkStyles([...selectedWorkStyles, trimmed]);
+                    setCustomWorkStyle("");
+                  }
+                }}
+              />
             </div>
           </div>
 
-          {/* Job Types Seeking */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">
-              Job Types Seeking ({jobTypesSeeking.length})
-            </h2>
-
-            {jobTypesSeeking.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {jobTypesSeeking.map((jt) => (
-                  <button
-                    key={jt}
-                    type="button"
-                    onClick={() => toggleItem(jobTypesSeeking, setJobTypesSeeking, jt)}
-                    className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#148F8B] text-white shadow-md flex items-center gap-1"
-                  >
-                    <span>{jt}</span>
-                    <span className="text-[9px] opacity-80">×</span>
-                  </button>
-                ))}
+          {/* Talent pool visibility - before launch */}
+          <div className="p-6 rounded-[2rem] bg-white border border-gray-100 shadow-sm">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={visibilityPreference === "broad"}
+                onChange={(e) => setVisibilityPreference(e.target.checked ? "broad" : "limited")}
+                className="rounded border-gray-300 text-[#148F8B] focus:ring-[#148F8B] w-4 h-4 mt-0.5"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Make my profile appear in talent pool</span>
+                <p className="text-xs text-gray-500 mt-1">
+                  If unchecked, your profile will only be visible to jobs you&apos;ve applied to.
+                </p>
               </div>
-            )}
-
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
-              Suggested Job Types
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {CANDIDATE_CATEGORIES.jobTypesSeeking.map((jt) => (
-                <button
-                  key={jt}
-                  type="button"
-                  onClick={() => toggleItem(jobTypesSeeking, setJobTypesSeeking, jt)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    jobTypesSeeking.includes(jt)
-                      ? "bg-[#148F8B] text-white shadow-md"
-                      : "bg-[#F3EAF5]/30 text-gray-400 border border-gray-100 hover:border-[#148F8B]/30"
-                  }`}
-                >
-                  {jt}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-3 space-y-1">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customJobType}
-                  onChange={(e) => setCustomJobType(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && customJobType.trim()) {
-                      const trimmed = customJobType.trim();
-                      if (!jobTypesSeeking.includes(trimmed)) {
-                        setJobTypesSeeking([...jobTypesSeeking, trimmed]);
-                      }
-                      setCustomJobType("");
-                    }
-                  }}
-                  placeholder="Type your own job type and press Enter"
-                  className="flex-1 p-3 rounded-xl bg-white border border-gray-100 focus:ring-2 ring-[#148F8B]/10 outline-none text-sm"
-                />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium">
-                Custom job types will appear in the selected list above.
-              </p>
-            </div>
-          </div>
-
-          {/* Video Intro Placeholder */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Video Intro (optional)</h2>
-            <button
-              onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#148F8B] hover:border-[#148F8B]/30 transition-all"
-            >
-              <Camera size={36} />
-              <span className="font-black text-xs uppercase tracking-widest">Record Your 30-Second Intro</span>
-              <span className="text-[10px] text-gray-400 font-medium">Show employers your personality</span>
-            </button>
+            </label>
           </div>
 
           {/* Submit */}
           <div className="pt-4 space-y-4">
+            {validationError && (
+              <p className="text-center text-red-500 font-bold text-sm" role="alert">
+                {validationError}
+              </p>
+            )}
             <Button
               onClick={handleSubmit}
               className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl shadow-[#148F8B]/20 flex items-center justify-center gap-3"
@@ -784,6 +976,56 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
           </div>
         </div>
       </div>
+
+      <VideoIntroModal
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+        onComplete={(url, thumbUrl, duration) => {
+          setVideoUrl(url);
+          setVideoThumbnailUrl(thumbUrl);
+          setVideoDuration(duration);
+          setVideoUploadStatus("success");
+          setVideoUploadError(null);
+          if (videoUploadTimerRef.current) {
+            window.clearInterval(videoUploadTimerRef.current);
+            videoUploadTimerRef.current = null;
+          }
+          setVideoUploadProgress(1);
+          setShowVideoModal(false);
+        }}
+        onThumbnailReady={(thumbUrl) => setVideoThumbnailUrl(thumbUrl)}
+        onUploadStart={({ estimatedSizeBytes, durationSeconds }) => {
+          setVideoUploadStatus("uploading");
+          setVideoUploadError(null);
+          // Rough estimate: assume ~2 MB/s upload speed, clamp between 8s and 90s
+          const estimatedSeconds = Math.max(
+            8,
+            Math.min(90, estimatedSizeBytes / (2 * 1024 * 1024) || durationSeconds || 15),
+          );
+          setVideoUploadEstimateSeconds(estimatedSeconds);
+          setVideoUploadProgress(0);
+
+          if (videoUploadTimerRef.current) {
+            window.clearInterval(videoUploadTimerRef.current);
+          }
+          const start = Date.now();
+          videoUploadTimerRef.current = window.setInterval(() => {
+            const elapsed = (Date.now() - start) / 1000;
+            const progress = Math.min(0.95, elapsed / estimatedSeconds);
+            setVideoUploadProgress(progress);
+          }, 500);
+        }}
+        onUploadError={(message) => {
+          setVideoUploadStatus("error");
+          setVideoUploadError(message);
+          if (videoUploadTimerRef.current) {
+            window.clearInterval(videoUploadTimerRef.current);
+            videoUploadTimerRef.current = null;
+          }
+          setVideoUploadProgress(0);
+        }}
+        candidateId={userProfile?.candidateId ?? userProfile?.id}
+      />
     </div>
   );
 };
