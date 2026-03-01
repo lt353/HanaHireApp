@@ -892,6 +892,7 @@ export default function App() {
                     phone: existingCandidate.phone,
                     location: existingCandidate.location,
                     videoThumbnailUrl: existingCandidate.video_thumbnail_url,
+                    videoUrl: existingCandidate.video_url,
                     bio: existingCandidate.bio,
                     skills: existingCandidate.skills || [],
                     experience: existingCandidate.years_experience,
@@ -1102,7 +1103,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FAF9F7] font-sans text-gray-900 selection:bg-[#148F8B]/10">
       
-      <Header 
+      <Header
         isRoleSelected={currentView !== "landing"}
         role={userRole}
         currentTab={currentView}
@@ -1116,6 +1117,7 @@ export default function App() {
         onShowAuth={handleShowAuth}
         onReset={() => { setCurrentView("landing"); }}
         isPaymentModalOpen={showPaymentModal}
+        isDemoAccount={userProfile?.isDemoAccount === true}
       />
 
       <main>
@@ -1146,7 +1148,7 @@ export default function App() {
                   // First check candidates table (explicit select + maybeSingle avoids 406 when no row)
                   const { data: candidate } = await supabase
                     .from('candidates')
-                    .select('id, name, email, phone, location, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
+                    .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
                     .eq('email', email)
                     .maybeSingle();
 
@@ -1184,6 +1186,7 @@ export default function App() {
                       industries: candidate.industries_interested || [],
                       preferredJobCategories: candidate.preferred_job_categories || [],
                       videoThumbnailUrl: candidate.video_thumbnail_url,
+                      videoUrl: candidate.video_url,
                       candidateId: candidate.id,
                       id: candidate.id
                     };
@@ -1532,6 +1535,8 @@ export default function App() {
                               name: candidate.name,
                               phone: candidate.phone,
                               location: candidate.location,
+                              videoThumbnailUrl: candidate.video_thumbnail_url,
+                              videoUrl: candidate.video_url,
                               bio: candidate.bio,
                               skills: candidate.skills || [],
                               experience: candidate.years_experience,
@@ -1571,7 +1576,7 @@ export default function App() {
                       // Check if email already exists — if so, just log them in (maybeSingle avoids 406 when no row)
                       const { data: existingCandidate } = await supabase
                         .from('candidates')
-                        .select('id, name, email, phone, location, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
+                        .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
                         .eq('email', signupFormData.email)
                         .maybeSingle();
 
@@ -1584,6 +1589,7 @@ export default function App() {
                           phone: existingCandidate.phone,
                           location: existingCandidate.location,
                           videoThumbnailUrl: existingCandidate.video_thumbnail_url,
+                          videoUrl: existingCandidate.video_url,
                           bio: existingCandidate.bio,
                           skills: existingCandidate.skills || [],
                           experience: existingCandidate.years_experience,

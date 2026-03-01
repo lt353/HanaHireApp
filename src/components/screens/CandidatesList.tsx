@@ -79,7 +79,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   onShowPayment,
   onShowFilters,
   onSelectCandidate,
-  interactionFee,
   viewerLocation,
   viewerIndustry,
 }) => {

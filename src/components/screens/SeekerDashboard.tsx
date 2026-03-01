@@ -1,13 +1,24 @@
-import React from "react";
-import { motion } from "motion/react";
-import { Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, BarChart3 } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, BarChart3, AlertTriangle, Trash2 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { ViewType } from '../../App';
+import { deleteCandidate } from "../../utils/deleteCandidate";
 
 interface SeekerDashboardProps {
   isLoggedIn: boolean;
-  userProfile?: any;
+  userProfile?: {
+    candidateId?: string;
+    video_url?: string;
+    video_thumbnail_url?: string;
+    name?: string;
+    location?: string;
+    skills?: string[];
+    preferredJobCategories?: string[];
+    industries?: string[];
+    [key: string]: any;
+  };
  onNavigate: (view: ViewType) => void;
   onShowMedia: () => void;
   onShowVisibility: () => void;
@@ -30,6 +41,29 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   onSelectJob,
   applicationCount = 0
 }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteAccount = async () => {
+    console.log("handleDeleteAccount userProfile:", userProfile);
+    if (!userProfile) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    const { error } = await deleteCandidate(
+      Number(userProfile.candidateId),
+      userProfile.video_url,
+      userProfile.video_thumbnail_url,
+    );
+    setIsDeleting(false);
+    if (error) {
+      setDeleteError(error);
+      return;
+    }
+    setShowDeleteConfirm(false);
+    onLogout();
+  };
+
   const getMatchMeta = (job: any) => {
     const preferredCategories: string[] = userProfile?.preferredJobCategories || [];
     const interestedIndustries: string[] = userProfile?.industries || [];
@@ -300,6 +334,100 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           </div>
         </div>
       )}
+      {/* Danger Zone */}
+      {isLoggedIn && (
+        <div className="border border-red-200 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden">
+          <div className="px-8 sm:px-12 py-6 sm:py-8 bg-red-50 flex items-center gap-3 border-b border-red-200">
+            <AlertTriangle size={20} className="text-red-500 shrink-0" />
+            <span className="font-black uppercase tracking-[0.2em] text-xs text-red-600">Danger Zone</span>
+          </div>
+          <div className="px-8 sm:px-12 py-8 sm:py-10 bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="space-y-1.5">
+              <p className="font-black text-lg tracking-tight text-gray-900">Delete Account</p>
+              <p className="text-sm text-gray-500 font-medium leading-relaxed max-w-md">
+                Permanently deletes your profile, video intro, and all associated data. This cannot be undone.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-2xl border-red-300 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-200 shrink-0"
+              onClick={() => { setDeleteError(null); setShowDeleteConfirm(true); }}
+            >
+              <Trash2 size={16} /> Delete Account
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) setShowDeleteConfirm(false); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="bg-white rounded-[2.5rem] p-8 sm:p-12 max-w-md w-full shadow-2xl space-y-8"
+            >
+              {/* Icon */}
+              <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center">
+                <AlertTriangle size={32} className="text-red-500" />
+              </div>
+
+              {/* Copy */}
+              <div className="space-y-3">
+                <h3 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900">Delete your account?</h3>
+                <p className="text-gray-500 font-medium leading-relaxed text-sm sm:text-base">
+                  This will permanently delete your candidate profile, your video intro, and your thumbnail from our servers.
+                </p>
+                <p className="text-red-600 font-black text-sm uppercase tracking-widest">This cannot be undone.</p>
+              </div>
+
+              {/* Error */}
+              {deleteError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
+                  <p className="text-red-700 font-bold text-sm">{deleteError}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-14 rounded-2xl border-gray-200"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 h-14 rounded-2xl bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-600/30"
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} /> Yes, Delete Everything
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

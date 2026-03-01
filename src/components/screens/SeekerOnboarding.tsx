@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic, ChevronDown, Check, X, Loader2 } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
-import { Progress } from "../ui/progress.tsx";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES, JOB_CATEGORIES } from "../../data/mockData";
 import { ViewType } from '../../App';
 import { VideoIntroModal } from "./VideoIntroModal";
@@ -154,9 +153,6 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [videoUploadStatus, setVideoUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
-  const [videoUploadProgress, setVideoUploadProgress] = useState(0); // 0–1 (estimated)
-  const [videoUploadEstimateSeconds, setVideoUploadEstimateSeconds] = useState(0);
-  const videoUploadTimerRef = useRef<number | null>(null);
   const [visibilityPreference, setVisibilityPreference] = useState<"broad" | "limited">("broad");
   const [showVideoModal, setShowVideoModal] = useState(false);
 
@@ -458,25 +454,15 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                   </div>
                 </div>
                 {videoUploadStatus === "uploading" && (
-                  <div className="mt-3 p-4 rounded-2xl border-2 border-[#148F8B]/40 bg-[#148F8B]/10 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#148F8B]">
-                      <Loader2 size={16} className="animate-spin shrink-0" />
-                      <span>
-                        Uploading video…{" "}
-                        {videoUploadEstimateSeconds > 0 && (
-                          <span className="normal-case font-medium text-gray-700">
-                            (~{Math.max(1, Math.round((1 - videoUploadProgress) * videoUploadEstimateSeconds))}s left)
-                          </span>
-                        )}
-                      </span>
+                  <div className="mt-3 rounded-2xl bg-[#148F8B]/5 px-4 py-3.5 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Loader2 size={14} className="text-[#148F8B] animate-spin shrink-0" />
+                      <p className="text-sm font-medium text-[#148F8B] tracking-tight">Uploading your video in the background…</p>
                     </div>
-                    <Progress
-                      value={videoUploadProgress <= 0 ? 8 : Math.min(100, videoUploadProgress * 100)}
-                      className="h-3 w-full shrink-0 bg-gray-200 [&_[data-slot=progress-indicator]]:bg-[#148F8B]"
-                    />
-                    <p className="text-xs text-gray-700 font-medium">
-                      This runs in the background — keep filling out the rest of your profile.
-                    </p>
+                    <div className="h-1 w-full rounded-full bg-[#148F8B]/15 overflow-hidden">
+                      <div className="h-full w-1/3 rounded-full bg-[#148F8B] animate-indeterminate" />
+                    </div>
+                    <p className="text-xs text-gray-400">Keep filling out your profile — we'll let you know when it's ready.</p>
                   </div>
                 )}
                 {videoUploadStatus === "error" && videoUploadError && (
@@ -504,25 +490,15 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                   You can record with your camera or upload a video file (up to 60 seconds, max 50 MB).
                 </p>
                 {videoUploadStatus === "uploading" && (
-                  <div className="mt-3 p-4 rounded-2xl border-2 border-[#148F8B]/40 bg-[#148F8B]/10 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#148F8B]">
-                      <Loader2 size={16} className="animate-spin shrink-0" />
-                      <span>
-                        Uploading video…{" "}
-                        {videoUploadEstimateSeconds > 0 && (
-                          <span className="normal-case font-medium text-gray-700">
-                            (~{Math.max(1, Math.round((1 - videoUploadProgress) * videoUploadEstimateSeconds))}s left)
-                          </span>
-                        )}
-                      </span>
+                  <div className="mt-3 rounded-2xl bg-[#148F8B]/5 px-4 py-3.5 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Loader2 size={14} className="text-[#148F8B] animate-spin shrink-0" />
+                      <p className="text-sm font-medium text-[#148F8B] tracking-tight">Uploading your video in the background…</p>
                     </div>
-                    <Progress
-                      value={videoUploadProgress <= 0 ? 8 : Math.min(100, videoUploadProgress * 100)}
-                      className="h-3 w-full shrink-0 bg-gray-200 [&_[data-slot=progress-indicator]]:bg-[#148F8B]"
-                    />
-                    <p className="text-xs text-gray-700 font-medium">
-                      This runs in the background — keep filling out the rest of your profile.
-                    </p>
+                    <div className="h-1 w-full rounded-full bg-[#148F8B]/15 overflow-hidden">
+                      <div className="h-full w-1/3 rounded-full bg-[#148F8B] animate-indeterminate" />
+                    </div>
+                    <p className="text-xs text-gray-400">Keep filling out your profile — we'll let you know when it's ready.</p>
                   </div>
                 )}
                 {videoUploadStatus === "error" && videoUploadError && (
@@ -977,6 +953,21 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         </div>
       </div>
 
+      {/* Floating upload progress banner — fixed above submit button, visible while uploading */}
+      {videoUploadStatus === "uploading" && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[320px] pointer-events-none">
+          <div className="rounded-full bg-white border border-[#148F8B]/25 shadow-lg shadow-[#148F8B]/15 px-5 py-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Loader2 size={13} className="text-[#148F8B] animate-spin shrink-0" />
+              <p className="text-xs font-semibold text-[#148F8B] tracking-tight truncate">Uploading video…</p>
+            </div>
+            <div className="h-0.5 w-full rounded-full bg-[#148F8B]/15 overflow-hidden">
+              <div className="h-full w-1/3 rounded-full bg-[#148F8B] animate-indeterminate" />
+            </div>
+          </div>
+        </div>
+      )}
+
       <VideoIntroModal
         isOpen={showVideoModal}
         onClose={() => setShowVideoModal(false)}
@@ -986,43 +977,16 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
           setVideoDuration(duration);
           setVideoUploadStatus("success");
           setVideoUploadError(null);
-          if (videoUploadTimerRef.current) {
-            window.clearInterval(videoUploadTimerRef.current);
-            videoUploadTimerRef.current = null;
-          }
-          setVideoUploadProgress(1);
           setShowVideoModal(false);
         }}
         onThumbnailReady={(thumbUrl) => setVideoThumbnailUrl(thumbUrl)}
-        onUploadStart={({ estimatedSizeBytes, durationSeconds }) => {
+        onUploadStart={() => {
           setVideoUploadStatus("uploading");
           setVideoUploadError(null);
-          // Rough estimate: assume ~2 MB/s upload speed, clamp between 8s and 90s
-          const estimatedSeconds = Math.max(
-            8,
-            Math.min(90, estimatedSizeBytes / (2 * 1024 * 1024) || durationSeconds || 15),
-          );
-          setVideoUploadEstimateSeconds(estimatedSeconds);
-          setVideoUploadProgress(0);
-
-          if (videoUploadTimerRef.current) {
-            window.clearInterval(videoUploadTimerRef.current);
-          }
-          const start = Date.now();
-          videoUploadTimerRef.current = window.setInterval(() => {
-            const elapsed = (Date.now() - start) / 1000;
-            const progress = Math.min(0.95, elapsed / estimatedSeconds);
-            setVideoUploadProgress(progress);
-          }, 500);
         }}
         onUploadError={(message) => {
           setVideoUploadStatus("error");
           setVideoUploadError(message);
-          if (videoUploadTimerRef.current) {
-            window.clearInterval(videoUploadTimerRef.current);
-            videoUploadTimerRef.current = null;
-          }
-          setVideoUploadProgress(0);
         }}
         candidateId={userProfile?.candidateId ?? userProfile?.id}
       />

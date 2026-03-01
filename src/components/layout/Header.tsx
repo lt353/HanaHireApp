@@ -16,6 +16,7 @@ interface HeaderProps {
   onShowAuth: (mode: "login" | "signup") => void;
   onReset: () => void;
   isPaymentModalOpen?: boolean;
+  isDemoAccount?: boolean;
 }
 
 export const Header = ({
@@ -28,7 +29,8 @@ export const Header = ({
   onLogout,
   onShowAuth,
   onReset,
-  isPaymentModalOpen = false
+  isPaymentModalOpen = false,
+  isDemoAccount = false,
 }: HeaderProps) => {
 
   const borderStyle = !isRoleSelected
@@ -167,16 +169,22 @@ export const Header = ({
         {isRoleSelected && (
           <>
             {/* Role Toggle - Desktop Only */}
-            <button
-              onClick={onToggleRole}
-              className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 transition-all text-xs sm:text-sm font-black uppercase tracking-widest text-gray-600 hover:scale-105 active:scale-95 duration-200 ${
-                role === "seeker"
-                  ? "hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:text-[#148F8B]"
-                  : "hover:border-[#A63F8E] hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
-              }`}
-            >
-              Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
-            </button>
+            {isDemoAccount ? (
+              <span className="hidden lg:block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-2 select-none">
+                Switch roles unavailable in demo
+              </span>
+            ) : (
+              <button
+                onClick={onToggleRole}
+                className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 transition-all text-xs sm:text-sm font-black uppercase tracking-widest text-gray-600 hover:scale-105 active:scale-95 duration-200 ${
+                  role === "seeker"
+                    ? "hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:text-[#148F8B]"
+                    : "hover:border-[#A63F8E] hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
+                }`}
+              >
+                Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
+              </button>
+            )}
           </>
         )}
 
