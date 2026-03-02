@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Camera, Upload, AlertCircle, Save } from "lucide-react";
 import { supabase } from "../../utils/supabase/client";
 
@@ -392,10 +393,10 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
         ? (isRecording ? "Recording…" : "Get ready to record")
         : "Video Intro";
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      style={{ position: "fixed" }}
+      className="fixed inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           if (step === "preview") {
@@ -667,6 +668,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -48,6 +48,7 @@ import { EmployerOnboarding } from './components/screens/EmployerOnboarding';
 import { JobPostingFlow } from './components/screens/JobPostingFlow';
 import { ProfileTitleCustomization } from './components/screens/ProfileTitleCustomization';
 import { ProfileEditor } from './components/screens/ProfileEditor';
+import { VideoIntroModal } from "./components/screens/VideoIntroModal";
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
@@ -88,6 +89,8 @@ export default function App() {
   const [showPostJobModal, setShowPostJobModal] = useState(false);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
+  const [showVideoUpdateModal, setShowVideoUpdateModal] = useState(false);
+  const [showCandidateVideoPlayer, setShowCandidateVideoPlayer] = useState(false);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -723,7 +726,7 @@ export default function App() {
       }}
       onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
       onShowFilters={() => setShowFilterModal(true)}
-      onSelectCandidate={(c) => setSelectedCandidate(c)}
+      onSelectCandidate={(c) => { setSelectedCandidate(c); setShowCandidateVideoPlayer(false); }}
       interactionFee={INTERACTION_FEE}
       viewerLocation={userProfile?.location}
       viewerIndustry={userProfile?.industry}
@@ -766,7 +769,7 @@ export default function App() {
             isLoggedIn={isLoggedIn}
             userProfile={userProfile}
             onNavigate={handleNavigate}
-            onShowMedia={() => setShowMediaModal(true)}
+            onShowMedia={() => setShowVideoUpdateModal(true)}
             onShowVisibility={() => setShowVisibilityModal(true)}
             onShowAuth={handleShowAuth}
             onLogout={handleLogout}
@@ -786,7 +789,7 @@ export default function App() {
             onNavigate={handleNavigate}
             onShowPostJob={() => handleNavigate("job-posting")}
             onSelectJob={setSelectedJob}
-            onSelectCandidate={(c) => setSelectedCandidate(c)}
+            onSelectCandidate={(c) => { setSelectedCandidate(c); setShowCandidateVideoPlayer(false); }}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
             onShowAuth={handleShowAuth}
             onLogout={handleLogout}
@@ -2061,6 +2064,57 @@ export default function App() {
             </div>
          </div>
       </Modal>
+      <VideoIntroModal
+        isOpen={showVideoUpdateModal}
+        onClose={() => setShowVideoUpdateModal(false)}
+        candidateId={userProfile?.candidateId ?? userProfile?.id}
+        onComplete={async (videoUrl, videoThumbnailUrl, _durationSeconds) => {
+          // Immediately update local state so thumbnail refreshes in the dashboard
+          setUserProfile((prev: any) =>
+            prev ? { ...prev, videoUrl, videoThumbnailUrl } : prev
+          );
+          toast.success("Video uploaded! Saving to your profile...");
+
+          // Persist to Supabase candidates table
+          const candidateId = userProfile?.candidateId ?? userProfile?.id;
+          if (candidateId) {
+            const { error } = await supabase
+              .from("candidates")
+              .update({
+                video_url: videoUrl,
+                video_thumbnail_url: videoThumbnailUrl,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", candidateId);
+
+            if (error) {
+              console.error("Error saving updated video to database:", error);
+              toast.error("Video uploaded but failed to save to your profile. Please try again.");
+            } else {
+              toast.success("Intro video updated successfully!");
+            }
+          }
+        }}
+        onThumbnailReady={async (thumbUrl) => {
+          // Thumbnail finishes generating after modal closes — update state and DB
+          setUserProfile((prev: any) =>
+            prev ? { ...prev, videoThumbnailUrl: thumbUrl } : prev
+          );
+          const candidateId = userProfile?.candidateId ?? userProfile?.id;
+          if (candidateId) {
+            await supabase
+              .from("candidates")
+              .update({ video_thumbnail_url: thumbUrl })
+              .eq("id", candidateId);
+          }
+        }}
+        onUploadStart={() => {
+          toast.info("Uploading your new video in the background...");
+        }}
+        onUploadError={(message) => {
+          toast.error(`Video upload failed: ${message}`);
+        }}
+      />
 
       <Modal isOpen={showFilterModal} onClose={() => setShowFilterModal(false)} title="Refine Results">
          <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
@@ -2190,7 +2244,7 @@ export default function App() {
       </Modal>
 
      {/* Mobile Nav */}
-{currentView !== "landing" && !showPaymentModal && (
+{currentView !== "landing" && !showPaymentModal && !showVideoUpdateModal && (
   <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-3 z-50 shadow-2xl">
      <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200">
        <Eye size={24} />
@@ -2365,7 +2419,7 @@ export default function App() {
         )}
       </Modal>
 
-      <Modal isOpen={!!selectedCandidate} onClose={() => setSelectedCandidate(null)} title={unlockedCandidateIds.includes(selectedCandidate?.id) ? "Full Candidate Profile" : "Candidate Intel"}>
+      <Modal isOpen={!!selectedCandidate} onClose={() => { setSelectedCandidate(null); setShowCandidateVideoPlayer(false); }} title={unlockedCandidateIds.includes(selectedCandidate?.id) ? "Full Candidate Profile" : "Candidate Intel"}>
         {selectedCandidate && (
           <div className="space-y-10">
             {unlockedCandidateIds.includes(selectedCandidate.id) ? (
@@ -2385,16 +2439,24 @@ export default function App() {
                 </div>
 
                 {/* Video Player */}
-                <div className="relative aspect-video bg-black rounded-[2.5rem] overflow-hidden group shadow-2xl">
-                   <ImageWithFallback 
-                     src={selectedCandidate.video_thumbnail_url} 
+                <div
+                  className="relative aspect-video bg-black rounded-[2.5rem] overflow-hidden group shadow-2xl cursor-pointer"
+                  onClick={() => selectedCandidate.video_url && setShowCandidateVideoPlayer(true)}
+                >
+                   <ImageWithFallback
+                     src={selectedCandidate.video_thumbnail_url}
                      className="w-full h-full object-cover opacity-80"
                    />
                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border-2 border-white/50 group-hover:scale-110 transition-transform cursor-pointer">
+                      <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center border-2 border-white/50 group-hover:scale-110 transition-transform">
                          <Play size={40} className="text-white fill-white ml-2" />
                       </div>
                    </div>
+                   {!selectedCandidate.video_url && (
+                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-3 py-2 text-center">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-white/70">No video uploaded yet</p>
+                     </div>
+                   )}
                 </div>
 
                 <div className="flex gap-4 p-1 bg-[#F3EAF5]/30 rounded-2xl">
@@ -2572,6 +2634,33 @@ export default function App() {
           </div>
         )}
       </Modal>
+
+      {/* Candidate video player overlay */}
+      {showCandidateVideoPlayer && selectedCandidate?.video_url && (
+        <div
+          className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+          style={{ zIndex: 1000001 }}
+          onClick={() => setShowCandidateVideoPlayer(false)}
+        >
+          <div
+            className="w-full max-w-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              controls
+              autoPlay
+              playsInline
+              className="w-full rounded-[2rem] bg-black shadow-2xl"
+              style={{ maxHeight: "80vh" }}
+            >
+              <source
+                src={selectedCandidate.video_url}
+                type={selectedCandidate.video_url.includes('.webm') ? 'video/webm' : 'video/mp4'}
+              />
+            </video>
+          </div>
+        </div>
+      )}
 
     </div>
   );

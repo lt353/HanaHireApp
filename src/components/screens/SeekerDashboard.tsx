@@ -12,6 +12,8 @@ interface SeekerDashboardProps {
     candidateId?: string;
     video_url?: string;
     video_thumbnail_url?: string;
+    videoUrl?: string;
+    videoThumbnailUrl?: string;
     name?: string;
     location?: string;
     skills?: string[];
@@ -44,6 +46,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
 
   const handleDeleteAccount = async () => {
     console.log("handleDeleteAccount userProfile:", userProfile);
@@ -140,14 +143,17 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           <div className="lg:col-span-2 space-y-8 sm:space-y-12">
             <div className="p-6 sm:p-10 md:p-12 bg-white rounded-[2.5rem] sm:rounded-[3.5rem] md:rounded-[4.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-16 group relative overflow-hidden">
               <div className="w-40 sm:w-48 md:w-52 aspect-[9/16] bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] overflow-hidden relative shadow-2xl shrink-0">
-                <ImageWithFallback src={userProfile?.videoThumbnailUrl || "https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800"} className="w-full h-full object-cover opacity-70" />
+                <ImageWithFallback src={userProfile?.videoThumbnailUrl || userProfile?.video_thumbnail_url || "https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800"} className="w-full h-full object-cover opacity-70" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-2xl flex items-center justify-center text-white border-2 border-white/40 shadow-2xl cursor-pointer hover:scale-110 transition-transform">
+                  <div
+                    className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-2xl flex items-center justify-center text-white border-2 border-white/40 shadow-2xl cursor-pointer hover:scale-110 transition-transform"
+                    onClick={() => (userProfile?.videoUrl || userProfile?.video_url) && setShowVideoPlayer(true)}
+                  >
                     <Play fill="white" size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
                   </div>
                 </div>
               </div>
-              <div className="space-y-6 sm:space-y-8 text-center md:text-left flex-1 relative z-10">
+              <div className="space-y-6 sm:space-y-8 text-center md:text-left flex-1">
                 <div className="space-y-2 sm:space-y-3">
                   <h3 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">Your Intro Video</h3>
                   <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px]">RECORDED IN SECONDS</p>
@@ -358,6 +364,44 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Video player modal */}
+      <AnimatePresence>
+        {showVideoPlayer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowVideoPlayer(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="w-full max-w-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {(() => {
+                const videoUrl = userProfile?.videoUrl || userProfile?.video_url;
+                const videoType = videoUrl?.includes('.webm') ? 'video/webm' : 'video/mp4';
+                return (
+                  <video
+                    controls
+                    autoPlay
+                    playsInline
+                    className="w-full rounded-[2rem] bg-black shadow-2xl"
+                    style={{ maxHeight: "80vh" }}
+                  >
+                    <source src={videoUrl} type={videoType} />
+                  </video>
+                );
+              })()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete confirmation modal */}
       <AnimatePresence>
