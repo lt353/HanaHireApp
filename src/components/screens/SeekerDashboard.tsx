@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
-import { Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, BarChart3, AlertTriangle, Trash2 } from "lucide-react";
+import { Play, Video, Settings as SettingsIcon, Users, Edit3, LogIn, LogOut, Briefcase, MapPin, DollarSign, Building2, ExternalLink, BarChart3, AlertTriangle, Trash2, Clock, MessageSquare } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { ViewType } from '../../App';
@@ -27,7 +28,9 @@ interface SeekerDashboardProps {
   onShowAuth: (mode: "login" | "signup") => void;
   onLogout: () => void;
   unlockedJobs?: any[];
+  applications?: any[];
   onSelectJob?: (job: any) => void;
+  onAnswerQuestions?: (job: any) => void;
   applicationCount?: number;
 }
 
@@ -40,7 +43,9 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   onShowAuth,
   onLogout,
   unlockedJobs,
+  applications = [],
   onSelectJob,
+  onAnswerQuestions,
   applicationCount = 0
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -81,6 +86,20 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
       return { label: "Industry Match", tone: "industry" as const };
     }
     return null;
+  };
+
+  const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
+    submitted:   { bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]',   label: 'Submitted' },
+    reviewed:    { bg: 'bg-amber-50',     text: 'text-amber-700',    label: 'Reviewed' },
+    shortlisted: { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]',   label: 'Shortlisted' },
+    interview:   { bg: 'bg-purple-50',    text: 'text-purple-600',   label: 'Interview' },
+    rejected:    { bg: 'bg-gray-100',     text: 'text-gray-500',     label: 'Not Selected' },
+  };
+
+  const toAgo = (iso: string | null | undefined) => {
+    if (!iso) return null;
+    try { return formatDistanceToNow(new Date(iso), { addSuffix: true }); }
+    catch { return null; }
   };
 
   return (
@@ -242,6 +261,16 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
           <div className="grid gap-6">
             {unlockedJobs.map((job) => {
               const matchMeta = getMatchMeta(job);
+              const application = applications.find(a => a.job_id === job.id);
+              const statusKey = application?.status || 'submitted';
+              const statusCfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.submitted;
+              const appliedAgo = toAgo(application?.applied_at);
+              const reviewedAgo = application?.reviewed_at ? toAgo(application.reviewed_at) : null;
+              const updatedDiffersFromApplied =
+                application?.updated_at &&
+                application?.applied_at &&
+                application.updated_at !== application.applied_at;
+              const updatedAgo = updatedDiffersFromApplied ? toAgo(application.updated_at) : null;
               return (
               <motion.div
                 key={job.id}
@@ -254,12 +283,18 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                   {/* Header with company name - ONLY VISIBLE WHEN UNLOCKED */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-3 flex-1">
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#780262]/10 rounded-full">
-                        <div className="w-2 h-2 rounded-full bg-[#780262] animate-pulse" />
-                        <span className="text-xs font-black uppercase tracking-widest text-[#780262]">Unlocked</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#780262]/10 rounded-full">
+                          <div className="w-2 h-2 rounded-full bg-[#780262] animate-pulse" />
+                          <span className="text-xs font-black uppercase tracking-widest text-[#780262]">Unlocked</span>
+                        </div>
+                        {/* Application status pill */}
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusCfg.bg} ${statusCfg.text}`}>
+                          {statusCfg.label}
+                        </span>
                         {matchMeta && (
                           <span
-                            className={`ml-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
                               matchMeta.tone === "strong"
                                 ? "bg-[#148F8B]/10 text-[#148F8B]"
                                 : "bg-amber-50 text-amber-700"
@@ -269,6 +304,26 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                           </span>
                         )}
                       </div>
+                      {/* Timestamps */}
+                      {(appliedAgo || reviewedAgo || updatedAgo) && (
+                        <div className="flex flex-col gap-1">
+                          {appliedAgo && (
+                            <span className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400">
+                              <Clock size={10} className="shrink-0" /> Applied {appliedAgo}
+                            </span>
+                          )}
+                          {reviewedAgo && (
+                            <span className="flex items-center gap-1.5 text-[10px] font-medium text-amber-600">
+                              <Clock size={10} className="shrink-0" /> Reviewed {reviewedAgo}
+                            </span>
+                          )}
+                          {updatedAgo && (
+                            <span className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400">
+                              <Clock size={10} className="shrink-0" /> Updated {updatedAgo}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <h4 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight group-hover:text-[#148F8B] transition-colors">
                         {job.title}
                       </h4>
@@ -332,6 +387,18 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                           </p>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Answer Questions CTA */}
+                  {Array.isArray(job.application_questions) && job.application_questions.length > 0 && onAnswerQuestions && (
+                    <div className="pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        className="w-full h-14 rounded-2xl bg-[#780262] hover:bg-[#780262]/90 text-white shadow-lg shadow-[#780262]/20 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-black uppercase tracking-widest"
+                        onClick={() => onAnswerQuestions(job)}
+                      >
+                        <MessageSquare size={16} /> Answer Questions
+                      </Button>
                     </div>
                   )}
                 </div>

@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, ChevronDown, Eye, X, Filter } from "lucide-react";
+import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, ChevronDown, Eye, X, Filter, MessageSquare, Video } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
@@ -20,6 +21,7 @@ interface EmployerDashboardProps {
   jobs: any[];
   candidates: any[];
   unlockedCandidateIds: number[];
+  applications?: any[];
   onNavigate: (view: ViewType) => void;
   onShowPostJob: () => void;
   onSelectJob: (job: any) => void;
@@ -36,6 +38,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   jobs,
   candidates,
   unlockedCandidateIds,
+  applications = [],
   onNavigate,
   onShowPostJob,
   onSelectJob,
@@ -47,6 +50,20 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const unlockedCandidates = candidates.filter(c => unlockedCandidateIds.includes(c.id));
   const isVerified = isLoggedIn && userProfile?.businessLicense;
   const applicantsRef = useRef<HTMLDivElement>(null);
+
+  // Video lightbox for answer video playback
+  const [videoLightbox, setVideoLightbox] = useState<string | null>(null);
+
+  // Lookup: "candidateId-jobId" → application record (for question_answers)
+  const applicationsByKey = useMemo(() => {
+    const map: Record<string, any> = {};
+    for (const app of applications) {
+      if (app.candidate_id && app.job_id) {
+        map[`${app.candidate_id}-${app.job_id}`] = app;
+      }
+    }
+    return map;
+  }, [applications]);
 
   // Filter jobs to show only the employer's posted jobs
   const myJobs = useMemo(() => {
@@ -76,6 +93,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const filterJobTitle = filterByJobId ? jobs.find(j => j.id === filterByJobId)?.title : null;
 
   return (
+    <>
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16 md:space-y-24 mb-12 sm:mb-16 md:mb-20">
       {/* Browse anonymously banner */}
       {!isLoggedIn && (
@@ -212,6 +230,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-words">{j.title}</h4>
                     <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • LIVE • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
+                    {Array.isArray(j.application_questions) && j.application_questions.length > 0 && (
+                      <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-1 bg-[#148F8B]/10 text-[#148F8B] rounded-lg text-[9px] font-black uppercase tracking-widest">
+                        <MessageSquare size={10} /> {j.application_questions.length} custom question{j.application_questions.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
                   </div>
                   <Button variant="outline" className="h-9 sm:h-10 border-none bg-[#F3EAF5]/30 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onSelectJob(j)}>
                     Manage
@@ -394,8 +417,8 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           <h5 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Skills</h5>
           <div className="flex flex-wrap gap-2">
             {applicant.skills.slice(0, 6).map((s: string, idx: number) => (
-              <span 
-                key={idx} 
+              <span
+                key={idx}
                 className="px-3 py-1.5 bg-[#F3EAF5]/30 text-gray-600 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
               >
                 {s}
@@ -409,6 +432,68 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Application Question Answers */}
+      {(() => {
+        const application = applicationsByKey[`${applicant.id}-${applicant.appliedToJob?.id}`];
+        const jobQuestions: string[] = applicant.appliedToJob?.application_questions || [];
+        if (jobQuestions.length === 0) return null;
+        const answers: any[] = Array.isArray(application?.question_answers) ? application.question_answers : [];
+        return (
+          <div className="px-4 sm:px-6 pb-5 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <h5 className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest flex items-center gap-1.5">
+              <MessageSquare size={10} /> Application Answers
+            </h5>
+            <div className="space-y-3">
+              {jobQuestions.map((question: string, qIdx: number) => {
+                const ans = answers.find((a: any) => a.question === question);
+                return (
+                  <div key={qIdx} className="space-y-1.5">
+                    <p className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest leading-tight">
+                      {question}
+                    </p>
+                    {ans?.answer_text ? (
+                      <p className="text-xs font-medium text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
+                        {ans.answer_text}
+                      </p>
+                    ) : ans?.answer_video_url ? (
+                      <button
+                        type="button"
+                        onClick={() => setVideoLightbox(ans.answer_video_url)}
+                        className="flex items-center gap-3 w-full text-left bg-[#780262]/5 border border-[#780262]/15 rounded-xl px-3 py-2.5 hover:bg-[#780262]/10 transition-all group"
+                      >
+                        {ans.answer_video_thumbnail ? (
+                          <div className="relative shrink-0">
+                            <img
+                              src={ans.answer_video_thumbnail}
+                              className="w-14 h-9 object-cover rounded-lg"
+                              alt=""
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg group-hover:bg-black/20 transition-colors">
+                              <Play size={12} className="text-white fill-white" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-14 h-9 rounded-lg bg-[#780262]/15 flex items-center justify-center shrink-0">
+                            <Video size={14} className="text-[#780262]" />
+                          </div>
+                        )}
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#780262] group-hover:text-[#5C014A] transition-colors">
+                          Play Video Answer
+                        </span>
+                      </button>
+                    ) : (
+                      <p className="text-[10px] font-medium text-gray-300 italic px-1">
+                        No answer provided
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Action Buttons */}
       <div className="px-4 sm:px-6 pb-4 flex gap-2">
@@ -539,5 +624,41 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </section>
       )}
     </motion.div>
+
+    {/* Video answer lightbox */}
+    {videoLightbox && createPortal(
+      <div
+        className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[999999] flex items-center justify-center p-4"
+        onClick={() => setVideoLightbox(null)}
+      >
+        <div
+          className="w-full max-w-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={() => setVideoLightbox(null)}
+              className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <video
+            controls
+            autoPlay
+            playsInline
+            className="w-full rounded-[2rem] bg-black shadow-2xl"
+            style={{ maxHeight: "75vh" }}
+          >
+            <source
+              src={videoLightbox}
+              type={videoLightbox.includes(".webm") ? "video/webm" : "video/mp4"}
+            />
+          </video>
+        </div>
+      </div>,
+      document.body
+    )}
+  </>
   );
 };

@@ -50,6 +50,8 @@ import { JobPostingFlow } from './components/screens/JobPostingFlow';
 import { ProfileTitleCustomization } from './components/screens/ProfileTitleCustomization';
 import { ProfileEditor } from './components/screens/ProfileEditor';
 import { VideoIntroModal } from "./components/screens/VideoIntroModal";
+import { ApplicationQuestionsModal } from "./components/screens/ApplicationQuestionsModal";
+import type { QuestionAnswer } from "./components/screens/ApplicationQuestionsModal";
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
@@ -104,9 +106,14 @@ export default function App() {
   const [unlockedJobIds, setUnlockedJobIds] = useState<any[]>([]);
   const [unlockedCandidateIds, setUnlockedCandidateIds] = useState<any[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]); // full application records (seeker's own)
+  const [employerApplications, setEmployerApplications] = useState<any[]>([]); // applications for employer's jobs
   const [paymentTarget, setPaymentTarget] = useState<any>(null);
   const [paymentItems, setPaymentItems] = useState<any[]>([]);
   const [expandedPaymentItemId, setExpandedPaymentItemId] = useState<any>(null);
+  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
+  const [pendingApplyItems, setPendingApplyItems] = useState<any[]>([]);
+  const [isApplying, setIsApplying] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [editingJob, setEditingJob] = useState<any>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
@@ -137,6 +144,20 @@ export default function App() {
     // Load data in background, don't block UI
     fetchInitialData();
   }, []);
+
+  // Fetch applications for the employer's jobs whenever the employer logs in or jobs load
+  useEffect(() => {
+    if (userRole !== 'employer' || !userProfile?.employerId || jobs.length === 0) return;
+    const myJobIds = jobs
+      .filter((j: any) => j.employer_id === userProfile.employerId)
+      .map((j: any) => j.id);
+    if (myJobIds.length === 0) return;
+    supabase
+      .from('applications')
+      .select('candidate_id, job_id, status, question_answers, applied_at, updated_at, reviewed_at')
+      .in('job_id', myJobIds)
+      .then(({ data }) => { if (data) setEmployerApplications(data); });
+  }, [userRole, userProfile?.employerId, jobs]);
   
   // Don't block landing page on initial load
   useEffect(() => {
@@ -188,22 +209,32 @@ export default function App() {
         });
         
         const newData = await newResponse.json();
-        // Store employers separately
-        setEmployers(newData.employers || []);
-        // Merge jobs with employer data
-        const mergedJobs = mergeJobsWithEmployers(newData.jobs || [], newData.employers || []);
-        setJobs(mergedJobs);
         setCandidates(newData.candidates || []);
-        console.log(`Successfully seeded and loaded ${mergedJobs.length} jobs and ${newData.candidates?.length || 0} candidates from KV store`);
+        // Load employers and jobs from Supabase (authoritative source with application_questions)
+        const [{ data: supabaseEmployers }, { data: supabaseJobs, error: supabaseJobsError }] = await Promise.all([
+          supabase.from('employers').select('*'),
+          supabase.from('jobs').select('*').eq('status', 'active'),
+        ]);
+        if (supabaseJobsError) console.error("Failed to fetch jobs from Supabase:", supabaseJobsError);
+        const employers = supabaseEmployers && supabaseEmployers.length > 0 ? supabaseEmployers : (newData.employers || []);
+        const allJobs = supabaseJobs && supabaseJobs.length > 0 ? supabaseJobs : (newData.jobs || []);
+        setEmployers(employers);
+        setJobs(mergeJobsWithEmployers(allJobs, employers));
+        console.log(`Successfully seeded and loaded ${allJobs.length} jobs and ${newData.candidates?.length || 0} candidates`);
         toast.success('Marketplace initialized!');
       } else {
-        // Store employers separately
-        setEmployers(data.employers || []);
-        // Merge jobs with employer data
-        const mergedJobs = mergeJobsWithEmployers(data.jobs || [], data.employers || []);
-        setJobs(mergedJobs);
         setCandidates(data.candidates);
-        console.log(`Loaded ${mergedJobs.length} jobs and ${data.candidates.length} candidates from Supabase`);
+        // Load employers and jobs from Supabase (authoritative source with application_questions)
+        const [{ data: supabaseEmployers }, { data: supabaseJobs, error: supabaseJobsError }] = await Promise.all([
+          supabase.from('employers').select('*'),
+          supabase.from('jobs').select('*').eq('status', 'active'),
+        ]);
+        if (supabaseJobsError) console.error("Failed to fetch jobs from Supabase:", supabaseJobsError);
+        const employers = supabaseEmployers && supabaseEmployers.length > 0 ? supabaseEmployers : (data.employers || []);
+        const allJobs = supabaseJobs && supabaseJobs.length > 0 ? supabaseJobs : (data.jobs || []);
+        setEmployers(employers);
+        setJobs(mergeJobsWithEmployers(allJobs, employers));
+        console.log(`Loaded ${allJobs.length} jobs from Supabase`);
       }
     } catch (err) {
       console.error("Error loading data:", err);
@@ -300,21 +331,25 @@ export default function App() {
     if (!candidateId) return;
 
     try {
-      // Fetch applications from database
-      const { data: applications, error } = await supabase
+      // NOTE: applications table requires columns: job_id, status, applied_at, updated_at, reviewed_at
+      // If reviewed_at is missing from your schema, run:
+      //   ALTER TABLE applications ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;
+      //   ALTER TABLE applications ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+      const { data: appData, error } = await supabase
         .from('applications')
-        .select('job_id')
-        .eq('candidate_id', candidateId);
+        .select('job_id, status, applied_at, updated_at, reviewed_at')
+        .eq('candidate_id', candidateId)
+        .order('applied_at', { ascending: false });
 
       if (error) {
         console.error("Error fetching applications:", error);
         return;
       }
 
-      if (applications && applications.length > 0) {
-        const jobIds = applications.map(a => a.job_id);
-        setAppliedJobIds(jobIds);
-        console.log(`Loaded ${jobIds.length} job applications`);
+      if (appData && appData.length > 0) {
+        setApplications(appData);
+        setAppliedJobIds(appData.map(a => a.job_id));
+        console.log(`Loaded ${appData.length} job applications`);
       }
     } catch (err) {
       console.error("Unexpected error fetching applications:", err);
@@ -396,58 +431,19 @@ export default function App() {
           return;
         }
 
-        // Logged-in seeker: save unlocks and applications to database
-        const unlockRecords = itemIds.map((jobId: number) => ({
-          user_email: userProfile.email,
-          user_role: 'seeker',
-          target_type: 'job',
-          target_id: jobId,
-          amount_paid: INTERACTION_FEE,
-          payment_method: 'card',
-          payment_status: 'completed'
-        }));
-
-        const { error: unlockError } = await supabase
-          .from('unlocks')
-          .insert(unlockRecords);
-
-        if (unlockError) {
-          console.error("Error saving unlock:", unlockError);
+        // Check if any jobs have questions — show Q&A modal before finalizing
+        const hasQuestions = paymentItems.some(
+          (j: any) => Array.isArray(j.application_questions) && j.application_questions.length > 0
+        );
+        if (hasQuestions) {
+          setPendingApplyItems([...paymentItems]);
+          setShowPaymentModal(false);
+          setShowQuestionsModal(true);
+          return;
         }
 
-        if (userProfile?.id) {
-          const applicationRecords = itemIds.map((jobId: number) => ({
-            candidate_id: userProfile.id,
-            job_id: jobId,
-            status: 'submitted'
-          }));
-
-          const { error: applicationError } = await supabase
-            .from('applications')
-            .insert(applicationRecords);
-
-          if (applicationError) {
-            console.error("Error saving application:", applicationError);
-          }
-        }
-
-        const { error: deleteError } = await supabase
-          .from('saved_items')
-          .delete()
-          .eq('user_email', userProfile.email)
-          .eq('item_type', 'job')
-          .in('item_id', itemIds);
-
-        if (deleteError) {
-          console.error("Error removing from saved items:", deleteError);
-        }
-
-        setUnlockedJobIds([...unlockedJobIds, ...itemIds]);
-        setAppliedJobIds([...appliedJobIds, ...itemIds]);
-        setSeekerQueue(seekerQueue.filter(q => !itemIds.includes(q.id)));
-        setShowPaymentModal(false);
-        toast.success("Applied!", { description: "Business details now revealed in your jobs." });
-        handleNavigate("seeker");
+        // No questions: finalize immediately
+        await finalizeApplications(paymentItems, {});
       } else {
         // Save unlocks to database
         if (userProfile?.email) {
@@ -491,6 +487,94 @@ export default function App() {
     } catch (err) {
       console.error("Payment error:", err);
       toast.error("Unlock failed. Please try again.");
+    }
+  };
+
+  const finalizeApplications = async (
+    items: any[],
+    answersByJobId: Record<number, QuestionAnswer[]>
+  ) => {
+    setIsApplying(true);
+    try {
+      const itemIds = items.map((i: any) => i.id);
+
+      const unlockRecords = itemIds.map((jobId: number) => ({
+        user_email: userProfile.email,
+        user_role: 'seeker',
+        target_type: 'job',
+        target_id: jobId,
+        amount_paid: INTERACTION_FEE,
+        payment_method: 'card',
+        payment_status: 'completed'
+      }));
+      const { error: unlockError } = await supabase.from('unlocks').insert(unlockRecords);
+      if (unlockError) console.error("Error saving unlock:", unlockError);
+
+      if (userProfile?.id) {
+        const applicationRecords = itemIds.map((jobId: number) => ({
+          candidate_id: userProfile.id,
+          job_id: jobId,
+          status: 'submitted',
+          ...(answersByJobId[jobId]?.length ? { question_answers: answersByJobId[jobId] } : {})
+        }));
+        const { error: applicationError } = await supabase
+          .from('applications')
+          .upsert(applicationRecords, { onConflict: 'candidate_id,job_id' });
+        if (applicationError) console.error("Error saving application:", applicationError);
+      }
+
+      const { error: deleteError } = await supabase
+        .from('saved_items')
+        .delete()
+        .eq('user_email', userProfile.email)
+        .eq('item_type', 'job')
+        .in('item_id', itemIds);
+      if (deleteError) console.error("Error removing from saved items:", deleteError);
+
+      setUnlockedJobIds(prev => [...prev, ...itemIds]);
+      setAppliedJobIds(prev => [...prev, ...itemIds]);
+      const now = new Date().toISOString();
+      setApplications(prev => [
+        ...prev,
+        ...itemIds.map((jobId: number) => ({ job_id: jobId, status: 'submitted', applied_at: now, updated_at: now, reviewed_at: null }))
+      ]);
+      setSeekerQueue(seekerQueue.filter((q: any) => !itemIds.includes(q.id)));
+      setShowPaymentModal(false);
+      setShowQuestionsModal(false);
+      setPendingApplyItems([]);
+      toast.success("Applied!", { description: "Business details now revealed in your jobs." });
+      handleNavigate("seeker");
+    } catch (err) {
+      console.error("Application error:", err);
+      toast.error("Application failed. Please try again.");
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const submitApplicationAnswers = async (job: any, answers: QuestionAnswer[]) => {
+    setShowQuestionsModal(false);
+    setPendingApplyItems([]);
+    if (!userProfile?.id) return;
+    const nonEmpty = answers.filter((a) => a.answer_text || a.answer_video_url);
+    try {
+      await supabase
+        .from('applications')
+        .upsert(
+          [{ candidate_id: userProfile.id, job_id: job.id, status: 'submitted', ...(nonEmpty.length ? { question_answers: nonEmpty } : {}) }],
+          { onConflict: 'candidate_id,job_id' }
+        );
+      // Update local applications state
+      setApplications(prev => {
+        const existing = prev.find(a => a.job_id === job.id);
+        if (existing) return prev.map(a => a.job_id === job.id ? { ...a, question_answers: nonEmpty } : a);
+        const now = new Date().toISOString();
+        return [...prev, { job_id: job.id, status: 'submitted', applied_at: now, updated_at: now, reviewed_at: null, question_answers: nonEmpty }];
+      });
+      toast.success("Answers submitted!", { description: "Your responses have been sent to the employer." });
+    } catch (err) {
+      console.error("Answer submission error:", err);
+      toast.error("Failed to submit answers. Please try again.");
     }
   };
 
@@ -776,7 +860,9 @@ export default function App() {
             onLogout={handleLogout}
             unlockedJobs={jobs.filter(j => unlockedJobIds.includes(j.id))}
             onSelectJob={setSelectedJob}
-            applicationCount={unlockedJobIds.length}
+            onAnswerQuestions={(job) => { setPendingApplyItems([job]); setShowQuestionsModal(true); }}
+            applications={applications}
+            applicationCount={applications.length}
           />
         );
       case "employer":
@@ -787,6 +873,7 @@ export default function App() {
             jobs={jobs}
             candidates={candidates}
             unlockedCandidateIds={unlockedCandidateIds}
+            applications={employerApplications}
             onNavigate={handleNavigate}
             onShowPostJob={() => handleNavigate("job-posting")}
             onSelectJob={setSelectedJob}
@@ -1966,6 +2053,33 @@ export default function App() {
   </div>
 </Modal>
 
+      <ApplicationQuestionsModal
+        isOpen={showQuestionsModal}
+        questions={pendingApplyItems[0]?.application_questions || []}
+        jobTitle={pendingApplyItems[0]?.title || ""}
+        candidateId={String(userProfile?.id || "")}
+        onSubmit={(answers) => {
+          const job = pendingApplyItems[0];
+          if (!job) return;
+          if (unlockedJobIds.includes(job.id)) {
+            // Already unlocked — just submit answers, no payment step
+            submitApplicationAnswers(job, answers);
+          } else {
+            const answersByJobId = { [job.id]: answers.filter((a) => a.answer_text || a.answer_video_url) };
+            finalizeApplications(pendingApplyItems, answersByJobId);
+          }
+        }}
+        onSkip={() => {
+          const items = pendingApplyItems;
+          const job = items[0];
+          setShowQuestionsModal(false);
+          setPendingApplyItems([]);
+          if (!job || !unlockedJobIds.includes(job.id)) {
+            finalizeApplications(items, {});
+          }
+        }}
+      />
+
       <Modal isOpen={showPostJobModal} onClose={() => setShowPostJobModal(false)} title="Post Job">
          <form onSubmit={(e) => {
             e.preventDefault();
@@ -2414,6 +2528,21 @@ export default function App() {
                     </p>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Application Questions */}
+            {Array.isArray(selectedJob.application_questions) && selectedJob.application_questions.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Application Questions</h4>
+                <ul className="space-y-2">
+                  {selectedJob.application_questions.map((q: string, i: number) => (
+                    <li key={i} className="flex gap-3 items-start text-sm text-gray-700 font-medium">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-[#780262]/10 text-[#780262] text-[10px] font-black flex items-center justify-center mt-0.5">{i + 1}</span>
+                      {q}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 

@@ -136,7 +136,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
     contact_phone: "",
     company_description: "",
     video_url: "",
-    image_url: ""
+    image_url: "",
+    application_questions: []
   });
 
   useEffect(() => {
@@ -266,7 +267,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         contact_phone: formatPhoneInput(userProfile?.phone || ""),  // From employers table via userProfile
         company_description: userProfile?.bio || "",  // From employers table via userProfile
         video_url: existingJob.video_url || "",
-        image_url: userProfile?.companyLogoUrl || ""  // From employers table via userProfile
+        image_url: userProfile?.companyLogoUrl || "",  // From employers table via userProfile
+        application_questions: Array.isArray(existingJob.application_questions) ? existingJob.application_questions : []
       });
       setStep('review'); // Skip to review screen when editing
     } else if (userProfile && userProfile.role === 'employer') {
@@ -452,7 +454,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         is_anonymous: true,
         status: 'active',
         applicant_count: existingJob?.applicant_count || 0,
-        employer_id: userProfile?.employerId  // Link to employer
+        employer_id: userProfile?.employerId,  // Link to employer
+        application_questions: (formData.application_questions || []).filter((q: string) => q.trim())
       };
 
       // Add optional fields if provided
@@ -1383,6 +1386,57 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                     </div>
                   </div>
                </div>
+            </section>
+
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] border-b border-gray-100 pb-3 sm:pb-4 w-full">Application Questions <span className="text-gray-300 normal-case tracking-normal font-medium">(optional)</span></h3>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 font-medium -mt-2">Add up to 5 custom questions applicants will answer when they apply.</p>
+              <div className="flex flex-col gap-3">
+                {(formData.application_questions || []).map((q: string, idx: number) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <span className="text-[10px] font-black text-gray-400 w-5 shrink-0">{idx + 1}.</span>
+                    <input
+                      type="text"
+                      className="flex-1 p-4 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm shadow-sm"
+                      placeholder={`e.g. Why are you interested in this role?`}
+                      value={q}
+                      onChange={(e) => {
+                        const n = [...formData.application_questions];
+                        n[idx] = e.target.value;
+                        setFormData((prev: any) => ({ ...prev, application_questions: n }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const n = formData.application_questions.filter((_: any, i: number) => i !== idx);
+                        setFormData((prev: any) => ({ ...prev, application_questions: n }));
+                      }}
+                      className="text-gray-400 hover:text-red-400 transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+                {(formData.application_questions || []).length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        application_questions: [...(prev.application_questions || []), ""],
+                      }))
+                    }
+                    className="p-4 border-2 border-dashed border-gray-100 rounded-xl text-gray-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:border-[#148F8B]/30 hover:text-[#148F8B] transition-all"
+                  >
+                    <Plus size={16} /> Add Question
+                  </button>
+                )}
+              </div>
             </section>
 
             <section className="space-y-8 p-10 bg-[#F3EAF5]/30 rounded-[3rem] border-2 border-dashed border-gray-100">

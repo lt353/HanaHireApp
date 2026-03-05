@@ -24,6 +24,7 @@ export interface Job {
   start_date?: string;
   video_url?: string;
   employer_id: number;
+  application_questions?: string[];
 }
 
 export interface Employer {

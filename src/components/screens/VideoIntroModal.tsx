@@ -38,6 +38,8 @@ interface VideoIntroModalProps {
 	/** Called if video upload ultimately fails (after modal has closed). */
 	onUploadError?: (message: string) => void;
 	candidateId?: number;
+	/** Prefix for the storage file path, e.g. "intro" → "{id}_intro_{ts}.mp4". Defaults to "intro". */
+	uploadPrefix?: string;
 }
 
 export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
@@ -49,6 +51,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 	onUploadProgress,
 	onUploadError,
 	candidateId,
+	uploadPrefix = "intro",
 }) => {
 	const [step, setStep] = useState<Step>("choose");
 	const [error, setError] = useState<string | null>(null);
@@ -307,8 +310,8 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 				const userId = candidateId ?? Math.floor(Date.now() / 1000);
 				const ts = Date.now();
 				const videoExt = preview.blob.type.includes("webm") ? "webm" : "mp4";
-				const videoPath = `${userId}_intro_${ts}.${videoExt}`;
-				const thumbPath = `${userId}_intro_${ts}_thumb.jpg`;
+				const videoPath = `${userId}_${uploadPrefix}_${ts}.${videoExt}`;
+				const thumbPath = `${userId}_${uploadPrefix}_${ts}_thumb.jpg`;
 				const bucket = "candidate-videos";
 				const contentType =
 					preview.blob.type ||

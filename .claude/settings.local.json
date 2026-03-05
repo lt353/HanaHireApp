@@ -4,7 +4,8 @@
       "Bash(npx tsc:*)",
       "WebFetch(domain:supabase.com)",
       "Bash(xargs grep:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
