@@ -61,5 +61,8 @@
       "scripts": {
             "dev": "vite",
             "build": "vite build"
+      },
+      "overrides": {
+            "@rollup/rollup-linux-x64-gnu": "latest"
       }
 }
