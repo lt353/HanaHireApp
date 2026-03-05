@@ -55,8 +55,8 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
     setDeleteError(null);
     const { error } = await deleteCandidate(
       Number(userProfile.candidateId),
-      userProfile.video_url,
-      userProfile.video_thumbnail_url,
+      userProfile.video_url ?? userProfile.videoUrl,
+      userProfile.video_thumbnail_url ?? userProfile.videoThumbnailUrl,
     );
     setIsDeleting(false);
     if (error) {

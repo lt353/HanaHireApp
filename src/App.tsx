@@ -28,6 +28,7 @@ import { mergeJobsWithEmployers } from "./utils/jobHelpers";
 import { projectId, publicAnonKey } from './utils/supabase/info';
 import { supabase } from './utils/supabase/client';
 import { formatPhoneInput } from './utils/formatters';
+import { removeStorageFilesFromUrls } from './utils/deleteCandidate';
 
 
 // Components
@@ -2074,6 +2075,13 @@ export default function App() {
             prev ? { ...prev, videoUrl, videoThumbnailUrl } : prev
           );
           toast.success("Video uploaded! Saving to your profile...");
+
+          // Delete old video & thumbnail from storage so we don't leave orphans
+          const oldVideoUrl = userProfile?.video_url ?? userProfile?.videoUrl;
+          const oldThumbUrl = userProfile?.video_thumbnail_url ?? userProfile?.videoThumbnailUrl;
+          if (oldVideoUrl || oldThumbUrl) {
+            await removeStorageFilesFromUrls(oldVideoUrl, oldThumbUrl);
+          }
 
           // Persist to Supabase candidates table
           const candidateId = userProfile?.candidateId ?? userProfile?.id;

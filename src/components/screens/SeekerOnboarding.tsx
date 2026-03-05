@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic, ChevronDown, Check, X, Loader2 } from "lucide-react";
+import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic, ChevronDown, Check, X, Play, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
 import { CANDIDATE_CATEGORIES, DEMO_PROFILES, JOB_CATEGORIES } from "../../data/mockData";
 import { ViewType } from '../../App';
 import { VideoIntroModal } from "./VideoIntroModal";
+import { removeStorageFilesFromUrls } from "../../utils/deleteCandidate";
 
 /** Multi-select dropdown: trigger opens menu with checkboxes; selected items appear as removable pills outside; custom input below. */
 function MultiSelectDropdown({
@@ -153,6 +154,8 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [videoDuration, setVideoDuration] = useState<number>(0);
   const [videoUploadStatus, setVideoUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [visibilityPreference, setVisibilityPreference] = useState<"broad" | "limited">("broad");
   const [showVideoModal, setShowVideoModal] = useState(false);
 
@@ -416,67 +419,25 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         </button>
 
         <div className="space-y-8">
-          {/* Video Intro (Required) - first */}
+          {/* Video Intro (Required) - one state at a time */}
           <div
             ref={(el) => { sectionRefs.current["video"] = el; }}
             className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && !videoUrl ? "border-red-400" : "border-gray-100"}`}
           >
             <div className="flex items-center gap-3">
-              {videoUrl && <CheckCircle size={18} className="text-[#148F8B]" />}
+              {videoUrl && videoUploadStatus === "success" && <CheckCircle size={18} className="text-[#148F8B]" />}
               <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Video Intro (Required)</h2>
             </div>
             <p className="text-sm text-gray-600 font-medium">
               Here is where you sell yourself as an applicant—make it count!
             </p>
-            {videoUrl ? (
-              <div className="space-y-3">
-                <div className="flex gap-4 items-start">
-                  {videoThumbnailUrl && (
-                    <div className="w-32 aspect-video rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                      <img src={videoThumbnailUrl} alt="Intro thumbnail" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                      {videoDuration >= 60 ? "1:00" : `${Math.floor(videoDuration / 60)}:${String(videoDuration % 60).padStart(2, "0")}`} video
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setVideoUploadStatus("idle");
-                        setVideoUploadError(null);
-                        setShowVideoModal(true);
-                      }}
-                      className="mt-2 text-sm font-bold text-[#148F8B] hover:underline"
-                    >
-                      Re-record
-                    </button>
-                  </div>
-                </div>
-                {videoUploadStatus === "uploading" && (
-                  <div className="mt-3 rounded-2xl bg-[#148F8B]/5 px-4 py-3.5 space-y-2.5">
-                    <div className="flex items-center gap-2">
-                      <Loader2 size={14} className="text-[#148F8B] animate-spin shrink-0" />
-                      <p className="text-sm font-medium text-[#148F8B] tracking-tight">Uploading your video in the background…</p>
-                    </div>
-                    <div className="h-1 w-full rounded-full bg-[#148F8B]/15 overflow-hidden">
-                      <div className="h-full w-1/3 rounded-full bg-[#148F8B] animate-indeterminate" />
-                    </div>
-                    <p className="text-xs text-gray-400">Keep filling out your profile — we'll let you know when it's ready.</p>
-                  </div>
-                )}
-                {videoUploadStatus === "error" && videoUploadError && (
-                  <p className="mt-2 text-xs text-red-500 font-medium">
-                    We couldn&apos;t save your latest video: {videoUploadError}
-                  </p>
-                )}
-              </div>
-            ) : (
+
+            {/* IDLE: no video yet */}
+            {videoUploadStatus === "idle" && !videoUrl && (
               <>
                 <button
                   type="button"
                   onClick={() => {
-                    setVideoUploadStatus("idle");
                     setVideoUploadError(null);
                     setShowVideoModal(true);
                   }}
@@ -489,24 +450,121 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 <p className="text-xs text-gray-500">
                   You can record with your camera or upload a video file (up to 60 seconds, max 50 MB).
                 </p>
-                {videoUploadStatus === "uploading" && (
-                  <div className="mt-3 rounded-2xl bg-[#148F8B]/5 px-4 py-3.5 space-y-2.5">
-                    <div className="flex items-center gap-2">
-                      <Loader2 size={14} className="text-[#148F8B] animate-spin shrink-0" />
-                      <p className="text-sm font-medium text-[#148F8B] tracking-tight">Uploading your video in the background…</p>
-                    </div>
-                    <div className="h-1 w-full rounded-full bg-[#148F8B]/15 overflow-hidden">
-                      <div className="h-full w-1/3 rounded-full bg-[#148F8B] animate-indeterminate" />
-                    </div>
-                    <p className="text-xs text-gray-400">Keep filling out your profile — we'll let you know when it's ready.</p>
-                  </div>
-                )}
-                {videoUploadStatus === "error" && videoUploadError && (
-                  <p className="mt-2 text-xs text-red-500 font-medium">
-                    We couldn&apos;t save your video: {videoUploadError}
-                  </p>
-                )}
               </>
+            )}
+
+            {/* UPLOADING: hide upload box, show progress only */}
+            {videoUploadStatus === "uploading" && (
+              <div className="rounded-2xl border border-[#148F8B]/25 bg-white p-6 space-y-4">
+                <p className="text-center text-sm font-semibold text-[#148F8B]">
+                  Loading
+                </p>
+                {/* Progress bar - inline styles only so layout/CSS cannot hide it */}
+                <div
+                  data-video-upload-progress-bar
+                  role="progressbar"
+                  aria-valuenow={uploadProgress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  style={{
+                    display: "block",
+                    boxSizing: "border-box",
+                    height: "16px",
+                    width: "100%",
+                    margin: "8px 0",
+                    borderRadius: "8px",
+                    backgroundColor: "#e0f2f1",
+                    overflow: "hidden",
+                    border: "1px solid rgba(20, 143, 139, 0.3)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "block",
+                      boxSizing: "border-box",
+                      height: "100%",
+                      width: `${Math.min(100, Math.max(0, uploadProgress))}%`,
+                      minWidth: uploadProgress > 0 ? "4%" : "0%",
+                      borderRadius: "6px",
+                      backgroundColor: "#148F8B",
+                      transition: "width 0.25s ease-out",
+                    }}
+                  />
+                </div>
+                <p className="text-center text-sm font-medium text-[#148F8B]">
+                  {uploadProgress}%
+                </p>
+                <p className="text-center text-xs text-gray-500">
+                  Keep filling out your profile — we&apos;ll notify you when it&apos;s ready.
+                </p>
+              </div>
+            )}
+
+            {/* SUCCESS: large preview with play */}
+            {videoUrl && videoUploadStatus === "success" && (
+              <div className="rounded-2xl border-2 border-[#148F8B]/20 bg-gradient-to-br from-[#148F8B]/5 to-[#A63F8E]/5 overflow-hidden">
+                <div
+                  className="relative aspect-video w-full cursor-pointer group"
+                  onClick={() => setShowVideoPreview(true)}
+                >
+                  {videoThumbnailUrl ? (
+                    <img src={videoThumbnailUrl} alt="Video intro" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center" />
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                    <div className="w-24 h-24 rounded-full bg-white/95 flex items-center justify-center shadow-xl">
+                      <Play size={44} className="text-[#148F8B] ml-1.5" fill="currentColor" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3 p-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={18} className="text-[#148F8B] shrink-0" />
+                    <span className="text-sm font-bold text-gray-800">Video Ready</span>
+                    <span className="text-xs text-gray-500">
+                      {videoDuration >= 60 ? "1:00" : `${Math.floor(videoDuration / 60)}:${String(Math.round(videoDuration) % 60).padStart(2, "0")}`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVideoUploadStatus("idle");
+                      setVideoUploadError(null);
+                      setShowVideoModal(true);
+                    }}
+                    className="flex items-center gap-1.5 text-sm font-bold text-[#148F8B] hover:underline"
+                  >
+                    <RefreshCw size={14} />
+                    Re-record
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ERROR */}
+            {videoUploadStatus === "error" && (
+              <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={18} className="text-red-500 shrink-0" />
+                  <p className="text-sm font-semibold text-red-700">Upload failed</p>
+                </div>
+                {videoUploadError && <p className="text-xs text-red-600">{videoUploadError}</p>}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVideoUploadStatus("idle");
+                    setVideoUploadError(null);
+                    setVideoUrl("");
+                    setVideoThumbnailUrl("");
+                    setVideoDuration(0);
+                    setShowVideoModal(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600"
+                >
+                  Try Again
+                </button>
+              </div>
             )}
           </div>
 
@@ -953,17 +1011,28 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         </div>
       </div>
 
-      {/* Floating upload progress banner — fixed above submit button, visible while uploading */}
-      {videoUploadStatus === "uploading" && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[320px] pointer-events-none">
-          <div className="rounded-full bg-white border border-[#148F8B]/25 shadow-lg shadow-[#148F8B]/15 px-5 py-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <Loader2 size={13} className="text-[#148F8B] animate-spin shrink-0" />
-              <p className="text-xs font-semibold text-[#148F8B] tracking-tight truncate">Uploading video…</p>
-            </div>
-            <div className="h-0.5 w-full rounded-full bg-[#148F8B]/15 overflow-hidden">
-              <div className="h-full w-1/3 rounded-full bg-[#148F8B] animate-indeterminate" />
-            </div>
+      {/* Full-screen video preview modal */}
+      {showVideoPreview && videoUrl && (
+        <div
+          className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setShowVideoPreview(false)}
+        >
+          <button
+            type="button"
+            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white hover:bg-white/20"
+            onClick={() => setShowVideoPreview(false)}
+            aria-label="Close"
+          >
+            <X size={24} />
+          </button>
+          <div className="w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
+            <video
+              src={videoUrl}
+              controls
+              autoPlay
+              playsInline
+              className="w-full rounded-lg shadow-2xl"
+            />
           </div>
         </div>
       )}
@@ -971,22 +1040,29 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       <VideoIntroModal
         isOpen={showVideoModal}
         onClose={() => setShowVideoModal(false)}
-        onComplete={(url, thumbUrl, duration) => {
+        onComplete={async (url, thumbUrl, duration) => {
+          if (videoUrl || videoThumbnailUrl) {
+            await removeStorageFilesFromUrls(videoUrl, videoThumbnailUrl);
+          }
           setVideoUrl(url);
           setVideoThumbnailUrl(thumbUrl);
           setVideoDuration(duration);
           setVideoUploadStatus("success");
           setVideoUploadError(null);
+          setUploadProgress(0);
           setShowVideoModal(false);
         }}
         onThumbnailReady={(thumbUrl) => setVideoThumbnailUrl(thumbUrl)}
         onUploadStart={() => {
           setVideoUploadStatus("uploading");
           setVideoUploadError(null);
+          setUploadProgress(0);
         }}
+        onUploadProgress={(percent) => setUploadProgress(percent)}
         onUploadError={(message) => {
           setVideoUploadStatus("error");
           setVideoUploadError(message);
+          setUploadProgress(0);
         }}
         candidateId={userProfile?.candidateId ?? userProfile?.id}
       />
