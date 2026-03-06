@@ -1,43 +1,34 @@
-import React, { useState, useRef, useEffect } from "react";
-import { MessageSquare, Video, X, Loader2, CheckCircle, RotateCcw } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { CheckCircle, Loader2, MessageSquare, Mic, RotateCcw, Video, X } from "lucide-react";
 import { VideoIntroModal } from "./VideoIntroModal";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 
-export interface QuestionAnswer {
+export interface ApplicationQuestionAnswer {
   question: string;
   answer_text?: string;
-  answer_video_url?: string;
-  answer_video_thumbnail?: string;
 }
 
-type AnswerMode = "text" | "video" | null;
-
-interface AnswerState {
-  mode: AnswerMode;
-  text: string;
-  videoUrl?: string;
-  videoThumbUrl?: string;
-  uploading: boolean;
-  uploadProgress: number;
-  uploadError?: string;
+export interface ApplicationSubmissionPayload {
+  mode: "video" | "text" | null;
+  question_answers: ApplicationQuestionAnswer[];
+  video_url?: string;
+  video_thumbnail_url?: string;
 }
 
 interface ApplicationQuestionsModalProps {
   isOpen: boolean;
   questions: string[];
   jobTitle: string;
-  onSubmit: (answers: QuestionAnswer[]) => void;
+  onSubmit: (payload: ApplicationSubmissionPayload) => void;
   onSkip: () => void;
   candidateId: string;
+  existingApplication?: {
+    video_url?: string | null;
+    video_thumbnail_url?: string | null;
+    question_answers?: ApplicationQuestionAnswer[] | null;
+  } | null;
 }
-
-const emptyAnswer = (): AnswerState => ({
-  mode: null,
-  text: "",
-  uploading: false,
-  uploadProgress: 0,
-});
 
 export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps> = ({
   isOpen,
@@ -46,298 +37,385 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
   onSubmit,
   onSkip,
   candidateId,
+  existingApplication,
 }) => {
-  const [answers, setAnswers] = useState<AnswerState[]>([]);
-  const [activeVideoQIdx, setActiveVideoQIdx] = useState<number | null>(null);
-  // Ref keeps the active question index alive across async upload callbacks
-  const videoQIdxRef = useRef<number | null>(null);
+  const [responseMode, setResponseMode] = useState<"video" | "text" | null>(null);
+  const [textAnswers, setTextAnswers] = useState<string[]>([]);
+  const [applicationVideoUrl, setApplicationVideoUrl] = useState<string | undefined>(undefined);
+  const [applicationVideoThumbUrl, setApplicationVideoThumbUrl] = useState<string | undefined>(undefined);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | undefined>(undefined);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
+  const [activeSpeechIndex, setActiveSpeechIndex] = useState<number | null>(null);
+  const recognitionRef = useRef<any | null>(null);
 
-  // Reset answers each time the modal opens
   useEffect(() => {
-    if (isOpen) {
-      setAnswers(questions.map(() => emptyAnswer()));
-      setActiveVideoQIdx(null);
-      videoQIdxRef.current = null;
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setHasSpeechSupport(false);
+      return;
     }
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateAnswer = (idx: number, patch: Partial<AnswerState>) => {
-    setAnswers((prev) =>
-      prev.map((a, i) => (i === idx ? { ...a, ...patch } : a))
-    );
-  };
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognition.onend = () => setActiveSpeechIndex(null);
+      recognitionRef.current = recognition;
+      setHasSpeechSupport(true);
+    } catch {
+      setHasSpeechSupport(false);
+    }
+  }, []);
 
-  const openVideoModal = (qIdx: number) => {
-    videoQIdxRef.current = qIdx;
-    setActiveVideoQIdx(qIdx);
-    updateAnswer(qIdx, {
-      mode: "video",
-      videoUrl: undefined,
-      videoThumbUrl: undefined,
-      uploadError: undefined,
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const existingAnswers = Array.isArray(existingApplication?.question_answers)
+      ? existingApplication.question_answers
+      : [];
+    const nextTextAnswers = questions.map((question) => {
+      const match = existingAnswers.find((answer) => answer.question === question);
+      return match?.answer_text ?? "";
     });
+
+    const hasTextAnswers = nextTextAnswers.some((answer) => answer.trim().length > 0);
+    const hasVideoAnswer = !!existingApplication?.video_url;
+
+    setTextAnswers(nextTextAnswers);
+    setApplicationVideoUrl(existingApplication?.video_url ?? undefined);
+    setApplicationVideoThumbUrl(existingApplication?.video_thumbnail_url ?? undefined);
+    setUploadProgress(0);
+    setUploadError(undefined);
+    setUploading(false);
+    setShowVideoModal(false);
+    setResponseMode(hasTextAnswers ? "text" : hasVideoAnswer ? "video" : null);
+  }, [isOpen, questions, existingApplication]);
+
+  const updateTextAnswer = (idx: number, value: string) => {
+    setTextAnswers((prev) => prev.map((answer, i) => (i === idx ? value : answer)));
   };
 
-  const anyUploading = answers.some((a) => a.uploading);
+  const switchToText = () => {
+    setResponseMode("text");
+    setApplicationVideoUrl(undefined);
+    setApplicationVideoThumbUrl(undefined);
+    setUploadProgress(0);
+    setUploadError(undefined);
+    setUploading(false);
+  };
+
+  const switchToVideo = () => {
+    setResponseMode("video");
+    setTextAnswers((prev) => prev.map(() => ""));
+    setShowVideoModal(true);
+  };
+
+  const toggleSpeechToText = (idx: number) => {
+    if (!recognitionRef.current || !hasSpeechSupport) return;
+
+    const recognition = recognitionRef.current as any;
+    if (activeSpeechIndex === idx) {
+      recognition.stop();
+      setActiveSpeechIndex(null);
+      return;
+    }
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          transcript += result[0].transcript;
+        }
+      }
+
+      if (transcript) {
+        updateTextAnswer(
+          idx,
+          textAnswers[idx]
+            ? `${textAnswers[idx].trim()} ${transcript.trim()}`
+            : transcript.trim(),
+        );
+      }
+    };
+
+    try {
+      recognition.start();
+      setActiveSpeechIndex(idx);
+    } catch {
+      setActiveSpeechIndex(null);
+    }
+  };
 
   const handleSubmit = () => {
-    const result: QuestionAnswer[] = questions.map((q, i) => {
-      const ans = answers[i];
-      const qa: QuestionAnswer = { question: q };
-      if (ans?.mode === "text" && ans.text.trim()) {
-        qa.answer_text = ans.text.trim();
-      } else if (ans?.mode === "video" && ans.videoUrl) {
-        qa.answer_video_url = ans.videoUrl;
-        if (ans.videoThumbUrl) qa.answer_video_thumbnail = ans.videoThumbUrl;
-      }
-      return qa;
+    const normalizedAnswers = questions.map((question, idx) => {
+      const answer = textAnswers[idx]?.trim();
+      return {
+        question,
+        ...(responseMode === "text" && answer ? { answer_text: answer } : {}),
+      };
     });
-    onSubmit(result);
+
+    onSubmit({
+      mode: responseMode,
+      question_answers: normalizedAnswers,
+      ...(responseMode === "video" && applicationVideoUrl
+        ? {
+            video_url: applicationVideoUrl,
+            video_thumbnail_url: applicationVideoThumbUrl,
+          }
+        : {}),
+    });
   };
 
   const candidateIdNum = parseInt(candidateId, 10) || undefined;
-  const activePrefix = `answer_${videoQIdxRef.current ?? 0}`;
+  const hasExistingApplication =
+    !!existingApplication?.video_url ||
+    !!existingApplication?.video_thumbnail_url ||
+    !!(Array.isArray(existingApplication?.question_answers) &&
+      existingApplication.question_answers.some((answer) => !!answer.answer_text?.trim()));
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onSkip} title="Answer Questions">
+      <Modal isOpen={isOpen} onClose={onSkip} title={hasExistingApplication ? "Update Application" : "Apply to Job"}>
         <div className="space-y-6">
-          {/* Context banner */}
-          <div className="p-4 bg-[#148F8B]/5 border border-[#148F8B]/15 rounded-2xl">
-            <p className="text-xs font-black uppercase tracking-widest text-[#148F8B] mb-1">
+          <div className="p-4 bg-[#148F8B]/5 border border-[#148F8B]/15 rounded-2xl space-y-2">
+            <p className="text-xs font-black uppercase tracking-widest text-[#148F8B]">
               {jobTitle}
             </p>
-            <p className="text-sm font-medium text-gray-600 leading-relaxed">
-              The employer has {questions.length} question
-              {questions.length !== 1 ? "s" : ""} for applicants. All answers
-              are optional.
+            <p className="text-sm font-medium text-gray-700 leading-relaxed">
+              Your intro video always stays on your profile. You can optionally add
+              one personalized application video for this job, or answer the
+              employer&apos;s questions in text instead.
             </p>
           </div>
 
-          {/* Question cards */}
-          <div className="space-y-4">
-            {questions.map((question, idx) => {
-              const ans = answers[idx] || emptyAnswer();
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={switchToVideo}
+              className={`rounded-2xl border-2 p-4 text-left transition-all ${
+                responseMode === "video"
+                  ? "border-[#780262] bg-[#780262]/5"
+                  : "border-gray-100 hover:border-[#780262]/30 hover:bg-[#780262]/5"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Video size={18} className="text-[#780262] shrink-0" />
+                <span className="text-xs font-black uppercase tracking-widest text-[#780262]">
+                  Personalized Video
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600 font-medium">
+                Record one job-specific video that employers will see alongside
+                your intro video.
+              </p>
+            </button>
 
-              return (
-                <div
-                  key={idx}
-                  className="rounded-[1.5rem] border-2 border-gray-100 overflow-hidden"
-                >
-                  {/* Question header */}
-                  <div className="px-5 py-4 bg-gray-50 flex items-start gap-3">
-                    <span className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-[#780262]/10 text-[#780262] text-[10px] font-black flex items-center justify-center">
-                      {idx + 1}
-                    </span>
-                    <p className="text-sm font-bold text-gray-900 leading-snug flex-1">
-                      {question}
-                    </p>
-                  </div>
-
-                  {/* Answer area */}
-                  <div className="px-5 py-4 space-y-3">
-                    {ans.mode === null && (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => updateAnswer(idx, { mode: "text" })}
-                            className="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-gray-100 hover:border-[#148F8B]/40 hover:bg-[#148F8B]/5 transition-all group"
-                          >
-                            <MessageSquare size={15} className="text-gray-400 group-hover:text-[#148F8B] transition-colors shrink-0" />
-                            <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 group-hover:text-[#148F8B] transition-colors">
-                              Type Answer
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            disabled={anyUploading}
-                            onClick={() => openVideoModal(idx)}
-                            className="flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-gray-100 hover:border-[#780262]/40 hover:bg-[#780262]/5 transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            <Video size={15} className="text-gray-400 group-hover:text-[#780262] transition-colors shrink-0" />
-                            <span className="text-[11px] font-black uppercase tracking-widest text-gray-500 group-hover:text-[#780262] transition-colors">
-                              Record Video
-                            </span>
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {/* no-op — null mode = skipped */}}
-                          className="w-full text-center text-[10px] font-black uppercase tracking-widest text-gray-300 py-1 cursor-default"
-                        >
-                          Skip this question
-                        </button>
-                      </div>
-                    )}
-
-                    {ans.mode === "text" && (
-                      <div className="space-y-2">
-                        <textarea
-                          value={ans.text}
-                          onChange={(e) =>
-                            updateAnswer(idx, { text: e.target.value })
-                          }
-                          placeholder="Type your answer here..."
-                          rows={3}
-                          className="w-full p-3 sm:p-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-medium text-sm text-gray-900 resize-none transition-colors placeholder:text-gray-300"
-                        />
-                        <div className="flex items-center justify-between">
-                          <button
-                            type="button"
-                            disabled={anyUploading}
-                            onClick={() => openVideoModal(idx)}
-                            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#780262] transition-colors disabled:opacity-40"
-                          >
-                            <Video size={10} /> Switch to video
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateAnswer(idx, { mode: null, text: "" })
-                            }
-                            className="text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-gray-500 transition-colors"
-                          >
-                            Skip question
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {ans.mode === "video" && (
-                      <div className="space-y-2">
-                        {ans.uploading ? (
-                          <div className="p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl space-y-2">
-                            <div className="flex items-center gap-2">
-                              <Loader2
-                                size={14}
-                                className="text-[#780262] animate-spin shrink-0"
-                              />
-                              <span className="text-xs font-black uppercase tracking-widest text-gray-600">
-                                Uploading {ans.uploadProgress}%
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className="bg-[#780262] h-full rounded-full transition-all duration-300"
-                                style={{ width: `${ans.uploadProgress}%` }}
-                              />
-                            </div>
-                          </div>
-                        ) : ans.videoUrl ? (
-                          <div className="p-4 bg-[#780262]/5 border-2 border-[#780262]/20 rounded-2xl flex items-center gap-3">
-                            {ans.videoThumbUrl ? (
-                              <img
-                                src={ans.videoThumbUrl}
-                                className="w-16 h-10 object-cover rounded-xl shrink-0"
-                                alt=""
-                              />
-                            ) : (
-                              <div className="w-16 h-10 rounded-xl bg-[#780262]/10 flex items-center justify-center shrink-0">
-                                <Video size={16} className="text-[#780262]" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <CheckCircle
-                                  size={12}
-                                  className="text-[#780262] shrink-0"
-                                />
-                                <span className="text-xs font-black uppercase tracking-widest text-[#780262]">
-                                  Video recorded
-                                </span>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              disabled={anyUploading}
-                              onClick={() => openVideoModal(idx)}
-                              className="p-2 rounded-xl border border-[#780262]/20 text-[#780262] hover:bg-[#780262]/10 transition-colors disabled:opacity-40"
-                              title="Re-record"
-                            >
-                              <RotateCcw size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateAnswer(idx, {
-                                  mode: null,
-                                  videoUrl: undefined,
-                                  videoThumbUrl: undefined,
-                                })
-                              }
-                              className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:text-red-400 hover:border-red-200 transition-colors"
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
-                        ) : (
-                          /* Video mode chosen but not yet recorded */
-                          <div className="space-y-2">
-                            {ans.uploadError && (
-                              <p className="text-xs font-bold text-red-500">
-                                {ans.uploadError}
-                              </p>
-                            )}
-                            <button
-                              type="button"
-                              disabled={anyUploading}
-                              onClick={() => openVideoModal(idx)}
-                              className="w-full p-5 border-2 border-dashed border-[#780262]/20 rounded-2xl flex flex-col items-center gap-2 hover:border-[#780262]/40 hover:bg-[#780262]/5 transition-all group disabled:opacity-40"
-                            >
-                              <Video
-                                size={24}
-                                className="text-[#780262]/40 group-hover:text-[#780262]/70 transition-colors"
-                              />
-                              <span className="text-xs font-black uppercase tracking-widest text-gray-500 group-hover:text-[#780262] transition-colors">
-                                Start Recording
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateAnswer(idx, { mode: "text" })
-                              }
-                              className="w-full text-center text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#148F8B] transition-colors py-1"
-                            >
-                              Switch to text instead
-                            </button>
-                          </div>
-                        )}
-
-                        {!ans.uploading && !ans.videoUrl && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateAnswer(idx, {
-                                mode: null,
-                                videoUrl: undefined,
-                              })
-                            }
-                            className="w-full text-center text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-gray-500 transition-colors py-0.5"
-                          >
-                            Skip question
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            <button
+              type="button"
+              onClick={switchToText}
+              disabled={questions.length === 0}
+              className={`rounded-2xl border-2 p-4 text-left transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                responseMode === "text"
+                  ? "border-[#148F8B] bg-[#148F8B]/5"
+                  : "border-gray-100 hover:border-[#148F8B]/30 hover:bg-[#148F8B]/5"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <MessageSquare size={18} className="text-[#148F8B] shrink-0" />
+                <span className="text-xs font-black uppercase tracking-widest text-[#148F8B]">
+                  Text Answers
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-gray-600 font-medium">
+                Type answers to the employer&apos;s questions, or use speech to
+                text if you prefer.
+              </p>
+            </button>
           </div>
 
-          {/* Actions */}
+          {responseMode === "video" && (
+            <div className="space-y-4 rounded-[1.5rem] border-2 border-[#780262]/15 bg-[#780262]/5 p-5">
+              <div className="space-y-1">
+                <p className="text-xs font-black uppercase tracking-widest text-[#780262]">
+                  Application Video
+                </p>
+                <p className="text-sm font-medium text-gray-600">
+                  This is in addition to your intro video, not a replacement for it.
+                </p>
+              </div>
+
+              {uploading ? (
+                <div className="space-y-3 rounded-2xl border border-gray-100 bg-white p-4">
+                  <div className="flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin text-[#780262] shrink-0" />
+                    <span className="text-xs font-black uppercase tracking-widest text-gray-700">
+                      Uploading {uploadProgress}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#780262] transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              ) : applicationVideoUrl ? (
+                <div className="flex items-center gap-3 rounded-2xl border border-[#780262]/15 bg-white p-4">
+                  {applicationVideoThumbUrl ? (
+                    <img
+                      src={applicationVideoThumbUrl}
+                      alt=""
+                      className="w-20 h-12 rounded-xl object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-12 rounded-xl bg-[#780262]/10 flex items-center justify-center shrink-0">
+                      <Video size={18} className="text-[#780262]" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle size={14} className="text-[#780262] shrink-0" />
+                      <span className="text-xs font-black uppercase tracking-widest text-[#780262]">
+                        Personalized video ready
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowVideoModal(true)}
+                    className="p-2 rounded-xl border border-[#780262]/20 text-[#780262] hover:bg-[#780262]/10 transition-colors"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setApplicationVideoUrl(undefined);
+                      setApplicationVideoThumbUrl(undefined);
+                      setResponseMode(null);
+                    }}
+                    className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowVideoModal(true)}
+                  className="w-full rounded-2xl border-2 border-dashed border-[#780262]/20 bg-white p-6 flex flex-col items-center gap-2 hover:border-[#780262]/40 hover:bg-[#780262]/5 transition-all"
+                >
+                  <Video size={24} className="text-[#780262]" />
+                  <span className="text-xs font-black uppercase tracking-widest text-[#780262]">
+                    Record personalized video
+                  </span>
+                </button>
+              )}
+
+              {uploadError && (
+                <p className="text-xs font-bold text-red-500">{uploadError}</p>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-black uppercase tracking-widest text-gray-400">
+                Employer Questions
+              </p>
+              {questions.length > 0 && (
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">
+                  {questions.length} total
+                </span>
+              )}
+            </div>
+
+            {questions.length === 0 ? (
+              <div className="rounded-[1.5rem] border-2 border-gray-100 bg-gray-50 px-5 py-4">
+                <p className="text-sm font-medium text-gray-500">
+                  This employer didn&apos;t add custom questions for this role.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {questions.map((question, idx) => (
+                  <div
+                    key={question}
+                    className="rounded-[1.5rem] border-2 border-gray-100 overflow-hidden"
+                  >
+                    <div className="px-5 py-4 bg-gray-50 flex items-start gap-3">
+                      <span className="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-[#780262]/10 text-[#780262] text-[10px] font-black flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <p className="text-sm font-bold text-gray-900 leading-snug flex-1">
+                        {question}
+                      </p>
+                    </div>
+
+                    <div className="px-5 py-4">
+                      {responseMode === "text" ? (
+                        <div className="space-y-3">
+                          <textarea
+                            value={textAnswers[idx] || ""}
+                            onChange={(e) => updateTextAnswer(idx, e.target.value)}
+                            placeholder="Type your answer here..."
+                            rows={3}
+                            className="w-full p-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-medium text-sm text-gray-900 resize-none transition-colors placeholder:text-gray-300"
+                          />
+                          <div className="flex justify-end">
+                            {hasSpeechSupport && (
+                              <button
+                                type="button"
+                                onClick={() => toggleSpeechToText(idx)}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black tracking-widest uppercase transition-all ${
+                                  activeSpeechIndex === idx
+                                    ? "border-[#148F8B] bg-[#148F8B]/10 text-[#148F8B]"
+                                    : "border-gray-200 bg-white text-gray-500 hover:border-[#148F8B] hover:text-[#148F8B]"
+                                }`}
+                              >
+                                <Mic size={12} />
+                                <span>{activeSpeechIndex === idx ? "Stop" : "Speak"}</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ) : responseMode === "video" ? (
+                        <p className="text-sm font-medium text-gray-500">
+                          You&apos;ll address this in your personalized application video.
+                        </p>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-400">
+                          Choose whether you want to respond with one personalized
+                          video or written answers.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-3">
             <Button
               className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] bg-[#148F8B] hover:bg-[#136068] text-white shadow-2xl shadow-[#148F8B]/30 hover:scale-105 active:scale-95 transition-all duration-200 tracking-tight"
               onClick={handleSubmit}
-              disabled={anyUploading}
+              disabled={uploading}
             >
-              {anyUploading ? (
+              {uploading ? (
                 <>
-                  <Loader2 size={18} className="mr-2 animate-spin" /> Uploading
-                  video…
+                  <Loader2 size={18} className="mr-2 animate-spin" />
+                  Uploading video…
                 </>
               ) : (
                 "Submit Application"
@@ -348,55 +426,35 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
               onClick={onSkip}
               className="w-full text-center text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors py-2"
             >
-              Skip all questions and apply →
+              Close
             </button>
           </div>
         </div>
       </Modal>
 
-      {/* Single VideoIntroModal instance; opened per-question via activeVideoQIdx */}
       <VideoIntroModal
-        isOpen={activeVideoQIdx !== null}
-        onClose={() => setActiveVideoQIdx(null)}
-        uploadPrefix={activePrefix}
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
         candidateId={candidateIdNum}
+        uploadPrefix="application"
         onUploadStart={() => {
-          const qIdx = videoQIdxRef.current;
-          if (qIdx !== null) updateAnswer(qIdx, { uploading: true, uploadProgress: 0 });
+          setUploading(true);
+          setUploadProgress(0);
+          setUploadError(undefined);
         }}
-        onUploadProgress={(p) => {
-          const qIdx = videoQIdxRef.current;
-          if (qIdx !== null) updateAnswer(qIdx, { uploadProgress: p });
+        onUploadProgress={(progress) => setUploadProgress(progress)}
+        onComplete={(videoUrl, videoThumbUrl) => {
+          setApplicationVideoUrl(videoUrl);
+          setApplicationVideoThumbUrl(videoThumbUrl);
+          setUploading(false);
+          setUploadProgress(100);
+          setShowVideoModal(false);
         }}
-        onComplete={(videoUrl) => {
-          const qIdx = videoQIdxRef.current;
-          if (qIdx !== null) {
-            // videoThumbUrl starts as videoUrl placeholder; replaced by onThumbnailReady
-            updateAnswer(qIdx, {
-              videoUrl,
-              videoThumbUrl: videoUrl,
-              uploading: false,
-              uploadProgress: 100,
-            });
-          }
-        }}
-        onThumbnailReady={(thumbUrl) => {
-          const qIdx = videoQIdxRef.current;
-          if (qIdx !== null) {
-            updateAnswer(qIdx, { videoThumbUrl: thumbUrl });
-            videoQIdxRef.current = null;
-          }
-        }}
-        onUploadError={(msg) => {
-          const qIdx = videoQIdxRef.current;
-          if (qIdx !== null) {
-            updateAnswer(qIdx, {
-              uploading: false,
-              uploadError: msg,
-              videoUrl: undefined,
-            });
-            videoQIdxRef.current = null;
-          }
+        onThumbnailReady={(thumbUrl) => setApplicationVideoThumbUrl(thumbUrl)}
+        onUploadError={(message) => {
+          setUploading(false);
+          setUploadError(message);
+          setUploadProgress(0);
         }}
       />
     </>

@@ -1,18 +1,19 @@
 import React, { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, ChevronDown, Eye, X, Filter, MessageSquare, Video } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, Eye, X, Filter, MessageSquare, Video } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
 import { ViewType } from '../../App';
 
-const APPLICANT_STATUSES = ['New', 'Reviewed', 'Shortlisted', 'Interview Scheduled'] as const;
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  'New': { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]' },
-  'Reviewed': { bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]' },
-  'Shortlisted': { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]' },
-  'Interview Scheduled': { bg: 'bg-purple-100', text: 'text-purple-600' },
+  'pending': { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]' },
+  'reviewed': { bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]' },
+  'shortlisted': { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]' },
+  'rejected': { bg: 'bg-gray-100', text: 'text-gray-500' },
+  'hired': { bg: 'bg-emerald-100', text: 'text-emerald-700' },
 };
 
 interface EmployerDashboardProps {
@@ -47,6 +48,15 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   onShowAuth,
   onLogout,
 }) => {
+  const parseAppTimestamp = (value: string | null | undefined) => {
+    if (!value) return null;
+    const normalized = /[zZ]|[+-]\d{2}:\d{2}$/.test(value)
+      ? value
+      : `${value.replace(" ", "T")}Z`;
+    const parsed = new Date(normalized);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
   const unlockedCandidates = candidates.filter(c => unlockedCandidateIds.includes(c.id));
   const isVerified = isLoggedIn && userProfile?.businessLicense;
   const applicantsRef = useRef<HTMLDivElement>(null);
@@ -54,43 +64,47 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   // Video lightbox for answer video playback
   const [videoLightbox, setVideoLightbox] = useState<string | null>(null);
 
-  // Lookup: "candidateId-jobId" → application record (for question_answers)
-  const applicationsByKey = useMemo(() => {
-    const map: Record<string, any> = {};
-    for (const app of applications) {
-      if (app.candidate_id && app.job_id) {
-        map[`${app.candidate_id}-${app.job_id}`] = app;
-      }
-    }
-    return map;
-  }, [applications]);
-
   // Filter jobs to show only the employer's posted jobs
   const myJobs = useMemo(() => {
     if (!isLoggedIn || !userProfile?.employerId) return jobs.slice(0, 2);
     return jobs.filter(j => j.employer_id === userProfile.employerId);
   }, [isLoggedIn, userProfile, jobs]);
 
-  // Build mock applicants from actual candidate data, assigned to the employer's posted jobs
-  const mockApplicants = useMemo(() => {
-    if (!isLoggedIn || candidates.length === 0 || myJobs.length === 0) return [];
-    const daysAgoLabels = ['2 hours ago', '5 hours ago', 'Yesterday', '2 days ago', '3 days ago', '4 days ago', '5 days ago', '1 week ago', '1 week ago'];
-    return candidates.slice(2, 20).map((c, i) => ({
-      ...c,
-      appliedToJob: myJobs[i % myJobs.length],
-      status: APPLICANT_STATUSES[i % APPLICANT_STATUSES.length],
-      appliedAgo: daysAgoLabels[i % daysAgoLabels.length],
-    }));
-  }, [isLoggedIn, candidates, myJobs]);
+  const actualApplicants = useMemo(() => {
+    if (!isLoggedIn || applications.length === 0 || myJobs.length === 0) return [];
+
+    return applications
+      .map((application) => {
+        const candidate = candidates.find((candidateItem) => candidateItem.id === application.candidate_id);
+        const appliedToJob = myJobs.find((job) => job.id === application.job_id);
+        if (!candidate || !appliedToJob) return null;
+
+        return {
+          ...candidate,
+          application,
+          appliedToJob,
+          status: application.status || "pending",
+          appliedAgo: application.applied_at
+            ? formatDistanceToNow(parseAppTimestamp(application.applied_at) || new Date(application.applied_at), { addSuffix: true })
+            : null,
+        };
+      })
+      .filter(Boolean) as any[];
+  }, [isLoggedIn, applications, candidates, myJobs]);
 
   const [filterByJobId, setFilterByJobId] = useState<number | null>(null);
 
   const filteredApplicants = filterByJobId
-    ? mockApplicants.filter(a => a.appliedToJob?.id === filterByJobId)
-    : mockApplicants;
+    ? actualApplicants.filter(a => a.appliedToJob?.id === filterByJobId)
+    : actualApplicants;
   const lockedApplicants = filteredApplicants.filter(a => !unlockedCandidateIds.includes(a.id));
   const unlockedApplicants = filteredApplicants.filter(a => unlockedCandidateIds.includes(a.id));
   const filterJobTitle = filterByJobId ? jobs.find(j => j.id === filterByJobId)?.title : null;
+  const openJobsCount = myJobs.filter((job) => job.status !== "filled").length;
+  const filledJobsCount = myJobs.filter((job) => job.status === "filled").length;
+  const reviewedCount = applications.filter((application) => !!application.reviewed_at).length;
+  const shortlistedCount = applications.filter((application) => application.status === "shortlisted").length;
+  const contactedCount = applications.filter((application) => !!application.contact_method).length;
 
   return (
     <>
@@ -180,29 +194,61 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
       {/* Stats Row - Only when logged in */}
       {isLoggedIn && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
-            <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Jobs Posted</span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#148F8B] transition-colors">{myJobs.length}</p>
-            <Briefcase className="absolute -right-4 -bottom-4 text-white/5" size={80} />
-          </div>
-          <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
-            <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Candidates Unlocked</span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#A63F8E] transition-colors">{unlockedCandidates.length}</p>
-            <Users className="absolute -right-4 -bottom-4 text-white/5" size={80} />
-          </div>
-          <button
-            onClick={() => { setFilterByJobId(null); setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}
-            className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200"
+        <div className="p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden group">
+          <h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
+            <BarChart3 size={24} className="text-[#148F8B]" /> Activity
+          </h3>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "nowrap",
+              width: "100%",
+              gap: "12px",
+            }}
           >
-            <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px] flex items-center gap-2">Applicants Received <ChevronDown size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" /></span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-[#A63F8E] transition-colors">{mockApplicants.length}</p>
-            <Mail className="absolute -right-4 -bottom-4 text-white/5" size={80} />
-          </button>
-          <div className="p-6 sm:p-8 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-3 group relative overflow-hidden">
-            <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Profile Views</span>
-            <p className="text-4xl sm:text-5xl font-black tracking-tighter group-hover:text-yellow-400 transition-colors">156</p>
-            <BarChart3 className="absolute -right-4 -bottom-4 text-white/5" size={80} />
+            <div
+              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            >
+              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Open Jobs</span>
+              <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{openJobsCount}</span>
+            </div>
+            <div
+              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            >
+              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Filled Jobs</span>
+              <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-emerald-400">{filledJobsCount}</span>
+            </div>
+            <button
+              onClick={() => { setFilterByJobId(null); setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}
+              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            >
+              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Applicants</span>
+              <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{actualApplicants.length}</span>
+            </button>
+            <div
+              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            >
+              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Reviewed</span>
+              <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{reviewedCount}</span>
+            </div>
+            <div
+              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            >
+              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Shortlisted</span>
+              <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
+            </div>
+            <div
+              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            >
+              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Contacted</span>
+              <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{contactedCount}</span>
+            </div>
           </div>
         </div>
       )}
@@ -211,7 +257,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         <section className="space-y-8 sm:space-y-12">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-              <Briefcase size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#148F8B]" /> Active Postings
+              <Briefcase size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#148F8B]" /> Your Jobs
             </h3>
             <Button
               variant="outline"
@@ -223,13 +269,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           </div>
           <div className="space-y-4 sm:space-y-6">
             {myJobs.map(j => {
-              const jobApplicantCount = mockApplicants.filter(a => a.appliedToJob?.id === j.id).length;
+              const jobApplicantCount = actualApplicants.filter(a => a.appliedToJob?.id === j.id).length;
               return (
               <div key={j.id} className="p-6 sm:p-8 md:p-10 bg-white border border-gray-100 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] shadow-sm space-y-6 sm:space-y-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-words">{j.title}</h4>
-                    <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • LIVE • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
+                    <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • {j.status === 'filled' ? 'FILLED' : 'LIVE'} • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
                     {Array.isArray(j.application_questions) && j.application_questions.length > 0 && (
                       <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-1 bg-[#148F8B]/10 text-[#148F8B] rounded-lg text-[9px] font-black uppercase tracking-widest">
                         <MessageSquare size={10} /> {j.application_questions.length} custom question{j.application_questions.length !== 1 ? 's' : ''}
@@ -314,13 +360,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </section>
       </div>
 
-      {/* Recent Applicants Section */}
-      {isLoggedIn && mockApplicants.length > 0 && (
+      {/* Applications Section */}
+      {isLoggedIn && (
         <section ref={applicantsRef} className="space-y-8 sm:space-y-12 scroll-mt-28">
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-                <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> {filterJobTitle ? 'Applicants' : 'Recent Applicants'}
+                <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> {filterJobTitle ? 'Applications' : 'Applications'}
               </h3>
               <div className="flex items-center gap-4">
                 <span className="text-xs font-black uppercase tracking-widest text-gray-400">{filteredApplicants.length} total</span>
@@ -344,6 +390,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             )}
           </div>
 
+          {filteredApplicants.length === 0 && (
+            <div className="p-12 sm:p-16 md:p-20 bg-white border-4 border-dashed border-gray-100 rounded-[3rem] sm:rounded-[3.5rem] md:rounded-[4rem] text-center space-y-4 sm:space-y-6">
+              <Mail size={40} className="sm:w-11 sm:h-11 md:w-12 md:h-12 mx-auto text-gray-400" />
+              <p className="text-gray-400 font-black uppercase tracking-widest text-xs sm:text-sm">No applications yet</p>
+              <p className="text-sm text-gray-500 font-medium">Applications will appear here when candidates actually apply to one of your jobs.</p>
+            </div>
+          )}
+
           {/* Unlocked Applicants */}
           {unlockedApplicants.length > 0 && (
             <div className="space-y-4">
@@ -354,7 +408,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                 <h4 className="text-sm font-black uppercase tracking-widest text-[#A63F8E]">Unlocked Applicants</h4>
               </div>
           {unlockedApplicants.map((applicant, i) => {
-  const statusStyle = STATUS_COLORS[applicant.status] || STATUS_COLORS['New'];
+  const statusStyle = STATUS_COLORS[applicant.status] || STATUS_COLORS['pending'];
   return (
     <motion.div
       key={applicant.id}
@@ -433,64 +487,88 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </div>
       )}
 
-      {/* Application Question Answers */}
+      {/* Application videos and answers */}
       {(() => {
-        const application = applicationsByKey[`${applicant.id}-${applicant.appliedToJob?.id}`];
+        const application = applicant.application;
         const jobQuestions: string[] = applicant.appliedToJob?.application_questions || [];
-        if (jobQuestions.length === 0) return null;
-        const answers: any[] = Array.isArray(application?.question_answers) ? application.question_answers : [];
+        const answers: any[] = Array.isArray(application?.question_answers)
+          ? application.question_answers
+          : jobQuestions.map((question: string) => ({ question }));
+        const hasIntroVideo = !!applicant.video_url;
+        const hasApplicationVideo = !!application?.video_url;
+        if (!jobQuestions.length && !hasApplicationVideo && !hasIntroVideo) return null;
         return (
           <div className="px-4 sm:px-6 pb-5 space-y-3" onClick={(e) => e.stopPropagation()}>
-            <h5 className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest flex items-center gap-1.5">
-              <MessageSquare size={10} /> Application Answers
-            </h5>
-            <div className="space-y-3">
-              {jobQuestions.map((question: string, qIdx: number) => {
-                const ans = answers.find((a: any) => a.question === question);
-                return (
-                  <div key={qIdx} className="space-y-1.5">
-                    <p className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest leading-tight">
-                      {question}
-                    </p>
-                    {ans?.answer_text ? (
-                      <p className="text-xs font-medium text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
-                        {ans.answer_text}
-                      </p>
-                    ) : ans?.answer_video_url ? (
-                      <button
-                        type="button"
-                        onClick={() => setVideoLightbox(ans.answer_video_url)}
-                        className="flex items-center gap-3 w-full text-left bg-[#780262]/5 border border-[#780262]/15 rounded-xl px-3 py-2.5 hover:bg-[#780262]/10 transition-all group"
-                      >
-                        {ans.answer_video_thumbnail ? (
-                          <div className="relative shrink-0">
-                            <img
-                              src={ans.answer_video_thumbnail}
-                              className="w-14 h-9 object-cover rounded-lg"
-                              alt=""
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg group-hover:bg-black/20 transition-colors">
-                              <Play size={12} className="text-white fill-white" />
-                            </div>
-                          </div>
+            {(hasIntroVideo || hasApplicationVideo) && (
+              <div className="space-y-2">
+                <h5 className="text-[9px] font-black text-[#780262] uppercase tracking-widest flex items-center gap-1.5">
+                  <Video size={10} /> Application Media
+                </h5>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {hasIntroVideo && (
+                    <button
+                      type="button"
+                      onClick={() => setVideoLightbox(applicant.video_url)}
+                      className="flex items-center gap-3 w-full text-left bg-[#148F8B]/5 border border-[#148F8B]/15 rounded-xl px-3 py-2.5 hover:bg-[#148F8B]/10 transition-all group"
+                    >
+                      <div className="w-14 h-9 rounded-lg bg-[#148F8B]/15 flex items-center justify-center shrink-0">
+                        <Play size={12} className="text-[#148F8B] fill-[#148F8B]" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">
+                        Intro Video
+                      </span>
+                    </button>
+                  )}
+                  {hasApplicationVideo && (
+                    <button
+                      type="button"
+                      onClick={() => setVideoLightbox(application.video_url)}
+                      className="flex items-center gap-3 w-full text-left bg-[#780262]/5 border border-[#780262]/15 rounded-xl px-3 py-2.5 hover:bg-[#780262]/10 transition-all group"
+                    >
+                      <div className="w-14 h-9 rounded-lg bg-[#780262]/15 flex items-center justify-center shrink-0">
+                        <Play size={12} className="text-[#780262] fill-[#780262]" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#780262]">
+                        Personalized Video
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {jobQuestions.length > 0 && (
+              <div className="space-y-3">
+                <h5 className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest flex items-center gap-1.5">
+                  <MessageSquare size={10} /> Application Answers
+                </h5>
+                <div className="space-y-3">
+                  {jobQuestions.map((question: string, qIdx: number) => {
+                    const ans = answers.find((a: any) => a.question === question);
+                    return (
+                      <div key={qIdx} className="space-y-1.5">
+                        <p className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest leading-tight">
+                          {question}
+                        </p>
+                        {ans?.answer_text ? (
+                          <p className="text-xs font-medium text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
+                            {ans.answer_text}
+                          </p>
+                        ) : hasApplicationVideo ? (
+                          <p className="text-xs font-medium text-[#780262] bg-[#780262]/5 rounded-xl px-3 py-2.5 border border-[#780262]/10">
+                            Answered in the candidate&apos;s personalized application video.
+                          </p>
                         ) : (
-                          <div className="w-14 h-9 rounded-lg bg-[#780262]/15 flex items-center justify-center shrink-0">
-                            <Video size={14} className="text-[#780262]" />
-                          </div>
+                          <p className="text-[10px] font-medium text-gray-300 italic px-1">
+                            No answer provided
+                          </p>
                         )}
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#780262] group-hover:text-[#5C014A] transition-colors">
-                          Play Video Answer
-                        </span>
-                      </button>
-                    ) : (
-                      <p className="text-[10px] font-medium text-gray-300 italic px-1">
-                        No answer provided
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}

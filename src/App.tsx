@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   CreditCard,
   ArrowRight,
@@ -51,7 +51,7 @@ import { ProfileTitleCustomization } from './components/screens/ProfileTitleCust
 import { ProfileEditor } from './components/screens/ProfileEditor';
 import { VideoIntroModal } from "./components/screens/VideoIntroModal";
 import { ApplicationQuestionsModal } from "./components/screens/ApplicationQuestionsModal";
-import type { QuestionAnswer } from "./components/screens/ApplicationQuestionsModal";
+import type { ApplicationSubmissionPayload } from "./components/screens/ApplicationQuestionsModal";
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
@@ -93,7 +93,7 @@ export default function App() {
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [showVideoUpdateModal, setShowVideoUpdateModal] = useState(false);
-  const [showCandidateVideoPlayer, setShowCandidateVideoPlayer] = useState(false);
+  const [candidateVideoPlayerUrl, setCandidateVideoPlayerUrl] = useState<string | null>(null);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -113,11 +113,18 @@ export default function App() {
   const [expandedPaymentItemId, setExpandedPaymentItemId] = useState<any>(null);
   const [showQuestionsModal, setShowQuestionsModal] = useState(false);
   const [pendingApplyItems, setPendingApplyItems] = useState<any[]>([]);
-  const [isApplying, setIsApplying] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [editingJob, setEditingJob] = useState<any>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  const [profileViewsCount, setProfileViewsCount] = useState(0);
+  const [applicationStatusDraft, setApplicationStatusDraft] = useState("pending");
+  const [employerNotesDraft, setEmployerNotesDraft] = useState("");
+  const [contactMethodDraft, setContactMethodDraft] = useState("");
+  const [contactNotesDraft, setContactNotesDraft] = useState("");
+  const [isSavingApplicationReview, setIsSavingApplicationReview] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const loggedCandidateViewsRef = useRef<Set<string>>(new Set());
+  const loggedApplicationViewsRef = useRef<Set<string>>(new Set());
   const [filters, setFilters] = useState({
     industries: [] as string[],
     locations: [] as string[],
@@ -154,7 +161,7 @@ export default function App() {
     if (myJobIds.length === 0) return;
     supabase
       .from('applications')
-      .select('candidate_id, job_id, status, question_answers, applied_at, updated_at, reviewed_at')
+      .select('id, candidate_id, job_id, status, video_url, video_thumbnail_url, question_answers, applied_at, updated_at, reviewed_at, employer_notes, contact_method, contact_notes')
       .in('job_id', myJobIds)
       .then(({ data }) => { if (data) setEmployerApplications(data); });
   }, [userRole, userProfile?.employerId, jobs]);
@@ -337,7 +344,7 @@ export default function App() {
       //   ALTER TABLE applications ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
       const { data: appData, error } = await supabase
         .from('applications')
-        .select('job_id, status, applied_at, updated_at, reviewed_at')
+        .select('id, job_id, status, video_url, video_thumbnail_url, question_answers, applied_at, updated_at, reviewed_at')
         .eq('candidate_id', candidateId)
         .order('applied_at', { ascending: false });
 
@@ -346,15 +353,109 @@ export default function App() {
         return;
       }
 
-      if (appData && appData.length > 0) {
-        setApplications(appData);
-        setAppliedJobIds(appData.map(a => a.job_id));
-        console.log(`Loaded ${appData.length} job applications`);
-      }
+      setApplications(appData || []);
+      setAppliedJobIds((appData || []).map(a => a.job_id));
+      console.log(`Loaded ${(appData || []).length} job applications`);
     } catch (err) {
       console.error("Unexpected error fetching applications:", err);
     }
   };
+
+  const fetchSeekerProfileViews = async (candidateId: number) => {
+    if (!candidateId) return;
+    try {
+      const [{ data: viewRows }, { data: candidateRow }] = await Promise.all([
+        supabase
+          .from('views')
+          .select('viewer_email')
+          .eq('target_type', 'candidate_profile')
+          .eq('target_id', candidateId),
+        supabase
+          .from('candidates')
+          .select('profile_views')
+          .eq('id', candidateId)
+          .maybeSingle(),
+      ]);
+
+      const uniqueEmployerViews = new Set(
+        (viewRows || [])
+          .map((row: any) => row.viewer_email)
+          .filter(Boolean)
+      ).size;
+
+      setProfileViewsCount(uniqueEmployerViews || candidateRow?.profile_views || 0);
+    } catch (err) {
+      console.error("Unexpected error fetching seeker profile views:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (userRole !== 'seeker') return;
+    const candidateId = userProfile?.candidateId ?? userProfile?.id;
+    if (!candidateId) return;
+    fetchSeekerProfileViews(Number(candidateId));
+  }, [userRole, userProfile?.candidateId, userProfile?.id]);
+
+  useEffect(() => {
+    if (userRole !== 'employer' || !selectedCandidate || !userProfile?.email) return;
+
+    const candidateViewKey = `${userProfile.email}-${selectedCandidate.id}`;
+    const applicationId = selectedCandidate.application?.id;
+    const applicationViewKey = applicationId ? `${userProfile.email}-${applicationId}` : null;
+
+    setApplicationStatusDraft(selectedCandidate.application?.status || "pending");
+    setEmployerNotesDraft(selectedCandidate.application?.employer_notes || "");
+    setContactMethodDraft(selectedCandidate.application?.contact_method || "");
+    setContactNotesDraft(selectedCandidate.application?.contact_notes || "");
+
+    const markViewed = async () => {
+      try {
+        if (!loggedCandidateViewsRef.current.has(candidateViewKey)) {
+          loggedCandidateViewsRef.current.add(candidateViewKey);
+          await supabase.from('views').insert([{
+            viewer_email: userProfile.email,
+            target_type: 'candidate_profile',
+            target_id: selectedCandidate.id,
+          }]);
+        }
+
+        if (applicationId && applicationViewKey && !loggedApplicationViewsRef.current.has(applicationViewKey)) {
+          loggedApplicationViewsRef.current.add(applicationViewKey);
+          await supabase.from('views').insert([{
+            viewer_email: userProfile.email,
+            target_type: 'application',
+            target_id: applicationId,
+          }]);
+
+          if (!selectedCandidate.application?.reviewed_at) {
+            const reviewedAt = new Date().toISOString();
+            const { error } = await supabase
+              .from('applications')
+              .update({ reviewed_at: reviewedAt, updated_at: reviewedAt })
+              .eq('id', applicationId);
+            if (!error) {
+              setEmployerApplications(prev =>
+                prev.map((application: any) =>
+                  application.id === applicationId
+                    ? { ...application, reviewed_at: reviewedAt, updated_at: reviewedAt }
+                    : application
+                )
+              );
+              setSelectedCandidate((prev: any) =>
+                prev && prev.application?.id === applicationId
+                  ? { ...prev, application: { ...prev.application, reviewed_at: reviewedAt, updated_at: reviewedAt } }
+                  : prev
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error recording candidate/application view:", err);
+      }
+    };
+
+    markViewed();
+  }, [selectedCandidate?.id, selectedCandidate?.application?.id, userRole, userProfile?.email]);
 
   const handleNavigate = (view: ViewType) => {
   setCurrentView(view);
@@ -431,19 +532,7 @@ export default function App() {
           return;
         }
 
-        // Check if any jobs have questions — show Q&A modal before finalizing
-        const hasQuestions = paymentItems.some(
-          (j: any) => Array.isArray(j.application_questions) && j.application_questions.length > 0
-        );
-        if (hasQuestions) {
-          setPendingApplyItems([...paymentItems]);
-          setShowPaymentModal(false);
-          setShowQuestionsModal(true);
-          return;
-        }
-
-        // No questions: finalize immediately
-        await finalizeApplications(paymentItems, {});
+        await finalizeApplications(paymentItems);
       } else {
         // Save unlocks to database
         if (userProfile?.email) {
@@ -490,11 +579,7 @@ export default function App() {
     }
   };
 
-  const finalizeApplications = async (
-    items: any[],
-    answersByJobId: Record<number, QuestionAnswer[]>
-  ) => {
-    setIsApplying(true);
+  const finalizeApplications = async (items: any[]) => {
     try {
       const itemIds = items.map((i: any) => i.id);
 
@@ -510,19 +595,6 @@ export default function App() {
       const { error: unlockError } = await supabase.from('unlocks').insert(unlockRecords);
       if (unlockError) console.error("Error saving unlock:", unlockError);
 
-      if (userProfile?.id) {
-        const applicationRecords = itemIds.map((jobId: number) => ({
-          candidate_id: userProfile.id,
-          job_id: jobId,
-          status: 'submitted',
-          ...(answersByJobId[jobId]?.length ? { question_answers: answersByJobId[jobId] } : {})
-        }));
-        const { error: applicationError } = await supabase
-          .from('applications')
-          .upsert(applicationRecords, { onConflict: 'candidate_id,job_id' });
-        if (applicationError) console.error("Error saving application:", applicationError);
-      }
-
       const { error: deleteError } = await supabase
         .from('saved_items')
         .delete()
@@ -532,49 +604,133 @@ export default function App() {
       if (deleteError) console.error("Error removing from saved items:", deleteError);
 
       setUnlockedJobIds(prev => [...prev, ...itemIds]);
-      setAppliedJobIds(prev => [...prev, ...itemIds]);
-      const now = new Date().toISOString();
-      setApplications(prev => [
-        ...prev,
-        ...itemIds.map((jobId: number) => ({ job_id: jobId, status: 'submitted', applied_at: now, updated_at: now, reviewed_at: null }))
-      ]);
       setSeekerQueue(seekerQueue.filter((q: any) => !itemIds.includes(q.id)));
       setShowPaymentModal(false);
       setShowQuestionsModal(false);
       setPendingApplyItems([]);
-      toast.success("Applied!", { description: "Business details now revealed in your jobs." });
+      toast.success("Job unlocked!", { description: "Business details are now visible. Apply from your unlocked jobs when you're ready." });
       handleNavigate("seeker");
     } catch (err) {
       console.error("Application error:", err);
       toast.error("Application failed. Please try again.");
-    } finally {
-      setIsApplying(false);
     }
   };
 
-  const submitApplicationAnswers = async (job: any, answers: QuestionAnswer[]) => {
+  const submitApplicationAnswers = async (job: any, submission: ApplicationSubmissionPayload) => {
     setShowQuestionsModal(false);
     setPendingApplyItems([]);
-    if (!userProfile?.id) return;
-    const nonEmpty = answers.filter((a) => a.answer_text || a.answer_video_url);
+    const candidateId = Number(userProfile?.candidateId ?? userProfile?.id);
+    if (!candidateId) return;
+    const normalizedAnswers = Array.isArray(submission.question_answers)
+      ? submission.question_answers
+      : [];
     try {
-      await supabase
+      const now = new Date().toISOString();
+      const { data: savedApplication, error } = await supabase
         .from('applications')
         .upsert(
-          [{ candidate_id: userProfile.id, job_id: job.id, status: 'submitted', ...(nonEmpty.length ? { question_answers: nonEmpty } : {}) }],
+          [{
+            candidate_id: candidateId,
+            job_id: job.id,
+            status: 'pending',
+            updated_at: now,
+            question_answers: normalizedAnswers,
+            video_url: submission.mode === 'video' ? (submission.video_url || null) : null,
+            video_thumbnail_url: submission.mode === 'video' ? (submission.video_thumbnail_url || null) : null,
+          }],
           { onConflict: 'candidate_id,job_id' }
-        );
+        )
+        .select('id, job_id, status, video_url, video_thumbnail_url, question_answers, applied_at, updated_at, reviewed_at')
+        .single();
+      if (error) throw error;
+
       // Update local applications state
       setApplications(prev => {
         const existing = prev.find(a => a.job_id === job.id);
-        if (existing) return prev.map(a => a.job_id === job.id ? { ...a, question_answers: nonEmpty } : a);
-        const now = new Date().toISOString();
-        return [...prev, { job_id: job.id, status: 'submitted', applied_at: now, updated_at: now, reviewed_at: null, question_answers: nonEmpty }];
+        if (existing) {
+          return prev.map(a => a.job_id === job.id ? {
+            ...a,
+            ...(savedApplication || {}),
+          } : a);
+        }
+        return [...prev, (savedApplication || {
+          job_id: job.id,
+          status: 'pending',
+          applied_at: now,
+          updated_at: now,
+          reviewed_at: null,
+          question_answers: normalizedAnswers,
+          video_url: submission.mode === 'video' ? (submission.video_url || null) : null,
+          video_thumbnail_url: submission.mode === 'video' ? (submission.video_thumbnail_url || null) : null,
+        })];
       });
-      toast.success("Answers submitted!", { description: "Your responses have been sent to the employer." });
+      setAppliedJobIds(prev => Array.from(new Set([...prev, job.id])));
+      toast.success("Application submitted!", { description: "Your application has been sent to the employer." });
     } catch (err) {
-      console.error("Answer submission error:", err);
-      toast.error("Failed to submit answers. Please try again.");
+      console.error("Application submission error:", err);
+      toast.error("Failed to submit your application. Please try again.");
+    }
+  };
+
+  const saveEmployerApplicationReview = async () => {
+    if (userRole !== 'employer' || !selectedCandidate?.application?.id) return;
+    setIsSavingApplicationReview(true);
+    try {
+      const applicationId = selectedCandidate.application.id;
+      const updatedAt = new Date().toISOString();
+      const reviewedAt = selectedCandidate.application.reviewed_at || updatedAt;
+      const payload = {
+        status: applicationStatusDraft,
+        employer_notes: employerNotesDraft.trim() || null,
+        contact_method: contactMethodDraft.trim() || null,
+        contact_notes: contactNotesDraft.trim() || null,
+        reviewed_at: reviewedAt,
+        updated_at: updatedAt,
+      };
+
+      const { error } = await supabase
+        .from('applications')
+        .update(payload)
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      setEmployerApplications(prev =>
+        prev.map((application: any) =>
+          application.id === applicationId ? { ...application, ...payload } : application
+        )
+      );
+      setSelectedCandidate((prev: any) =>
+        prev && prev.application?.id === applicationId
+          ? { ...prev, status: payload.status, application: { ...prev.application, ...payload } }
+          : prev
+      );
+
+      toast.success("Application updated");
+    } catch (err) {
+      console.error("Error updating application:", err);
+      toast.error("Failed to update application");
+    } finally {
+      setIsSavingApplicationReview(false);
+    }
+  };
+
+  const toggleSelectedJobFilledStatus = async () => {
+    if (userRole !== 'employer' || !selectedJob?.id) return;
+    const nextStatus = selectedJob.status === 'filled' ? 'active' : 'filled';
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: nextStatus, updated_at: new Date().toISOString() })
+        .eq('id', selectedJob.id);
+      if (error) throw error;
+
+      setJobs(prev => prev.map((job: any) => job.id === selectedJob.id ? { ...job, status: nextStatus } : job));
+      setSelectedJob((prev: any) => prev ? { ...prev, status: nextStatus } : prev);
+      toast.success(nextStatus === 'filled' ? "Job marked filled" : "Job reopened");
+    } catch (err) {
+      console.error("Error updating job status:", err);
+      toast.error("Failed to update job status");
     }
   };
 
@@ -625,6 +781,7 @@ export default function App() {
   };
 
   const filteredJobs = jobs.filter(j => 
+    j.status !== 'filled' &&
     (filters.industries.length === 0 || filters.industries.includes(j.company_industry)) &&
     (filters.locations.length === 0 || filters.locations.includes(j.location)) &&
     (filters.payRanges.length === 0 || filters.payRanges.includes(j.pay_range)) &&
@@ -811,7 +968,7 @@ export default function App() {
       }}
       onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
       onShowFilters={() => setShowFilterModal(true)}
-      onSelectCandidate={(c) => { setSelectedCandidate(c); setShowCandidateVideoPlayer(false); }}
+      onSelectCandidate={(c) => { setSelectedCandidate(c); setCandidateVideoPlayerUrl(null); }}
       interactionFee={INTERACTION_FEE}
       viewerLocation={userProfile?.location}
       viewerIndustry={userProfile?.industry}
@@ -862,6 +1019,7 @@ export default function App() {
             onSelectJob={setSelectedJob}
             onAnswerQuestions={(job) => { setPendingApplyItems([job]); setShowQuestionsModal(true); }}
             applications={applications}
+            profileViewsCount={profileViewsCount}
             applicationCount={applications.length}
           />
         );
@@ -877,7 +1035,7 @@ export default function App() {
             onNavigate={handleNavigate}
             onShowPostJob={() => handleNavigate("job-posting")}
             onSelectJob={setSelectedJob}
-            onSelectCandidate={(c) => { setSelectedCandidate(c); setShowCandidateVideoPlayer(false); }}
+            onSelectCandidate={(c) => { setSelectedCandidate(c); setCandidateVideoPlayerUrl(null); }}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
             onShowAuth={handleShowAuth}
             onLogout={handleLogout}
@@ -946,13 +1104,7 @@ export default function App() {
                       payment_method: 'card',
                       payment_status: 'completed'
                     })));
-                    await supabase.from('applications').insert(pendingIds.map((jobId: number) => ({
-                      candidate_id: candidateId,
-                      job_id: jobId,
-                      status: 'submitted'
-                    })));
                     setUnlockedJobIds(prev => [...prev, ...pendingIds]);
-                    setAppliedJobIds(prev => [...prev, ...pendingIds]);
                     setPendingUnlockJobIds([]);
                     localStorage.removeItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
                   }
@@ -1833,13 +1985,13 @@ export default function App() {
     {/* What you get after purchase */}
     <div className={`p-4 rounded-2xl border ${paymentTarget?.type === 'seeker' ? 'bg-[#148F8B]/5 border-[#148F8B]/10' : 'bg-[#A63F8E]/5 border-[#A63F8E]/10'}`}>
       <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: paymentTarget?.type === 'seeker' ? '#148F8B' : '#A63F8E' }}>
-        {paymentTarget?.type === 'seeker' ? 'What you get after applying' : 'What unlocks after payment'}
+        {paymentTarget?.type === 'seeker' ? 'What unlocks after payment' : 'What unlocks after payment'}
       </p>
       {paymentTarget?.type === 'seeker' ? (
         <ul className="space-y-1">
           <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#148F8B] shrink-0" /> Business name and branding revealed</li>
           <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#148F8B] shrink-0" /> Direct contact details for the hiring team</li>
-          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#148F8B] shrink-0" /> Your application is submitted immediately</li>
+          <li className="flex items-center gap-2 text-xs text-gray-600 font-medium"><CheckCircle size={12} className="text-[#148F8B] shrink-0" /> Apply later with a personalized video or written answers</li>
         </ul>
       ) : (
         <ul className="space-y-1">
@@ -2057,26 +2209,16 @@ export default function App() {
         isOpen={showQuestionsModal}
         questions={pendingApplyItems[0]?.application_questions || []}
         jobTitle={pendingApplyItems[0]?.title || ""}
-        candidateId={String(userProfile?.id || "")}
-        onSubmit={(answers) => {
+        candidateId={String(userProfile?.candidateId ?? userProfile?.id ?? "")}
+        existingApplication={applications.find((application) => application.job_id === pendingApplyItems[0]?.id) || null}
+        onSubmit={(submission) => {
           const job = pendingApplyItems[0];
           if (!job) return;
-          if (unlockedJobIds.includes(job.id)) {
-            // Already unlocked — just submit answers, no payment step
-            submitApplicationAnswers(job, answers);
-          } else {
-            const answersByJobId = { [job.id]: answers.filter((a) => a.answer_text || a.answer_video_url) };
-            finalizeApplications(pendingApplyItems, answersByJobId);
-          }
+          submitApplicationAnswers(job, submission);
         }}
         onSkip={() => {
-          const items = pendingApplyItems;
-          const job = items[0];
           setShowQuestionsModal(false);
           setPendingApplyItems([]);
-          if (!job || !unlockedJobIds.includes(job.id)) {
-            finalizeApplications(items, {});
-          }
         }}
       />
 
@@ -2402,7 +2544,7 @@ export default function App() {
 
             {/* Employer action buttons - at top for easy access */}
             {userRole === 'employer' && (
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-3 gap-3 pt-2">
                 <Button variant="outline" className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
                   setEditingJob(selectedJob);
                   setSelectedJob(null);
@@ -2412,6 +2554,13 @@ export default function App() {
                 </Button>
                 <Button className="h-16 rounded-2xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setSelectedJob(null); handleNavigate('employer'); }}>
                   View Applicants
+                </Button>
+                <Button
+                  variant="outline"
+                  className={`h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200 ${selectedJob.status === 'filled' ? 'border-emerald-200 text-emerald-700 bg-emerald-50' : 'border-gray-200 text-gray-700 bg-white'}`}
+                  onClick={toggleSelectedJobFilledStatus}
+                >
+                  {selectedJob.status === 'filled' ? 'Reopen Job' : 'Mark Filled'}
                 </Button>
               </div>
             )}
@@ -2556,7 +2705,7 @@ export default function App() {
         )}
       </Modal>
 
-      <Modal isOpen={!!selectedCandidate} onClose={() => { setSelectedCandidate(null); setShowCandidateVideoPlayer(false); }} title={unlockedCandidateIds.includes(selectedCandidate?.id) ? "Full Candidate Profile" : "Candidate Intel"}>
+      <Modal isOpen={!!selectedCandidate} onClose={() => { setSelectedCandidate(null); setCandidateVideoPlayerUrl(null); }} title={unlockedCandidateIds.includes(selectedCandidate?.id) ? "Full Candidate Profile" : "Candidate Intel"}>
         {selectedCandidate && (
           <div className="space-y-10">
             {unlockedCandidateIds.includes(selectedCandidate.id) ? (
@@ -2578,7 +2727,7 @@ export default function App() {
                 {/* Video Player */}
                 <div
                   className="relative aspect-video bg-black rounded-[2.5rem] overflow-hidden group shadow-2xl cursor-pointer"
-                  onClick={() => selectedCandidate.video_url && setShowCandidateVideoPlayer(true)}
+                  onClick={() => selectedCandidate.video_url && setCandidateVideoPlayerUrl(selectedCandidate.video_url)}
                 >
                    <ImageWithFallback
                      src={selectedCandidate.video_thumbnail_url}
@@ -2761,6 +2910,123 @@ export default function App() {
                     </div>
                  </div>
               )}
+
+              {userRole === 'employer' && selectedCandidate.application && (
+                <div className="space-y-6 border-t border-gray-100 pt-6">
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Application Review</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1.5 rounded-xl bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest">
+                        {selectedCandidate.application.appliedToJob?.title || selectedCandidate.appliedToJob?.title || 'Applied Job'}
+                      </span>
+                      <span className="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest">
+                        {selectedCandidate.application.reviewed_at ? 'Reviewed' : 'Not reviewed yet'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {selectedCandidate.video_url && (
+                      <button
+                        type="button"
+                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.video_url)}
+                        className="p-4 rounded-2xl border border-[#148F8B]/20 bg-[#148F8B]/5 text-left hover:bg-[#148F8B]/10 transition-colors"
+                      >
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">Intro Video</p>
+                        <p className="mt-2 text-sm font-semibold text-gray-700">Play candidate intro video</p>
+                      </button>
+                    )}
+                    {selectedCandidate.application.video_url && (
+                      <button
+                        type="button"
+                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.application.video_url)}
+                        className="p-4 rounded-2xl border border-[#A63F8E]/20 bg-[#A63F8E]/5 text-left hover:bg-[#A63F8E]/10 transition-colors"
+                      >
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#A63F8E]">Personalized Video</p>
+                        <p className="mt-2 text-sm font-semibold text-gray-700">Play job-specific application video</p>
+                      </button>
+                    )}
+                  </div>
+
+                  {Array.isArray(selectedCandidate.application.question_answers) && selectedCandidate.application.question_answers.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Question Answers</h4>
+                      <div className="space-y-3">
+                        {selectedCandidate.application.question_answers.map((answer: any, idx: number) => (
+                          <div key={`${answer.question}-${idx}`} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{answer.question}</p>
+                            <p className="text-sm text-gray-700 font-medium">
+                              {answer.answer_text || (selectedCandidate.application.video_url ? "Answered in personalized video." : "No answer provided")}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Application Status</span>
+                      <select
+                        value={applicationStatusDraft}
+                        onChange={(e) => setApplicationStatusDraft(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="shortlisted">Shortlisted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="hired">Hired</option>
+                      </select>
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Method</span>
+                      <select
+                        value={contactMethodDraft}
+                        onChange={(e) => setContactMethodDraft(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
+                      >
+                        <option value="">Not contacted yet</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                        <option value="text">Text</option>
+                        <option value="in_person">In Person</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Employer Notes</span>
+                      <textarea
+                        value={employerNotesDraft}
+                        onChange={(e) => setEmployerNotesDraft(e.target.value)}
+                        rows={4}
+                        placeholder="Private notes about this candidate..."
+                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
+                      />
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Notes</span>
+                      <textarea
+                        value={contactNotesDraft}
+                        onChange={(e) => setContactNotesDraft(e.target.value)}
+                        rows={4}
+                        placeholder="How or when you contacted them..."
+                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
+                      />
+                    </label>
+                  </div>
+
+                  <Button
+                    className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#136068] text-white text-sm font-black uppercase tracking-widest"
+                    onClick={saveEmployerApplicationReview}
+                    disabled={isSavingApplicationReview}
+                  >
+                    {isSavingApplicationReview ? "Saving..." : "Save Application Review"}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {!unlockedCandidateIds.includes(selectedCandidate.id) && (
@@ -2773,11 +3039,11 @@ export default function App() {
       </Modal>
 
       {/* Candidate video player overlay */}
-      {showCandidateVideoPlayer && selectedCandidate?.video_url && (
+      {candidateVideoPlayerUrl && (
         <div
           className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
           style={{ zIndex: 1000001 }}
-          onClick={() => setShowCandidateVideoPlayer(false)}
+          onClick={() => setCandidateVideoPlayerUrl(null)}
         >
           <div
             className="w-full max-w-2xl"
@@ -2791,8 +3057,8 @@ export default function App() {
               style={{ maxHeight: "80vh" }}
             >
               <source
-                src={selectedCandidate.video_url}
-                type={selectedCandidate.video_url.includes('.webm') ? 'video/webm' : 'video/mp4'}
+                src={candidateVideoPlayerUrl}
+                type={candidateVideoPlayerUrl.includes('.webm') ? 'video/webm' : 'video/mp4'}
               />
             </video>
           </div>

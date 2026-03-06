@@ -29,6 +29,7 @@ interface SeekerDashboardProps {
   onLogout: () => void;
   unlockedJobs?: any[];
   applications?: any[];
+  profileViewsCount?: number;
   onSelectJob?: (job: any) => void;
   onAnswerQuestions?: (job: any) => void;
   applicationCount?: number;
@@ -44,6 +45,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   onLogout,
   unlockedJobs,
   applications = [],
+  profileViewsCount = 0,
   onSelectJob,
   onAnswerQuestions,
   applicationCount = 0
@@ -89,18 +91,31 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   };
 
   const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-    submitted:   { bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]',   label: 'Submitted' },
-    reviewed:    { bg: 'bg-amber-50',     text: 'text-amber-700',    label: 'Reviewed' },
+    pending:     { bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]',   label: 'Pending' },
+    reviewed:    { bg: 'bg-amber-50',     text: 'text-amber-700',   label: 'Reviewed' },
     shortlisted: { bg: 'bg-[#A63F8E]/10', text: 'text-[#A63F8E]',   label: 'Shortlisted' },
-    interview:   { bg: 'bg-purple-50',    text: 'text-purple-600',   label: 'Interview' },
-    rejected:    { bg: 'bg-gray-100',     text: 'text-gray-500',     label: 'Not Selected' },
+    rejected:    { bg: 'bg-gray-100',     text: 'text-gray-500',    label: 'Not Selected' },
+    hired:       { bg: 'bg-emerald-50',   text: 'text-emerald-700', label: 'Hired' },
+  };
+
+  const parseAppTimestamp = (value: string | null | undefined) => {
+    if (!value) return null;
+    const normalized = /[zZ]|[+-]\d{2}:\d{2}$/.test(value)
+      ? value
+      : `${value.replace(" ", "T")}Z`;
+    const parsed = new Date(normalized);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
 
   const toAgo = (iso: string | null | undefined) => {
-    if (!iso) return null;
-    try { return formatDistanceToNow(new Date(iso), { addSuffix: true }); }
+    const parsed = parseAppTimestamp(iso);
+    if (!parsed) return null;
+    try { return formatDistanceToNow(parsed, { addSuffix: true }); }
     catch { return null; }
   };
+
+  const applicationViewsCount = applications.filter((application) => !!application.reviewed_at).length;
+  const shortlistedCount = applications.filter((application) => application.status === "shortlisted").length;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 space-y-12 sm:space-y-16">
@@ -158,8 +173,8 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
       </div>
 
       {isLoggedIn && (
-        <div className="grid lg:grid-cols-3 gap-8 sm:gap-12 md:gap-20">
-          <div className="lg:col-span-2 space-y-8 sm:space-y-12">
+        <div className="space-y-8 sm:space-y-10">
+          <div className="space-y-8 sm:space-y-12">
             <div className="p-6 sm:p-10 md:p-12 bg-white rounded-[2.5rem] sm:rounded-[3.5rem] md:rounded-[4.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-16 group relative overflow-hidden">
               <div className="w-40 sm:w-48 md:w-52 aspect-[9/16] bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] overflow-hidden relative shadow-2xl shrink-0">
                 <ImageWithFallback src={userProfile?.videoThumbnailUrl || userProfile?.video_thumbnail_url || "https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800"} className="w-full h-full object-cover opacity-70" />
@@ -192,31 +207,56 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
             </div>
           </div>
 
-          {/* Stats Sidebar */}
+          {/* Activity Row */}
           <aside className="space-y-6 sm:space-y-8">
-            <div className="p-8 sm:p-10 md:p-12 bg-gray-900 text-white rounded-[2.5rem] sm:rounded-[3.5rem] md:rounded-[4.5rem] space-y-6 sm:space-y-8 shadow-2xl relative overflow-hidden group">
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none flex items-center gap-3">
+            <div className="p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden group">
+              <h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
                 <BarChart3 size={24} className="text-[#148F8B]" /> Activity
               </h3>
-              <div className="space-y-5">
-                <div className="flex justify-between items-end border-b border-white/10 pb-4">
-                  <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Profile Views</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#148F8B]">42</span>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "nowrap",
+                  width: "100%",
+                  gap: "12px",
+                }}
+              >
+                <div
+                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+                  style={{ flex: "1 1 0", minWidth: 0 }}
+                >
+                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Profile Views</span>
+                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{profileViewsCount}</span>
                 </div>
-                <div className="flex justify-between items-end border-b border-white/10 pb-4">
-                  <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Applications</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#780262]">{applicationCount}</span>
+                <div
+                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+                  style={{ flex: "1 1 0", minWidth: 0 }}
+                >
+                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Jobs Applied</span>
+                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{applicationCount}</span>
                 </div>
-                <div className="flex justify-between items-end border-b border-white/10 pb-4">
-                  <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Unlocked Profiles</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
+                <div
+                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+                  style={{ flex: "1 1 0", minWidth: 0 }}
+                >
+                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Jobs Unlocked</span>
+                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
                 </div>
-                <div className="flex justify-between items-end">
-                  <span className="text-white/40 font-black uppercase tracking-[0.3em] text-[9px]">Employers Seen You</span>
-                  <span className="text-4xl sm:text-5xl font-black tracking-tighter transition-all group-hover:text-yellow-400">7</span>
+                <div
+                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+                  style={{ flex: "1 1 0", minWidth: 0 }}
+                >
+                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">App Views</span>
+                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{applicationViewsCount}</span>
+                </div>
+                <div
+                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+                  style={{ flex: "1 1 0", minWidth: 0 }}
+                >
+                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Shortlisted</span>
+                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
                 </div>
               </div>
-              <Users className="absolute -right-20 -bottom-20 text-white/5 rotate-12" size={350} />
             </div>
 
             {/* Quick Profile Summary */}
@@ -262,8 +302,9 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
             {unlockedJobs.map((job) => {
               const matchMeta = getMatchMeta(job);
               const application = applications.find(a => a.job_id === job.id);
-              const statusKey = application?.status || 'submitted';
-              const statusCfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.submitted;
+              const hasApplied = !!application;
+              const statusKey = application?.status || null;
+              const statusCfg = statusKey ? (STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending) : null;
               const appliedAgo = toAgo(application?.applied_at);
               const reviewedAgo = application?.reviewed_at ? toAgo(application.reviewed_at) : null;
               const updatedDiffersFromApplied =
@@ -288,10 +329,11 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                           <div className="w-2 h-2 rounded-full bg-[#780262] animate-pulse" />
                           <span className="text-xs font-black uppercase tracking-widest text-[#780262]">Unlocked</span>
                         </div>
-                        {/* Application status pill */}
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusCfg.bg} ${statusCfg.text}`}>
-                          {statusCfg.label}
-                        </span>
+                        {statusCfg && (
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusCfg.bg} ${statusCfg.text}`}>
+                            {statusCfg.label}
+                          </span>
+                        )}
                         {matchMeta && (
                           <span
                             className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
@@ -390,14 +432,14 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                     </div>
                   )}
 
-                  {/* Answer Questions CTA */}
-                  {Array.isArray(job.application_questions) && job.application_questions.length > 0 && onAnswerQuestions && (
+                  {/* Apply CTA */}
+                  {onAnswerQuestions && (
                     <div className="pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                       <Button
                         className="w-full h-14 rounded-2xl bg-[#780262] hover:bg-[#780262]/90 text-white shadow-lg shadow-[#780262]/20 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-black uppercase tracking-widest"
                         onClick={() => onAnswerQuestions(job)}
                       >
-                        <MessageSquare size={16} /> Answer Questions
+                        <MessageSquare size={16} /> {hasApplied ? "Update Application" : "Apply to Job"}
                       </Button>
                     </div>
                   )}
