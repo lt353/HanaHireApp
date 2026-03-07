@@ -516,9 +516,10 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 								onClose();
 							}
 						}}
-						className="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+						aria-label={step === "preview" ? "Back to choose" : "Close"}
+					className="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
 					>
-						<X size={22} />
+						<X aria-hidden="true" size={22} />
 					</button>
 				</header>
 
@@ -578,7 +579,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 										onClick={openRecordView}
 										className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-[#148F8B] bg-[#148F8B] text-white font-black hover:bg-[#136068] transition-colors shadow-lg shadow-[#148F8B]/20"
 									>
-										<Camera size={24} />
+										<Camera aria-hidden="true" size={24} />
 										Record with Camera
 									</button>
 									<label className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-gray-200 bg-[#F3EAF5]/30 text-gray-800 font-bold hover:border-[#148F8B]/40 hover:bg-[#148F8B]/5 cursor-pointer transition-colors">
@@ -751,6 +752,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 											max={Math.max(0, previewBlob.duration - 0.5)}
 											step={0.5}
 											value={thumbnailTimeSeconds}
+											aria-label="Choose thumbnail frame time"
 											onChange={(e) =>
 												setThumbnailTimeSeconds(Number(e.target.value))
 											}
@@ -796,7 +798,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 											className="flex-1 py-3 rounded-xl bg-[#148F8B] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#136068] disabled:opacity-50 transition-colors"
 										>
 											<>
-												<Save size={20} />
+												<Save aria-hidden="true" size={20} />
 												Save
 											</>
 										</button>
@@ -839,7 +841,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 								className="w-full py-4 rounded-2xl font-black transition-colors flex items-center justify-center gap-2 shadow-lg border-2 border-red-700"
 								style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
 							>
-								<Camera size={22} />
+								<Camera aria-hidden="true" size={22} />
 								Start recording
 							</button>
 						</div>

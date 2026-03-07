@@ -51,7 +51,14 @@ export const Cart: React.FC<CartProps> = ({
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {queue.map(item => (
                 <div key={item.id} className="bg-white border border-gray-100 rounded-[2rem] sm:rounded-[3rem] lg:rounded-[3.5rem] overflow-hidden shadow-sm group transition-all hover:shadow-xl">
-                  <div className="p-4 sm:p-6 lg:p-10 flex items-center justify-between gap-2 sm:gap-4 cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
+                  <div
+                    className="p-4 sm:p-6 lg:p-10 flex items-center justify-between gap-2 sm:gap-4 cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={expandedId === item.id}
+                    onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedId(expandedId === item.id ? null : item.id); } }}
+                  >
                     <div className="flex items-center gap-2 sm:gap-4 lg:gap-8 min-w-0 flex-1">
                       {role === 'seeker' ? (
                         <div className="w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[1rem] sm:rounded-[1.5rem] lg:rounded-[2rem] bg-[#148F8B]/5 flex items-center justify-center text-[#148F8B] shadow-inner group-hover:rotate-6 transition-transform shrink-0">
@@ -82,7 +89,7 @@ export const Cart: React.FC<CartProps> = ({
                         <h3 className="font-black text-base sm:text-xl lg:text-2xl tracking-tight truncate">
                           {role === 'seeker' ? item.title : formatCandidateTitle(item)}
                         </h3>
-                        <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 truncate">
+                        <p className="text-xs font-black uppercase tracking-widest text-gray-400 truncate">
                           {role === 'seeker' ? item.location : item.location}
                         </p>
                       </div>
@@ -128,7 +135,7 @@ export const Cart: React.FC<CartProps> = ({
                           {/* Requirements */}
                           {Array.isArray(item.requirements) && item.requirements.length > 0 && (
                             <div className="space-y-2">
-                              <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Requirements</span>
+                              <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Requirements</span>
                               <div className="flex flex-wrap gap-2">
                                 {item.requirements.map((r: string, i: number) => (
                                   <span key={i} className="px-3 py-1.5 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest">{r}</span>
@@ -139,7 +146,7 @@ export const Cart: React.FC<CartProps> = ({
                           {/* Responsibilities */}
                           {Array.isArray(item.responsibilities) && item.responsibilities.length > 0 && (
                             <div className="space-y-2">
-                              <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Responsibilities</span>
+                              <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Responsibilities</span>
                               <ul className="space-y-1.5">
                                 {item.responsibilities.map((r: string, i: number) => (
                                   <li key={i} className="flex gap-2 items-start text-xs text-gray-600">
@@ -153,7 +160,7 @@ export const Cart: React.FC<CartProps> = ({
                           {/* Benefits */}
                           {Array.isArray(item.benefits) && item.benefits.length > 0 && (
                             <div className="space-y-2">
-                              <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Benefits</span>
+                              <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Benefits</span>
                               <div className="flex flex-wrap gap-2">
                                 {item.benefits.map((b: string, i: number) => (
                                   <span key={i} className="px-3 py-1.5 bg-[#A63F8E]/5 text-[#A63F8E] rounded-lg text-[10px] font-black uppercase tracking-widest">{b}</span>
@@ -178,37 +185,37 @@ export const Cart: React.FC<CartProps> = ({
                           <div className="grid grid-cols-2 gap-2 sm:gap-3">
                             {item.years_experience && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Experience</span>
+                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Experience</span>
                                 <p className="text-xs font-black text-gray-900">{item.years_experience} Years</p>
                               </div>
                             )}
                             {item.availability && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Availability</span>
+                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Availability</span>
                                 <p className="text-xs font-black text-[#A63F8E]">{item.availability}</p>
                               </div>
                             )}
                             {item.education && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Education</span>
+                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Education</span>
                                 <p className="text-xs font-black text-gray-900">{item.education}</p>
                               </div>
                             )}
                             {item.preferred_pay_range && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Target Pay</span>
+                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Target Pay</span>
                                 <p className="text-xs font-black text-[#A63F8E]">{item.preferred_pay_range}</p>
                               </div>
                             )}
                             {item.work_style && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Work Style</span>
+                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Work Style</span>
                                 <p className="text-xs font-black text-gray-900">{item.work_style}</p>
                               </div>
                             )}
                             {item.current_employment_status && (
                               <div className="p-3 bg-white border border-gray-100 rounded-xl space-y-1">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Status</span>
+                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Status</span>
                                 <p className="text-xs font-black text-gray-900">{item.current_employment_status}</p>
                               </div>
                             )}
@@ -216,7 +223,7 @@ export const Cart: React.FC<CartProps> = ({
                           {/* Industries interested */}
                           {Array.isArray(item.industries_interested) && item.industries_interested.length > 0 && (
                             <div className="space-y-2">
-                              <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Industries Interested</span>
+                              <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Industries Interested</span>
                               <div className="flex flex-wrap gap-2">
                                 {item.industries_interested.map((ind: string, i: number) => (
                                   <span key={i} className="px-3 py-1.5 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest">{ind}</span>
@@ -227,7 +234,7 @@ export const Cart: React.FC<CartProps> = ({
                           {/* Job types seeking */}
                           {Array.isArray(item.job_types_seeking) && item.job_types_seeking.length > 0 && (
                             <div className="space-y-2">
-                              <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Seeking</span>
+                              <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Seeking</span>
                               <div className="flex flex-wrap gap-2">
                                 {item.job_types_seeking.map((jt: string, i: number) => (
                                   <span key={i} className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{jt}</span>

@@ -360,6 +360,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             type="text"
             placeholder="Search candidates by skills, location..."
+            aria-label="Search candidates by skills or location"
             className="w-full pl-14 pr-5 py-5 rounded-lg bg-white border border-gray-100 shadow-sm focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-lg"
           />
         </div>
@@ -377,6 +378,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value as CandidateSortOption)}
+              aria-label="Sort candidates"
               className="h-full px-4 bg-white rounded-lg border border-gray-200 text-xs font-black uppercase tracking-widest text-gray-700 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <option value="newest">Newest profiles first</option>
@@ -676,6 +678,9 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
           onClick={() => setShowPassedBin(false)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="passed-candidates-title"
             className="w-full max-w-lg bg-white rounded-t-3xl shadow-2xl flex flex-col"
             style={{ maxHeight: "75vh" }}
             onClick={(e) => e.stopPropagation()}
@@ -688,7 +693,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
-                <h3 className="text-xl font-black tracking-tight">Passed</h3>
+                <h3 id="passed-candidates-title" className="text-xl font-black tracking-tight">Passed</h3>
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-0.5">
                   {passedCandidates.length} candidate{passedCandidates.length !== 1 ? "s" : ""}
                 </p>
@@ -715,9 +720,10 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPassedBin(false)}
+                  aria-label="Close passed candidates panel"
                   className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  <X size={16} />
+                  <X aria-hidden="true" size={16} />
                 </button>
               </div>
             </div>

@@ -60,16 +60,16 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
           <h2 className="text-4xl font-black tracking-tighter">Account Settings</h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Full Name</label>
-              <input type="text" placeholder="Identity Name" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
+              <label htmlFor="settings-fullname" className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Full Name</label>
+              <input id="settings-fullname" type="text" placeholder="Identity Name" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Email Address</label>
-              <input type="email" placeholder="contact@domain.com" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
+              <label htmlFor="settings-email" className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Email Address</label>
+              <input id="settings-email" type="email" placeholder="contact@domain.com" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Phone Number</label>
-              <input type="tel" placeholder="+1 (808) 000-0000" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
+              <label htmlFor="settings-phone" className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Phone Number</label>
+              <input id="settings-phone" type="tel" placeholder="+1 (808) 000-0000" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="flex items-end">
               <Button className="h-16 px-10 rounded-2xl w-full" onClick={() => toast.success("Info Updated")}>Update Info</Button>
@@ -78,7 +78,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
         </section>
 
         <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><Database className="text-[#A63F8E]" /> System Data</h2>
+          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><Database aria-hidden="true" className="text-[#A63F8E]" /> System Data</h2>
           <div className="p-10 bg-red-50/30 border border-red-100 rounded-[3rem] space-y-6">
             <div className="space-y-2">
               <p className="font-black text-lg tracking-tight uppercase text-red-600">Factory Reset</p>
@@ -97,7 +97,7 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
         </section>
 
         <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><CreditCard className="text-[#148F8B]" /> Payment Setup</h2>
+          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><CreditCard aria-hidden="true" className="text-[#148F8B]" /> Payment Setup</h2>
           <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-6">
             <div className="w-16 h-16 rounded-full bg-[#F3EAF5]/30 flex items-center justify-center text-gray-600"><Plus size={32} /></div>
             <p className="text-gray-400 font-bold">Secure Stripe Connection</p>
@@ -106,13 +106,13 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
         </section>
 
         <section className="bg-[#148F8B]/5 p-12 rounded-[4rem] border border-[#148F8B]/10 space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><HelpCircle className="text-[#148F8B]" /> Support</h2>
+          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><HelpCircle aria-hidden="true" className="text-[#148F8B]" /> Support</h2>
           <div className="grid md:grid-cols-2 gap-8 text-sm">
             <div className="space-y-4">
               <p className="font-black text-xl tracking-tight leading-none">Contact HanaHire</p>
               <div className="space-y-2 font-bold">
-                <p className="flex items-center gap-3"><Mail size={18} className="text-[#148F8B]" /> support@hanahire.com</p>
-                <p className="flex items-center gap-3"><Phone size={18} className="text-[#148F8B]" /> +1 (808) 555-0199</p>
+                <p className="flex items-center gap-3"><Mail aria-hidden="true" size={18} className="text-[#148F8B]" /> support@hanahire.com</p>
+                <p className="flex items-center gap-3"><Phone aria-hidden="true" size={18} className="text-[#148F8B]" /> +1 (808) 555-0199</p>
               </div>
             </div>
           </div>

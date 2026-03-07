@@ -209,7 +209,7 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
               }`}
             >
               <div className="flex items-center gap-2">
-                <Video size={18} className="text-[#780262] shrink-0" />
+                <Video aria-hidden="true" size={18} className="text-[#780262] shrink-0" />
                 <span className="text-xs font-black uppercase tracking-widest text-[#780262]">
                   Personalized Video
                 </span>
@@ -231,7 +231,7 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
               }`}
             >
               <div className="flex items-center gap-2">
-                <MessageSquare size={18} className="text-[#148F8B] shrink-0" />
+                <MessageSquare aria-hidden="true" size={18} className="text-[#148F8B] shrink-0" />
                 <span className="text-xs font-black uppercase tracking-widest text-[#148F8B]">
                   Text Answers
                 </span>
@@ -292,13 +292,15 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
                   </div>
                   <button
                     type="button"
+                    aria-label="Re-record video"
                     onClick={() => setShowVideoModal(true)}
                     className="p-2 rounded-xl border border-[#780262]/20 text-[#780262] hover:bg-[#780262]/10 transition-colors"
                   >
-                    <RotateCcw size={14} />
+                    <RotateCcw aria-hidden="true" size={14} />
                   </button>
                   <button
                     type="button"
+                    aria-label="Remove video"
                     onClick={() => {
                       setApplicationVideoUrl(undefined);
                       setApplicationVideoThumbUrl(undefined);
@@ -306,7 +308,7 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
                     }}
                     className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors"
                   >
-                    <X size={14} />
+                    <X aria-hidden="true" size={14} />
                   </button>
                 </div>
               ) : (
@@ -369,6 +371,7 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
                             value={textAnswers[idx] || ""}
                             onChange={(e) => updateTextAnswer(idx, e.target.value)}
                             placeholder="Type your answer here..."
+                            aria-label={question}
                             rows={3}
                             className="w-full p-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-medium text-sm text-gray-900 resize-none transition-colors placeholder:text-gray-300"
                           />

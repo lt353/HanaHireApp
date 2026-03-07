@@ -179,12 +179,14 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
               <div className="w-40 sm:w-48 md:w-52 aspect-[9/16] bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] overflow-hidden relative shadow-2xl shrink-0">
                 <ImageWithFallback src={userProfile?.videoThumbnailUrl || userProfile?.video_thumbnail_url || "https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800"} className="w-full h-full object-cover opacity-70" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div
-                    className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-2xl flex items-center justify-center text-white border-2 border-white/40 shadow-2xl cursor-pointer hover:scale-110 transition-transform"
+                  <button
+                    type="button"
+                    aria-label="Play intro video"
+                    className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-2xl flex items-center justify-center text-white border-2 border-white/40 shadow-2xl hover:scale-110 transition-transform"
                     onClick={() => (userProfile?.videoUrl || userProfile?.video_url) && setShowVideoPlayer(true)}
                   >
-                    <Play fill="white" size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
-                  </div>
+                    <Play aria-hidden="true" fill="white" size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" />
+                  </button>
                 </div>
               </div>
               <div className="space-y-6 sm:space-y-8 text-center md:text-left flex-1">
@@ -225,35 +227,35 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                   className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
                   style={{ flex: "1 1 0", minWidth: 0 }}
                 >
-                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Profile Views</span>
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Profile Views</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{profileViewsCount}</span>
                 </div>
                 <div
                   className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
                   style={{ flex: "1 1 0", minWidth: 0 }}
                 >
-                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Jobs Applied</span>
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Applied</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{applicationCount}</span>
                 </div>
                 <div
                   className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
                   style={{ flex: "1 1 0", minWidth: 0 }}
                 >
-                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Jobs Unlocked</span>
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Unlocked</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
                 </div>
                 <div
                   className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
                   style={{ flex: "1 1 0", minWidth: 0 }}
                 >
-                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">App Views</span>
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">App Views</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{applicationViewsCount}</span>
                 </div>
                 <div
                   className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
                   style={{ flex: "1 1 0", minWidth: 0 }}
                 >
-                  <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Shortlisted</span>
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Shortlisted</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
                 </div>
               </div>

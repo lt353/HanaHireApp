@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { formatDistanceToNow } from "date-fns";
-import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, Eye, X, Filter, MessageSquare, Video } from "lucide-react";
+import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, Eye, X, Filter, MessageSquare, Video, ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
@@ -63,6 +63,8 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
   // Video lightbox for answer video playback
   const [videoLightbox, setVideoLightbox] = useState<string | null>(null);
+  // Collapsible answers/media per applicant card
+  const [openAnswersId, setOpenAnswersId] = useState<number | null>(null);
 
   // Filter jobs to show only the employer's posted jobs
   const myJobs = useMemo(() => {
@@ -210,14 +212,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
               className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
               style={{ flex: "1 1 0", minWidth: 0 }}
             >
-              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Open Jobs</span>
+              <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Open Jobs</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{openJobsCount}</span>
             </div>
             <div
               className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
               style={{ flex: "1 1 0", minWidth: 0 }}
             >
-              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Filled Jobs</span>
+              <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Filled Jobs</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-emerald-400">{filledJobsCount}</span>
             </div>
             <button
@@ -225,28 +227,28 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
               className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200"
               style={{ flex: "1 1 0", minWidth: 0 }}
             >
-              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Applicants</span>
+              <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Applicants</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{actualApplicants.length}</span>
             </button>
             <div
               className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
               style={{ flex: "1 1 0", minWidth: 0 }}
             >
-              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Reviewed</span>
+              <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Reviewed</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{reviewedCount}</span>
             </div>
             <div
               className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
               style={{ flex: "1 1 0", minWidth: 0 }}
             >
-              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Shortlisted</span>
+              <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Shortlisted</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
             </div>
             <div
               className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
               style={{ flex: "1 1 0", minWidth: 0 }}
             >
-              <span className="block text-white/45 font-black uppercase tracking-[0.18em] text-[8px] leading-tight">Contacted</span>
+              <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Contacted</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{contactedCount}</span>
             </div>
           </div>
@@ -282,7 +284,8 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                       </span>
                     )}
                   </div>
-                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-[#F3EAF5]/30 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onSelectJob(j)}>
+                  <Button variant="outline" className="h-9 sm:h-10 border-none bg-[#F3EAF5]/30 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-1.5" onClick={() => onSelectJob(j)}>
+                    <Pencil aria-hidden="true" size={11} />
                     Manage
                   </Button>
                 </div>
@@ -318,7 +321,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             </div>
           ) : (
             <div className="grid gap-4 sm:gap-6">
-              {unlockedCandidates.map(cand => (
+              {unlockedCandidates.map(cand => {
+                const candApplicant = actualApplicants.find(a => a.id === cand.id);
+                const candStatus = candApplicant?.status || null;
+                const candStatusStyle = candStatus ? (STATUS_COLORS[candStatus] || STATUS_COLORS['pending']) : null;
+                return (
                 <div
                   key={cand.id}
                   className="p-6 sm:p-8 bg-white border border-gray-100 rounded-[2.5rem] sm:rounded-[3rem] shadow-sm hover:shadow-xl transition-all group cursor-pointer"
@@ -336,7 +343,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-lg sm:text-xl font-black tracking-tight truncate">{cand.name || cand.display_title}</h4>
+                      <div className="flex items-start justify-between gap-3">
+                        <h4 className="text-lg sm:text-xl font-black tracking-tight truncate">{cand.name || cand.display_title}</h4>
+                        {candStatusStyle && (
+                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap shrink-0 ${candStatusStyle.bg} ${candStatusStyle.text}`}>
+                            {candStatus}
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                         <MapPin size={12} /> {cand.location}
                       </div>
@@ -344,17 +358,17 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                   </div>
 
                   <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-50 flex gap-2 sm:gap-3">
-                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
-                      <Phone size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    <button type="button" className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                      <Phone aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Call</span>
                     </button>
-                    <button className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
-                      <Mail size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    <button type="button" className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                      <Mail aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Email</span>
                     </button>
                   </div>
                 </div>
-              ))}
+              ); })}
             </div>
           )}
         </section>
@@ -381,10 +395,12 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                 <Filter size={14} className="text-[#148F8B] shrink-0" />
                 <span className="text-xs font-bold text-[#148F8B] flex-1 truncate">Showing applicants for: {filterJobTitle}</span>
                 <button
+                  type="button"
+                  aria-label="Clear job filter"
                   onClick={() => setFilterByJobId(null)}
                   className="p-1 rounded-lg hover:bg-[#148F8B]/10 transition-colors shrink-0"
                 >
-                  <X size={14} className="text-[#148F8B]" />
+                  <X aria-hidden="true" size={14} className="text-[#148F8B]" />
                 </button>
               </div>
             )}
@@ -419,9 +435,9 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       onClick={() => onSelectCandidate(applicant)}
     >
       {/* Header Row */}
-      <div className="p-4 sm:p-6 flex items-start gap-3 sm:gap-4">
+      <div className="p-5 sm:p-6 flex items-start gap-4">
         {/* Avatar */}
-        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-xl sm:rounded-2xl bg-gray-100 overflow-hidden relative shrink-0 group-hover:scale-105 transition-transform">
+        <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden relative shrink-0 transition-transform">
           <ImageWithFallback
             src={applicant.video_thumbnail_url || applicant.thumbnail}
             alt={applicant.name}
@@ -434,52 +450,50 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
         {/* Name + Location */}
         <div className="flex-1 min-w-0 space-y-2">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-3">
             <h4 className="text-base sm:text-lg font-black tracking-tight break-words leading-tight">
               {applicant.name}
             </h4>
             {/* Status Badge */}
-            <span className={`px-2 sm:px-2.5 py-1 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${statusStyle.bg} ${statusStyle.text} whitespace-nowrap shrink-0`}>
+            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal ${statusStyle.bg} ${statusStyle.text} whitespace-nowrap shrink-0`}>
               {applicant.status}
             </span>
           </div>
-          
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
-            <span className="flex items-center gap-1">
-              <MapPin size={10} /> {applicant.location}
+
+          <div className="flex flex-col gap-1 text-xs font-semibold text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <MapPin aria-hidden="true" size={12} /> {applicant.location}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock size={10} /> {applicant.appliedAgo}
+            <span className="flex items-center gap-1.5">
+              <Clock aria-hidden="true" size={12} /> {applicant.appliedAgo}
+            </span>
+          </div>
+
+          {/* Applied To Job Tag - moved inside header for compactness */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-400">Applied to:</span>
+            <span className="text-xs font-black text-[#148F8B] truncate">
+              {applicant.appliedToJob?.title || 'Your Job Post'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Applied To Job Tag */}
-      <div className="px-4 sm:px-6 pb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Applied to:</span>
-          <span className="text-xs sm:text-sm font-black text-[#148F8B] tracking-tight truncate">
-            {applicant.appliedToJob?.title || 'Your Job Post'}
-          </span>
-        </div>
-      </div>
-
-      {/* Skills Section - IMPROVED WITH BETTER SPACING */}
+      {/* Skills */}
       {applicant.skills && applicant.skills.length > 0 && (
-        <div className="px-4 sm:px-6 pb-4 space-y-2">
-          <h5 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Skills</h5>
+        <div className="px-5 sm:px-6 pb-4 space-y-2">
+          <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest">Skills</h5>
           <div className="flex flex-wrap gap-2">
             {applicant.skills.slice(0, 6).map((s: string, idx: number) => (
               <span
                 key={idx}
-                className="px-3 py-1.5 bg-[#F3EAF5]/30 text-gray-600 rounded-lg text-[10px] font-bold tracking-wide border border-gray-100"
+                className="px-3 py-1.5 bg-[#F3EAF5]/30 text-gray-600 rounded-lg text-xs font-semibold border border-gray-100"
               >
                 {s}
               </span>
             ))}
             {applicant.skills.length > 6 && (
-              <span className="px-3 py-1.5 text-gray-400 text-[10px] font-bold tracking-wide">
+              <span className="px-3 py-1.5 text-gray-400 text-xs font-semibold">
                 +{applicant.skills.length - 6}
               </span>
             )}
@@ -487,7 +501,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </div>
       )}
 
-      {/* Application videos and answers */}
+      {/* Application videos and answers — collapsible */}
       {(() => {
         const application = applicant.application;
         const jobQuestions: string[] = applicant.appliedToJob?.application_questions || [];
@@ -497,76 +511,91 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         const hasIntroVideo = !!applicant.video_url;
         const hasApplicationVideo = !!application?.video_url;
         if (!jobQuestions.length && !hasApplicationVideo && !hasIntroVideo) return null;
+        const isOpen = openAnswersId === applicant.id;
         return (
-          <div className="px-4 sm:px-6 pb-5 space-y-3" onClick={(e) => e.stopPropagation()}>
-            {(hasIntroVideo || hasApplicationVideo) && (
-              <div className="space-y-2">
-                <h5 className="text-[9px] font-black text-[#780262] uppercase tracking-widest flex items-center gap-1.5">
-                  <Video size={10} /> Application Media
-                </h5>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {hasIntroVideo && (
-                    <button
-                      type="button"
-                      onClick={() => setVideoLightbox(applicant.video_url)}
-                      className="flex items-center gap-3 w-full text-left bg-[#148F8B]/5 border border-[#148F8B]/15 rounded-xl px-3 py-2.5 hover:bg-[#148F8B]/10 transition-all group"
-                    >
-                      <div className="w-14 h-9 rounded-lg bg-[#148F8B]/15 flex items-center justify-center shrink-0">
-                        <Play size={12} className="text-[#148F8B] fill-[#148F8B]" />
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">
-                        Intro Video
-                      </span>
-                    </button>
-                  )}
-                  {hasApplicationVideo && (
-                    <button
-                      type="button"
-                      onClick={() => setVideoLightbox(application.video_url)}
-                      className="flex items-center gap-3 w-full text-left bg-[#780262]/5 border border-[#780262]/15 rounded-xl px-3 py-2.5 hover:bg-[#780262]/10 transition-all group"
-                    >
-                      <div className="w-14 h-9 rounded-lg bg-[#780262]/15 flex items-center justify-center shrink-0">
-                        <Play size={12} className="text-[#780262] fill-[#780262]" />
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[#780262]">
-                        Personalized Video
-                      </span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+          <div onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              onClick={() => setOpenAnswersId(isOpen ? null : applicant.id)}
+              className="w-full px-5 sm:px-6 pt-3 pb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-600 transition-colors border-t border-gray-100"
+            >
+              <MessageSquare aria-hidden="true" size={12} />
+              Application Details
+              {isOpen ? <ChevronUp aria-hidden="true" size={14} /> : <ChevronDown aria-hidden="true" size={14} />}
+            </button>
+            {isOpen && (
+              <div className="px-5 sm:px-6 pb-5 space-y-4">
+                {(hasIntroVideo || hasApplicationVideo) && (
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-black text-[#780262] uppercase tracking-widest flex items-center gap-1.5">
+                      <Video aria-hidden="true" size={12} /> Application Media
+                    </h5>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {hasIntroVideo && (
+                        <button
+                          type="button"
+                          onClick={() => setVideoLightbox(applicant.video_url)}
+                          className="flex items-center gap-3 w-full text-left bg-[#148F8B]/5 border border-[#148F8B]/15 rounded-xl px-3 py-2.5 hover:bg-[#148F8B]/10 transition-all group"
+                        >
+                          <div className="w-14 h-9 rounded-lg bg-[#148F8B]/15 flex items-center justify-center shrink-0">
+                            <Play aria-hidden="true" size={14} className="text-[#148F8B] fill-[#148F8B]" />
+                          </div>
+                          <span className="text-xs font-black uppercase tracking-wide text-[#148F8B]">
+                            Intro Video
+                          </span>
+                        </button>
+                      )}
+                      {hasApplicationVideo && (
+                        <button
+                          type="button"
+                          onClick={() => setVideoLightbox(application.video_url)}
+                          className="flex items-center gap-3 w-full text-left bg-[#780262]/5 border border-[#780262]/15 rounded-xl px-3 py-2.5 hover:bg-[#780262]/10 transition-all group"
+                        >
+                          <div className="w-14 h-9 rounded-lg bg-[#780262]/15 flex items-center justify-center shrink-0">
+                            <Play aria-hidden="true" size={14} className="text-[#780262] fill-[#780262]" />
+                          </div>
+                          <span className="text-xs font-black uppercase tracking-wide text-[#780262]">
+                            Personalized Video
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-            {jobQuestions.length > 0 && (
-              <div className="space-y-3">
-                <h5 className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest flex items-center gap-1.5">
-                  <MessageSquare size={10} /> Application Answers
-                </h5>
-                <div className="space-y-3">
-                  {jobQuestions.map((question: string, qIdx: number) => {
-                    const ans = answers.find((a: any) => a.question === question);
-                    return (
-                      <div key={qIdx} className="space-y-1.5">
-                        <p className="text-[9px] font-black text-[#148F8B] uppercase tracking-widest leading-tight">
-                          {question}
-                        </p>
-                        {ans?.answer_text ? (
-                          <p className="text-xs font-medium text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
-                            {ans.answer_text}
-                          </p>
-                        ) : hasApplicationVideo ? (
-                          <p className="text-xs font-medium text-[#780262] bg-[#780262]/5 rounded-xl px-3 py-2.5 border border-[#780262]/10">
-                            Answered in the candidate&apos;s personalized application video.
-                          </p>
-                        ) : (
-                          <p className="text-[10px] font-medium text-gray-300 italic px-1">
-                            No answer provided
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                {jobQuestions.length > 0 && (
+                  <div className="space-y-3">
+                    <h5 className="text-xs font-black text-[#148F8B] uppercase tracking-widest flex items-center gap-1.5">
+                      <MessageSquare aria-hidden="true" size={12} /> Application Answers
+                    </h5>
+                    <div className="space-y-3">
+                      {jobQuestions.map((question: string, qIdx: number) => {
+                        const ans = answers.find((a: any) => a.question === question);
+                        return (
+                          <div key={qIdx} className="space-y-2">
+                            <p className="text-xs font-black text-[#148F8B] uppercase tracking-wide leading-snug">
+                              {question}
+                            </p>
+                            {ans?.answer_text ? (
+                              <p className="text-sm font-medium text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                                {ans.answer_text}
+                              </p>
+                            ) : hasApplicationVideo ? (
+                              <p className="text-sm font-medium text-[#780262] bg-[#780262]/5 rounded-xl px-4 py-3 border border-[#780262]/10">
+                                Answered in the candidate&apos;s personalized application video.
+                              </p>
+                            ) : (
+                              <p className="text-xs font-medium text-gray-400 italic px-1">
+                                No answer provided
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -574,20 +603,22 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       })()}
 
       {/* Action Buttons */}
-      <div className="px-4 sm:px-6 pb-4 flex gap-2">
+      <div className="px-5 sm:px-6 pt-2 pb-10 flex gap-3 justify-center">
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); }}
-          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-1.5 hover:bg-[#148F8B] hover:text-white transition-all"
+          className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
         >
-          <Phone size={16} />
-          <span className="font-black text-[10px] uppercase tracking-wider">Call</span>
+          <Phone aria-hidden="true" size={16} />
+          Call
         </button>
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); }}
-          className="flex-1 h-10 sm:h-11 rounded-xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-1.5 hover:bg-[#A63F8E] hover:text-white transition-all"
+          className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
         >
-          <Mail size={16} />
-          <span className="font-black text-[10px] uppercase tracking-wider">Email</span>
+          <Mail aria-hidden="true" size={16} />
+          Email
         </button>
       </div>
     </motion.div>
@@ -680,17 +711,19 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       {/* Action Buttons */}
       <div className="px-4 sm:px-6 pb-4 flex gap-2">
         <button
+          type="button"
           onClick={() => onSelectCandidate(applicant)}
           className="flex-1 h-10 sm:h-11 rounded-xl bg-[#F3EAF5]/30 text-gray-600 flex items-center justify-center gap-1.5 hover:bg-gray-100 transition-all"
         >
-          <Eye size={20} />
+          <Eye aria-hidden="true" size={20} />
           <span className="font-black text-[12px] uppercase tracking-wider">Preview</span>
         </button>
         <button
+          type="button"
           onClick={() => onShowPayment({ type: 'employer', items: [applicant] })}
           className="flex-1 h-10 sm:h-11 rounded-xl bg-[#A63F8E] text-white flex items-center justify-center gap-1.5 hover:bg-[#A63F8E]/90 transition-all shadow-md shadow-[#A63F8E]/20"
         >
-          <Lock size={18} />
+          <Lock aria-hidden="true" size={18} />
           <span className="font-black text-[12px] uppercase tracking-wider">Unlock</span>
         </button>
       </div>
@@ -715,10 +748,12 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         >
           <div className="flex justify-end mb-3">
             <button
+              type="button"
+              aria-label="Close video"
               onClick={() => setVideoLightbox(null)}
               className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
             >
-              <X size={20} />
+              <X aria-hidden="true" size={20} />
             </button>
           </div>
           <video

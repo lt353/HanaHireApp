@@ -320,6 +320,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             type="text"
             placeholder="Search jobs by title, location..."
+            aria-label="Search jobs by title or location"
             className="w-full pl-14 pr-5 py-5 rounded-lg bg-white border border-gray-100 shadow-sm focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-lg"
           />
         </div>
@@ -337,6 +338,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value as JobSortOption)}
+              aria-label="Sort jobs"
               className="h-full px-4 bg-white rounded-lg border border-gray-200 text-xs font-black uppercase tracking-widest text-gray-700 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
             >
               <option value="newest">Newest first</option>
@@ -432,7 +434,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                   <button
                     type="button"
                     onClick={() => { handleToggleBookmark(currentJob); resetCard(); }}
-                    className="flex flex-col items-center justify-center gap-2 py-4 px-5 rounded-xl border-2 border-gray-200 bg-white hover:bg-[#F3EAF5]/50 hover:border-[#148F8B]/30 transition-all hover:scale-105 active:scale-95"
+                    className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-[#F3EAF5]/30 transition-all"
                     title={isInQueue(currentJob.id) ? "Remove from saved" : "Save job"}
                   >
                     <svg className="w-7 h-7" style={{ fill: isInQueue(currentJob.id) ? '#A63F8E' : 'none', stroke: isInQueue(currentJob.id) ? '#A63F8E' : '#9CA3AF', strokeWidth: '2' }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
@@ -495,7 +497,7 @@ export const JobsList: React.FC<JobsListProps> = ({
               return (
               <div
                 key={job.id}
-                className="relative p-4 border border-gray-100 rounded-xl hover:shadow-lg transition-all group overflow-hidden flex"
+                className="relative p-6 border border-gray-100 rounded-2xl hover:shadow-2xl transition-all group overflow-hidden flex"
                 style={{
                   background: "#FAFAFA",
                   borderLeft: `6px solid ${categoryStyle.borderColor}`,
@@ -534,7 +536,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                     <button
                       type="button"
                       onClick={() => handleToggleBookmark(job)}
-                      className="flex flex-col items-center justify-center gap-2 py-4 px-5 rounded-xl border-2 border-gray-200 bg-white hover:bg-[#F3EAF5]/50 hover:border-[#148F8B]/30 transition-all hover:scale-105 active:scale-95"
+                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-[#F3EAF5]/30 transition-all"
                       title={isInQueue(job.id) ? "Remove from saved" : "Save job"}
                     >
                       <svg className="w-7 h-7" style={{ fill: isInQueue(job.id) ? '#A63F8E' : 'none', stroke: isInQueue(job.id) ? '#A63F8E' : '#9CA3AF', strokeWidth: '2' }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
@@ -556,6 +558,9 @@ export const JobsList: React.FC<JobsListProps> = ({
           onClick={() => setShowPassedBin(false)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="passed-jobs-title"
             className="w-full max-w-lg bg-white rounded-t-3xl shadow-2xl flex flex-col"
             style={{ maxHeight: "75vh" }}
             onClick={(e) => e.stopPropagation()}
@@ -568,7 +573,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
-                <h3 className="text-xl font-black tracking-tight">Passed</h3>
+                <h3 id="passed-jobs-title" className="text-xl font-black tracking-tight">Passed</h3>
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-0.5">
                   {passedJobs.length} job{passedJobs.length !== 1 ? "s" : ""}
                 </p>
@@ -595,9 +600,10 @@ export const JobsList: React.FC<JobsListProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPassedBin(false)}
+                  aria-label="Close passed jobs panel"
                   className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
                 >
-                  <X size={16} />
+                  <X aria-hidden="true" size={16} />
                 </button>
               </div>
             </div>
