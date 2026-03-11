@@ -397,50 +397,49 @@ export const JobsList: React.FC<JobsListProps> = ({
               <motion.div style={{ opacity: passOpacity, scale: badgeScale }} className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-[calc(100%+24px)] px-6 py-3 rounded-lg bg-[#A63F8E] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none">Skip</motion.div>
               <motion.div style={{ opacity: saveOpacity, scale: badgeScale }} className="absolute top-1/2 left-1/2 -translate-y-1/2 translate-x-[24px] px-6 py-3 rounded-lg bg-[#148F8B] text-white text-xs font-black uppercase tracking-widest shadow-2xl pointer-events-none">Save</motion.div>
 
-              {/* Layout: [ Left: illustration + metadata ] [ Middle: title + description + tap ] [ Right: Save ] */}
-              <div className="flex gap-4 items-stretch">
-                {/* Left: illustration + info centered under it, no outline */}
-                <div className="shrink-0 flex flex-col gap-2.5 items-center" style={{ width: 124 }}>
-                  {getJobCategoryStyle(currentJob.job_category).svgPath ? (
-                    <div className="rounded-lg overflow-hidden opacity-90 flex items-center justify-center bg-white/60 border border-white/80 p-1" style={{ width: 108, height: 108 }}>
-                      <img src={`${import.meta.env.BASE_URL}${getJobCategoryStyle(currentJob.job_category).svgPath}`} alt="" className="w-full h-full object-contain" />
-                    </div>
-                  ) : null}
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {currentJob.company_industry && <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: "rgba(20, 143, 139, 0.15)", color: "#0D7377" }}>{currentJob.company_industry}</span>}
+              {/* Top row: image + title + save button */}
+              <div className="flex items-start gap-3">
+                {getJobCategoryStyle(currentJob.job_category).svgPath ? (
+                  <div className="rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white/60 border border-white/80 p-1" style={{ width: 56, height: 56 }}>
+                    <img src={`${import.meta.env.BASE_URL}${getJobCategoryStyle(currentJob.job_category).svgPath}`} alt="" className="w-full h-full object-contain" />
+                  </div>
+                ) : null}
+                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onSelectJob(currentJob)}>
+                  <h3 className="text-lg font-black tracking-tight leading-snug break-words">{currentJob.title}</h3>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {currentJob.company_industry && <span className="inline-flex px-2.5 py-1 text-xs font-bold rounded-lg" style={{ backgroundColor: "rgba(20, 143, 139, 0.15)", color: "#0D7377" }}>{currentJob.company_industry}</span>}
                     {currentJob.job_category && (() => {
                       const s = getJobCategoryStyle(currentJob.job_category);
-                      return <span className="inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded w-fit" style={{ background: s.badgeBackground ?? "rgba(249, 115, 22, 0.1)", color: s.textColor ?? "#C05621" }}>{currentJob.job_category}</span>;
+                      return <span className="inline-flex px-2.5 py-1 text-xs font-bold uppercase rounded-lg w-fit" style={{ background: s.badgeBackground ?? "rgba(249, 115, 22, 0.1)", color: s.textColor ?? "#C05621" }}>{currentJob.job_category}</span>;
                     })()}
-                    {currentJob.company_size && <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: "rgba(139, 92, 246, 0.18)", color: "#5B21B6" }}>{currentJob.company_size}</span>}
+                    {currentJob.company_size && <span className="inline-flex px-2.5 py-1 text-xs font-bold rounded-lg" style={{ backgroundColor: "rgba(139, 92, 246, 0.18)", color: "#5B21B6" }}>{currentJob.company_size}</span>}
                   </div>
                 </div>
-
-                {/* Middle: title, location/pay/type line, description, tap — with padding */}
-                <div className="flex-1 min-w-0 flex flex-col justify-center gap-3 px-4 py-2 cursor-pointer" onClick={() => onSelectJob(currentJob)}>
-                  <h3 className="text-lg font-black tracking-tight leading-snug break-words">{currentJob.title}</h3>
-                  <div className="flex flex-wrap text-[11px] font-semibold text-gray-500" style={{ gap: "0.75rem 1.25rem" }}>
-                    <span className="flex items-center gap-1"><MapPin size={10} /> {currentJob.location}</span>
-                    <span className="flex items-center gap-1 text-[#148F8B]"><DollarSign size={10} /> {currentJob.pay_range}</span>
-                    <span className="flex items-center gap-1"><Briefcase size={10} /> {currentJob.job_type}</span>
-                    <span className="text-gray-400"><Lock size={10} /> {isApplied(currentJob.id) ? "Applied" : isUnlocked(currentJob.id) ? "Unlocked" : "Locked"}</span>
-                  </div>
-                  {currentJob.description && <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{currentJob.description}</p>}
-                  <p className="text-xs font-black text-[#148F8B] uppercase tracking-widest">Tap for details →</p>
-                </div>
-
-                {/* Right: larger Save button */}
-                <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex items-center">
+                <div onClick={(e) => e.stopPropagation()} className="shrink-0">
                   <button
                     type="button"
                     onClick={() => { handleToggleBookmark(currentJob); resetCard(); }}
-                    className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl border border-gray-200 bg-white hover:bg-[#F3EAF5]/30 transition-all"
+                    className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-[#F3EAF5]/30 transition-all"
                     title={isInQueue(currentJob.id) ? "Remove from saved" : "Save job"}
                   >
-                    <svg className="w-7 h-7" style={{ fill: isInQueue(currentJob.id) ? '#A63F8E' : 'none', stroke: isInQueue(currentJob.id) ? '#A63F8E' : '#9CA3AF', strokeWidth: '2' }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-                    <span className="text-xs font-black uppercase" style={{ color: isInQueue(currentJob.id) ? '#A63F8E' : '#6B7280' }}>{isInQueue(currentJob.id) ? 'Saved' : 'Save'}</span>
+                    <svg className="w-6 h-6" style={{ fill: isInQueue(currentJob.id) ? '#A63F8E' : 'none', stroke: isInQueue(currentJob.id) ? '#A63F8E' : '#9CA3AF', strokeWidth: '2' }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                    <span className="text-[10px] font-black uppercase" style={{ color: isInQueue(currentJob.id) ? '#A63F8E' : '#6B7280' }}>{isInQueue(currentJob.id) ? 'Saved' : 'Save'}</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Metadata row */}
+              <div className="flex flex-wrap text-[11px] font-semibold text-gray-500 mt-3" style={{ gap: "0.5rem 1rem" }}>
+                <span className="flex items-center gap-1"><MapPin size={10} /> {currentJob.location}</span>
+                <span className="flex items-center gap-1 text-[#148F8B]"><DollarSign size={10} /> {currentJob.pay_range}</span>
+                <span className="flex items-center gap-1"><Briefcase size={10} /> {currentJob.job_type}</span>
+                <span className="text-gray-400 flex items-center gap-1"><Lock size={10} /> {isApplied(currentJob.id) ? "Applied" : isUnlocked(currentJob.id) ? "Unlocked" : "Locked"}</span>
+              </div>
+
+              {/* Description — full width */}
+              <div className="cursor-pointer mt-3" onClick={() => onSelectJob(currentJob)}>
+                {currentJob.description && <p className="text-sm text-gray-600 leading-relaxed line-clamp-4">{currentJob.description}</p>}
+                <p className="text-xs font-black text-[#148F8B] uppercase tracking-widest mt-2">Tap for details →</p>
               </div>
 
               {/* Action buttons - Skip, Save, Undo */}

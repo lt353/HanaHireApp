@@ -260,8 +260,8 @@ export const Cart: React.FC<CartProps> = ({
                     <span className="text-lg font-bold">${(queue.length * interactionFee).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center border-t border-gray-100 pt-8">
-                    <span className="text-3xl font-black tracking-tight">Total</span>
-                    <span className="text-5xl font-black text-[#148F8B] tracking-tighter">${total.toFixed(2)}</span>
+                    <span className="text-lg font-bold">Total</span>
+                    <span className="text-lg font-bold text-[#148F8B]">${total.toFixed(2)}</span>
                   </div>
                 </div>
                 <Button

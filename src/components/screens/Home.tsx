@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Video, Search, DollarSign, CheckCircle, Sparkles, Clock, Shield, Users } from "lucide-react";
+import { Video, Search, DollarSign, CheckCircle, Sparkles, Clock, Shield, Users, Briefcase } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { INTERACTION_FEE } from "../../data/mockData";
 import heroImg from "../../assets/hero-image.jpg";
@@ -36,7 +36,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
               Not the Paper
             </h1>
             <p className="text-lg sm:text-2xl md:text-4xl text-gray-800 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Job seekers show who they are in seconds. Employers see real people, not paper. Everyone saves time.
+              Join Hawaii's video-first job marketplace. Employers see real people, not paper. Everyone saves time.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center lg:justify-start pt-4 sm:pt-6">
@@ -107,7 +107,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             </div>
             <div className="flex-1 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 space-y-4 sm:space-y-6 shadow-lg" style={{ backgroundColor: '#c8f0e5' }}>
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center">
-                <DollarSign size={40} className="sm:w-11 sm:h-11 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
+                <Briefcase size={40} className="sm:w-11 sm:h-11 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 3px #e8e4de)' }} />
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Apply & Unlock</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Pay ${INTERACTION_FEE.toFixed(2)} to apply and reveal the employer. Direct contact info unlocked instantly.
+                  Apply to reveal the employer. Direct contact info unlocked instantly.
                 </p>
               </div>
             </div>
@@ -169,7 +169,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Unlock & Connect</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Pay ${INTERACTION_FEE.toFixed(2)} per candidate to unlock full profile and contact info. Reach out directly.
+                  Unlock a candidate's full profile and contact info. Reach out directly.
                 </p>
               </div>
             </div>
@@ -184,7 +184,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
             <h2 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">Why HanaHire?</h2>
             <p className="text-lg sm:text-xl text-gray-500 font-medium">Built for Hawaii's unique job market</p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="flex flex-col sm:flex-row justify-center gap-6 sm:gap-8">
             <div className="text-center space-y-3 sm:space-y-4">
               <div className="flex items-center justify-center mx-auto">
                 <Clock size={24} className="sm:w-7 sm:h-7 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
@@ -198,13 +198,6 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
               </div>
               <h4 className="text-lg sm:text-xl font-black tracking-tight">Privacy First</h4>
               <p className="text-xs sm:text-sm text-gray-800 font-medium">Stay anonymous until you choose to reveal</p>
-            </div>
-            <div className="text-center space-y-3 sm:space-y-4">
-              <div className="flex items-center justify-center mx-auto">
-                <DollarSign size={24} className="sm:w-7 sm:h-7 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
-              </div>
-              <h4 className="text-lg sm:text-xl font-black tracking-tight">Simple Pricing</h4>
-              <p className="text-xs sm:text-sm text-gray-700 font-medium">${INTERACTION_FEE.toFixed(2)} per unlock. No subscriptions.</p>
             </div>
             <div className="text-center space-y-3 sm:space-y-4">
               <div className="flex items-center justify-center mx-auto">
@@ -223,9 +216,6 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tight leading-tight">
             Ready to Find Your Match?
           </h2>
-          <p className="text-lg sm:text-2xl text-gray-500 font-medium max-w-2xl mx-auto">
-            Join Hawaii's video-first job marketplace. Whether you're hiring or seeking, start in seconds.
-          </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center pt-4 sm:pt-6">
             <button
               onClick={() => onSelectRole("seeker")}

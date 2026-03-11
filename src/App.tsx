@@ -20,7 +20,9 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronUp,
-  X
+  X,
+  ShoppingCart,
+  FolderOpen
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
@@ -2130,8 +2132,8 @@ export default function App() {
       </div>
 
       <div className="bg-gray-900 px-5 sm:px-6 py-4 flex items-center justify-between">
-        <span className="text-white/60 font-black uppercase tracking-[0.3em] text-[10px]">Total</span>
-        <span className="text-white text-3xl sm:text-4xl font-black tracking-tighter">${(paymentItems.length * INTERACTION_FEE).toFixed(2)}</span>
+        <span className="text-white/60 font-black uppercase tracking-[0.3em] text-sm">Total</span>
+        <span className="text-white text-sm font-black">${(paymentItems.length * INTERACTION_FEE).toFixed(2)}</span>
       </div>
     </div>
 
@@ -2509,18 +2511,29 @@ export default function App() {
 
      {/* Mobile Nav */}
 {currentView !== "landing" && !showPaymentModal && !showVideoUpdateModal && (
-  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden grid grid-cols-3 z-50 shadow-2xl">
-     <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center gap-2 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200">
-       <Eye size={24} />
+  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden flex flex-row items-center justify-center gap-10 z-50 shadow-2xl">
+     <button onClick={() => handleNavigate("landing")} className="flex flex-row items-center justify-center gap-2 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200">
+       <Eye size={20} />
        <span className="text-xs font-black uppercase tracking-widest">EXPLORE</span>
      </button>
-     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
-       <Briefcase size={24} />
-       <span className="text-[9px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
+     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-row items-center justify-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+       <Briefcase size={20} />
+       <span className="text-xs font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
      </button>
-     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
-       <User size={24} />
-       <span className="text-[9px] font-black uppercase tracking-widest">HUB</span>
+     <button onClick={() => handleNavigate("cart")} className={`flex flex-row items-center justify-center gap-2 relative ${currentView === "cart" ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+       <div className="relative">
+         <FolderOpen size={20} />
+         {(userRole === 'seeker' ? seekerQueue.length : employerQueue.length) > 0 && (
+           <span className="absolute -top-2 -right-2 bg-[#148F8B] text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+             {userRole === 'seeker' ? seekerQueue.length : employerQueue.length}
+           </span>
+         )}
+       </div>
+       <span className="text-xs font-black uppercase tracking-widest">APPLY</span>
+     </button>
+     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-row items-center justify-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+       <User size={20} />
+       <span className="text-xs font-black uppercase tracking-widest">HUB</span>
      </button>
   </div>
 )}
