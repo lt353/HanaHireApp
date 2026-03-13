@@ -923,7 +923,11 @@ export default function App() {
 
     setApplicationStatusDraft(selectedCandidate.application?.status || "pending");
     setEmployerNotesDraft(selectedCandidate.application?.employer_notes || "");
-    setContactMethodDraft(selectedCandidate.application?.contact_method || "");
+    const savedContactMethod = selectedCandidate.application?.contact_method || "";
+    const hasMessaged = conversations.some(
+      (c: any) => Number(c.employer_id) === Number(userProfile?.employerId) && Number(c.candidate_id) === Number(selectedCandidate.id)
+    );
+    setContactMethodDraft(savedContactMethod || (hasMessaged ? "messaged" : ""));
     setContactNotesDraft(selectedCandidate.application?.contact_notes || "");
 
     const markViewed = async () => {
@@ -973,7 +977,7 @@ export default function App() {
     };
 
     markViewed();
-  }, [selectedCandidate?.id, selectedCandidate?.application?.id, userRole, userProfile?.email]);
+  }, [selectedCandidate?.id, selectedCandidate?.application?.id, userRole, userProfile?.email, userProfile?.employerId, conversations]);
 
   const handleNavigate = (view: ViewType, options?: { selectConversation?: string }) => {
     if (view === 'messages' && !options?.selectConversation) {
@@ -3864,6 +3868,124 @@ export default function App() {
             )}
 
             <div className="space-y-6 sm:space-y-8">
+              {userRole === 'employer' && selectedCandidate.application && (
+                <div className="space-y-6 border-b border-gray-100 pb-6">
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Application Review</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1.5 rounded-xl bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest">
+                        {selectedCandidate.application.appliedToJob?.title || selectedCandidate.appliedToJob?.title || 'Applied Job'}
+                      </span>
+                      <span className="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest">
+                        {selectedCandidate.application.reviewed_at ? 'Reviewed' : 'Not reviewed yet'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Application Status</span>
+                      <select
+                        value={applicationStatusDraft}
+                        onChange={(e) => setApplicationStatusDraft(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="shortlisted">Shortlisted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="hired">Hired</option>
+                      </select>
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Method</span>
+                      <select
+                        value={contactMethodDraft}
+                        onChange={(e) => setContactMethodDraft(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
+                      >
+                        <option value="">Not contacted yet</option>
+                        <option value="messaged">Messaged (App)</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                        <option value="text">Text</option>
+                        <option value="in_person">In Person</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Employer Notes</span>
+                      <textarea
+                        value={employerNotesDraft}
+                        onChange={(e) => setEmployerNotesDraft(e.target.value)}
+                        rows={4}
+                        placeholder="Private notes about this candidate..."
+                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
+                      />
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Notes</span>
+                      <textarea
+                        value={contactNotesDraft}
+                        onChange={(e) => setContactNotesDraft(e.target.value)}
+                        rows={4}
+                        placeholder="How or when you contacted them..."
+                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
+                      />
+                    </label>
+                  </div>
+
+                  <Button
+                    className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#136068] text-white text-sm font-black uppercase tracking-widest"
+                    onClick={saveEmployerApplicationReview}
+                    disabled={isSavingApplicationReview}
+                  >
+                    {isSavingApplicationReview ? "Saving..." : "Save Application Review"}
+                  </Button>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {selectedCandidate.video_url && (
+                      <button
+                        type="button"
+                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.video_url)}
+                        className="p-4 rounded-2xl border border-[#148F8B]/20 bg-[#148F8B]/5 text-left hover:bg-[#148F8B]/10 transition-colors"
+                      >
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">Intro Video</p>
+                        <p className="mt-2 text-sm font-semibold text-gray-700">Play candidate intro video</p>
+                      </button>
+                    )}
+                    {selectedCandidate.application.video_url && (
+                      <button
+                        type="button"
+                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.application.video_url)}
+                        className="p-4 rounded-2xl border border-[#A63F8E]/20 bg-[#A63F8E]/5 text-left hover:bg-[#A63F8E]/10 transition-colors"
+                      >
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#A63F8E]">Personalized Video</p>
+                        <p className="mt-2 text-sm font-semibold text-gray-700">Play job-specific application video</p>
+                      </button>
+                    )}
+                  </div>
+
+                  {Array.isArray(selectedCandidate.application.question_answers) && selectedCandidate.application.question_answers.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Question Answers</h4>
+                      <div className="space-y-3">
+                        {selectedCandidate.application.question_answers.map((answer: any, idx: number) => (
+                          <div key={`${answer.question}-${idx}`} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{answer.question}</p>
+                            <p className="text-sm text-gray-700 font-medium">
+                              {answer.answer_text || (selectedCandidate.application.video_url ? "Answered in personalized video." : "No answer provided")}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Bio Section */}
               <div className="space-y-2">
                 <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Professional Narrative</h4>
@@ -3980,122 +4102,6 @@ export default function App() {
                  </div>
               )}
 
-              {userRole === 'employer' && selectedCandidate.application && (
-                <div className="space-y-6 border-t border-gray-100 pt-6">
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Application Review</h4>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1.5 rounded-xl bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest">
-                        {selectedCandidate.application.appliedToJob?.title || selectedCandidate.appliedToJob?.title || 'Applied Job'}
-                      </span>
-                      <span className="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest">
-                        {selectedCandidate.application.reviewed_at ? 'Reviewed' : 'Not reviewed yet'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {selectedCandidate.video_url && (
-                      <button
-                        type="button"
-                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.video_url)}
-                        className="p-4 rounded-2xl border border-[#148F8B]/20 bg-[#148F8B]/5 text-left hover:bg-[#148F8B]/10 transition-colors"
-                      >
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">Intro Video</p>
-                        <p className="mt-2 text-sm font-semibold text-gray-700">Play candidate intro video</p>
-                      </button>
-                    )}
-                    {selectedCandidate.application.video_url && (
-                      <button
-                        type="button"
-                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.application.video_url)}
-                        className="p-4 rounded-2xl border border-[#A63F8E]/20 bg-[#A63F8E]/5 text-left hover:bg-[#A63F8E]/10 transition-colors"
-                      >
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[#A63F8E]">Personalized Video</p>
-                        <p className="mt-2 text-sm font-semibold text-gray-700">Play job-specific application video</p>
-                      </button>
-                    )}
-                  </div>
-
-                  {Array.isArray(selectedCandidate.application.question_answers) && selectedCandidate.application.question_answers.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Question Answers</h4>
-                      <div className="space-y-3">
-                        {selectedCandidate.application.question_answers.map((answer: any, idx: number) => (
-                          <div key={`${answer.question}-${idx}`} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{answer.question}</p>
-                            <p className="text-sm text-gray-700 font-medium">
-                              {answer.answer_text || (selectedCandidate.application.video_url ? "Answered in personalized video." : "No answer provided")}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <label className="space-y-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Application Status</span>
-                      <select
-                        value={applicationStatusDraft}
-                        onChange={(e) => setApplicationStatusDraft(e.target.value)}
-                        className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="shortlisted">Shortlisted</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="hired">Hired</option>
-                      </select>
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Method</span>
-                      <select
-                        value={contactMethodDraft}
-                        onChange={(e) => setContactMethodDraft(e.target.value)}
-                        className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700"
-                      >
-                        <option value="">Not contacted yet</option>
-                        <option value="email">Email</option>
-                        <option value="phone">Phone</option>
-                        <option value="text">Text</option>
-                        <option value="in_person">In Person</option>
-                      </select>
-                    </label>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <label className="space-y-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Employer Notes</span>
-                      <textarea
-                        value={employerNotesDraft}
-                        onChange={(e) => setEmployerNotesDraft(e.target.value)}
-                        rows={4}
-                        placeholder="Private notes about this candidate..."
-                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
-                      />
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Notes</span>
-                      <textarea
-                        value={contactNotesDraft}
-                        onChange={(e) => setContactNotesDraft(e.target.value)}
-                        rows={4}
-                        placeholder="How or when you contacted them..."
-                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
-                      />
-                    </label>
-                  </div>
-
-                  <Button
-                    className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#136068] text-white text-sm font-black uppercase tracking-widest"
-                    onClick={saveEmployerApplicationReview}
-                    disabled={isSavingApplicationReview}
-                  >
-                    {isSavingApplicationReview ? "Saving..." : "Save Application Review"}
-                  </Button>
-                </div>
-              )}
             </div>
 
             {unlockedCandidateIds.some((id: any) => Number(id) === Number(selectedCandidate.id)) && userRole === 'employer' && userProfile?.employerId && (

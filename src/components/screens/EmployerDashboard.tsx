@@ -115,6 +115,16 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const lockedApplicants = filteredApplicants.filter(a => !isCandidateUnlocked(a.id));
   const unlockedApplicants = filteredApplicants.filter(a => isCandidateUnlocked(a.id));
   const filterJobTitle = filterByJobId ? jobs.find(j => j.id === filterByJobId)?.title : null;
+
+  // Unlocked talent tagged to the filtered job but NOT already in applicants (de-duplication)
+  const filterJobApplicantIds = new Set(filteredApplicants.map((a: any) => Number(a.id)));
+  const filterJobTalent: any[] = filterByJobId
+    ? unlockedCandidates.filter((c: any) => {
+        if (filterJobApplicantIds.has(Number(c.id))) return false;
+        const taggedIds = candidateJobLinks[String(c.id)] || [];
+        return taggedIds.some((jid: any) => Number(jid) === filterByJobId);
+      })
+    : [];
   const openJobsCount = myJobs.filter((job) => job.status !== "filled").length;
   const filledJobsCount = myJobs.filter((job) => job.status === "filled").length;
   const reviewedCount = applications.filter((application) => !!application.reviewed_at).length;
@@ -311,7 +321,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                     setFilterByJobId(j.id);
                     setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}>
-                    View Applicants
+                    View Candidates
                   </Button>
                   <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-5 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("candidates")}>
                     Talent Pool
@@ -531,26 +541,38 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </section>
       </div>
 
-      {/* Applications Section */}
+      {/* Candidates / Applications Section */}
       {isLoggedIn && (
         <section ref={applicantsRef} className="space-y-8 sm:space-y-12 scroll-mt-28">
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-                <Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> {filterJobTitle ? 'Applications' : 'Applications'}
+                {filterByJobId
+                  ? <><Users size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#148F8B]" /> Candidates</>
+                  : <><Mail size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> Applications</>
+                }
               </h3>
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-black uppercase tracking-widest text-gray-400">{filteredApplicants.length} total</span>
-                <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">{unlockedApplicants.length} unlocked</span>
-                <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]/60">{lockedApplicants.length} locked</span>
-              </div>
+              {filterByJobId ? (
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-400">{filteredApplicants.length} applicant{filteredApplicants.length !== 1 ? 's' : ''}</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-[#148F8B]">{filterJobTalent.length} unlocked talent</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-300">·</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-600">{filteredApplicants.length + filterJobTalent.length} total</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-400">{filteredApplicants.length} total</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">{unlockedApplicants.length} unlocked</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]/60">{lockedApplicants.length} locked</span>
+                </div>
+              )}
             </div>
 
             {/* Job filter indicator */}
             {filterJobTitle && (
               <div className="flex items-center gap-3 p-3 bg-[#148F8B]/5 rounded-xl border border-[#148F8B]/10">
                 <Filter size={14} className="text-[#148F8B] shrink-0" />
-                <span className="text-xs font-bold text-[#148F8B] flex-1 truncate">Showing applicants for: {filterJobTitle}</span>
+                <span className="text-xs font-bold text-[#148F8B] flex-1 truncate">Showing candidates for: {filterJobTitle}</span>
                 <button
                   type="button"
                   aria-label="Clear job filter"
@@ -563,11 +585,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             )}
           </div>
 
-          {filteredApplicants.length === 0 && (
+          {filteredApplicants.length === 0 && filterJobTalent.length === 0 && (
             <div className="p-12 sm:p-16 md:p-20 bg-white border-4 border-dashed border-gray-100 rounded-[3rem] sm:rounded-[3.5rem] md:rounded-[4rem] text-center space-y-4 sm:space-y-6">
               <Mail size={40} className="sm:w-11 sm:h-11 md:w-12 md:h-12 mx-auto text-gray-400" />
-              <p className="text-gray-400 font-black uppercase tracking-widest text-xs sm:text-sm">No applications yet</p>
-              <p className="text-sm text-gray-500 font-medium">Applications will appear here when candidates actually apply to one of your jobs.</p>
+              <p className="text-gray-400 font-black uppercase tracking-widest text-xs sm:text-sm">{filterByJobId ? 'No candidates yet for this job' : 'No applications yet'}</p>
+              <p className="text-sm text-gray-500 font-medium">{filterByJobId ? 'Applicants and unlocked talent tagged to this job will appear here.' : 'Applications will appear here when candidates actually apply to one of your jobs.'}</p>
             </div>
           )}
 
@@ -926,6 +948,168 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     </motion.div>
   );
 })}
+            </div>
+          )}
+
+          {/* Unlocked Talent tagged to this job (unified view only) */}
+          {filterByJobId && filterJobTalent.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#148F8B]/10 flex items-center justify-center">
+                  <Star size={14} className="text-[#148F8B]" />
+                </div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-[#148F8B]">Unlocked Talent — Tagged to This Job</h4>
+              </div>
+              {filterJobTalent.map((cand: any, i: number) => {
+                const taggedJobIds = candidateJobLinks[String(cand.id)] || [];
+                const jobsTagged = jobs.filter((j: any) => taggedJobIds.some((jid: any) => Number(jid) === Number(j.id)));
+                // Pull any application this employer has for this candidate (may be for a different job)
+                const candAnyApp = actualApplicants.find((a: any) => Number(a.id) === Number(cand.id));
+                const appStatus = candAnyApp?.status || null;
+                const appStatusStyle = appStatus ? (STATUS_COLORS[appStatus] || STATUS_COLORS['pending']) : null;
+                const contactMethod = candAnyApp?.application?.contact_method || null;
+                const employerNotes = candAnyApp?.application?.employer_notes || null;
+                const contactNotes = candAnyApp?.application?.contact_notes || null;
+                return (
+                  <motion.div
+                    key={cand.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="bg-white border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-lg transition-all overflow-hidden"
+                    onClick={() => onSelectCandidate(cand)}
+                  >
+                    {/* Header Row */}
+                    <div className="p-5 sm:p-6 flex items-start gap-4">
+                      <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden relative shrink-0">
+                        <ImageWithFallback
+                          src={cand.video_thumbnail_url || cand.thumbnail}
+                          alt={cand.name || cand.display_title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-[#148F8B]/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                          <Play size={20} className="text-white fill-white drop-shadow-lg" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <h4 className="text-base sm:text-lg font-black tracking-tight break-words leading-tight">{cand.name || cand.display_title}</h4>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal bg-[#148F8B]/10 text-[#148F8B] whitespace-nowrap">Talent Pool</span>
+                            {appStatusStyle && (
+                              <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap ${appStatusStyle.bg} ${appStatusStyle.text}`}>
+                                {appStatus}
+                              </span>
+                            )}
+                            {(!!contactMethod || contactedCandidateIds.has(cand.id)) && (
+                              <span style={{ background: '#A63F8E', color: '#ffffff', fontSize: '10px', fontWeight: 900, borderRadius: '8px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                                Contacted ✓
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1 text-xs font-semibold text-gray-400">
+                          <span className="flex items-center gap-1.5"><MapPin aria-hidden="true" size={12} /> {cand.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-gray-400">Tagged for:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {jobsTagged.slice(0, 3).map((j: any) => (
+                              <span key={j.id} className="text-xs font-black text-[#148F8B] truncate">{j.title}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Skills */}
+                    {cand.skills && cand.skills.length > 0 && (
+                      <div className="px-5 sm:px-6 pb-4 space-y-2">
+                        <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest">Skills</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {cand.skills.slice(0, 6).map((s: string, idx: number) => (
+                            <span key={idx} className="px-3 py-1.5 bg-[#F3EAF5]/30 text-gray-600 rounded-lg text-xs font-semibold border border-gray-100">{s}</span>
+                          ))}
+                          {cand.skills.length > 6 && <span className="px-3 py-1.5 text-gray-400 text-xs font-semibold">+{cand.skills.length - 6}</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes & Review Info */}
+                    {(contactMethod || employerNotes || contactNotes) && (
+                      <div className="px-5 sm:px-6 pb-4 space-y-3 border-t border-gray-50 pt-4" onClick={(e) => e.stopPropagation()}>
+                        <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest">Review Notes</h5>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          {contactMethod && (
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Method</span>
+                              <p className="text-sm font-bold text-gray-700 capitalize">{contactMethod.replace('_', ' ')}</p>
+                            </div>
+                          )}
+                          {appStatus && (
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Application Status</span>
+                              <p className={`text-sm font-bold capitalize ${appStatusStyle?.text}`}>{appStatus}</p>
+                            </div>
+                          )}
+                          {employerNotes && (
+                            <div className="space-y-1 sm:col-span-2">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Employer Notes</span>
+                              <p className="text-sm font-medium text-gray-600 line-clamp-2">{employerNotes}</p>
+                            </div>
+                          )}
+                          {contactNotes && (
+                            <div className="space-y-1 sm:col-span-2">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Contact Notes</span>
+                              <p className="text-sm font-medium text-gray-600 line-clamp-2">{contactNotes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="px-5 sm:px-6 pt-2 pb-10 flex flex-wrap gap-3 justify-center" onClick={(e) => e.stopPropagation()}>
+                      {onOpenMessageWithCandidate && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenMessageWithCandidate(Number(cand.id))}
+                          className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#148F8B]/90 transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
+                        >
+                          <MessageSquare aria-hidden="true" size={16} /> Message
+                        </button>
+                      )}
+                      {onOrganizeCandidateJobs && (
+                        <button
+                          type="button"
+                          onClick={() => onOrganizeCandidateJobs(Number(cand.id))}
+                          className="px-8 h-12 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:border-[#A63F8E] hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+                        >
+                          <Pencil aria-hidden="true" size={16} /> Organize
+                        </button>
+                      )}
+                      {cand.phone ? (
+                        <a href={`tel:${cand.phone}`} onClick={(e) => e.stopPropagation()} className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide">
+                          <Phone aria-hidden="true" size={16} /> Call
+                        </a>
+                      ) : (
+                        <button type="button" disabled className="px-8 h-12 rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 cursor-not-allowed font-black text-sm uppercase tracking-wide">
+                          <Phone aria-hidden="true" size={16} /> Call
+                        </button>
+                      )}
+                      {cand.email ? (
+                        <a href={`mailto:${cand.email}`} onClick={(e) => e.stopPropagation()} className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide">
+                          <Mail aria-hidden="true" size={16} /> Email
+                        </a>
+                      ) : (
+                        <button type="button" disabled className="px-8 h-12 rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 cursor-not-allowed font-black text-sm uppercase tracking-wide">
+                          <Mail aria-hidden="true" size={16} /> Email
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </section>
