@@ -111,8 +111,8 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
             <div className="space-y-4">
               <p className="font-black text-xl tracking-tight leading-none">Contact HanaHire</p>
               <div className="space-y-2 font-bold">
-                <p className="flex items-center gap-3"><Mail aria-hidden="true" size={18} className="text-[#148F8B]" /> support@hanahire.com</p>
-                <p className="flex items-center gap-3"><Phone aria-hidden="true" size={18} className="text-[#148F8B]" /> +1 (808) 555-0199</p>
+                <a href="mailto:support@hanahire.com" className="flex items-center gap-3 hover:text-[#148F8B] transition-colors"><Mail aria-hidden="true" size={18} className="text-[#148F8B]" /> support@hanahire.com</a>
+                <a href="tel:+18085550199" className="flex items-center gap-3 hover:text-[#148F8B] transition-colors"><Phone aria-hidden="true" size={18} className="text-[#148F8B]" /> +1 (808) 555-0199</a>
               </div>
             </div>
           </div>

@@ -35,6 +35,8 @@ interface SeekerDashboardProps {
   applicationCount?: number;
   onOpenMessageWithEmployer?: (employerId: number) => void;
   jobsFromConversations?: any[];
+  conversationsByJobId?: Record<string | number, any>;
+  onSelectConversation?: (conversationId: string) => void;
 }
 
 export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
@@ -53,6 +55,8 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   applicationCount = 0,
   onOpenMessageWithEmployer,
   jobsFromConversations = [],
+  conversationsByJobId = {},
+  onSelectConversation,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -176,6 +180,141 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
         </div>
       </div>
 
+      {/* Employer Interest & Messages — always shown when logged in */}
+      {isLoggedIn && (() => {
+        const totalSectionUnread = jobsFromConversations.reduce(
+          (sum, job) => sum + ((conversationsByJobId[job.id]?.unreadCount ?? 0) > 0 ? 1 : 0), 0
+        );
+        return (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2.5">
+                <MessageSquare size={26} className="text-[#148F8B]" />
+                Employer Interest &amp; Messages
+              </h3>
+              {totalSectionUnread > 0 && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#148F8B]/10 text-[#148F8B] text-xs font-black uppercase tracking-widest">
+                  {totalSectionUnread} unread
+                </span>
+              )}
+            </div>
+
+            {jobsFromConversations.length === 0 ? (
+              <div className="p-6 bg-white border border-gray-100 rounded-2xl text-center text-gray-400 font-medium text-sm">
+                No new employer messages yet
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {jobsFromConversations.map((job: any, index: number) => {
+                  const hasJobId = job.id != null;
+                  const isUnlocked = hasJobId && unlockedJobs?.some((j: any) => j.id === job.id);
+                  const application = hasJobId ? applications.find((a: any) => Number(a.job_id) === Number(job.id)) : null;
+                  const hasApplied = !!application;
+                  // Look up conversation by conversation id first (covers orphan/no-job convs),
+                  // then fall back to job_id key for job-tagged convs.
+                  const conv = conversationsByJobId[job._conversationId] ?? (hasJobId ? conversationsByJobId[job.id] : undefined);
+                  // A conversation existing means the employer has reached out — always "contacted".
+                  const isContacted = !!application?.contact_method || !!conv;
+                  const unreadCount = conv?.unreadCount ?? 0;
+
+                  // Derive visual state
+                  const borderClass = hasApplied
+                    ? 'border-l-4 border-l-emerald-500 border-t border-r border-b border-t-gray-100 border-r-gray-100 border-b-gray-100'
+                    : isUnlocked
+                      ? 'border-l-4 border-l-[#148F8B] border-t border-r border-b border-t-gray-100 border-r-gray-100 border-b-gray-100'
+                      : 'border-l-4 border-l-amber-400 border-t border-r border-b border-t-gray-100 border-r-gray-100 border-b-gray-100';
+
+                  const statusBadge = !hasJobId
+                    ? { label: 'Employer message', bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]' }
+                    : hasApplied
+                      ? { label: 'Applied ✓ — messages available', bg: 'bg-emerald-50', text: 'text-emerald-700' }
+                      : isUnlocked
+                        ? { label: 'Unlocked — apply to message', bg: 'bg-[#148F8B]/10', text: 'text-[#148F8B]' }
+                        : { label: 'Action needed — apply to read', bg: 'bg-amber-50', text: 'text-amber-700' };
+
+                  return (
+                    <div
+                      key={job._conversationId ?? job.id ?? index}
+                      className={`p-5 sm:p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all ${borderClass}`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="min-w-0 space-y-1.5 flex-1">
+                          {/* Status badge row */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusBadge.bg} ${statusBadge.text}`}>
+                              {statusBadge.label}
+                            </span>
+                            {isContacted && (
+                              <span style={{ background: '#A63F8E', color: '#ffffff', fontSize: '10px', fontWeight: 900, borderRadius: '999px', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>
+                                Contacted ✓
+                              </span>
+                            )}
+                            {unreadCount > 0 && (
+                              <span style={{ background: '#ef4444', color: '#ffffff', fontSize: '10px', fontWeight: 900, borderRadius: '999px', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>
+                                {unreadCount} unread
+                              </span>
+                            )}
+                          </div>
+                          {/* Job info */}
+                          <h4 className="font-black text-lg text-gray-900 leading-snug">{job.company_name || 'Company'}</h4>
+                          <p className="text-sm text-gray-500">
+                            {hasJobId
+                              ? `${job.title} · ${job.location}`
+                              : `Direct outreach${job.location ? ` · ${job.location}` : ''}`}
+                          </p>
+                          {job.pay_range && <p className="text-xs text-[#148F8B] font-bold">{job.pay_range}</p>}
+                        </div>
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2 shrink-0 sm:pt-0.5">
+                          {hasJobId && !hasApplied && (
+                            <Button
+                              variant="outline"
+                              className="rounded-xl font-black text-xs uppercase tracking-widest"
+                              onClick={() => onSelectJob && onSelectJob(job)}
+                            >
+                              View Job
+                            </Button>
+                          )}
+                          {hasApplied || !hasJobId ? (
+                            <Button
+                              className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+                              onClick={() => {
+                                const convId = conv?.id ?? job._conversationId;
+                                if (convId && onSelectConversation) {
+                                  onSelectConversation(convId);
+                                } else {
+                                  onNavigate('messages');
+                                }
+                              }}
+                            >
+                              <MessageSquare size={14} className="mr-1.5" /> View Messages
+                            </Button>
+                          ) : isUnlocked ? (
+                            <Button
+                              className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+                              onClick={() => onAnswerQuestions && onAnswerQuestions(job)}
+                            >
+                              Apply Now
+                            </Button>
+                          ) : (
+                            <Button
+                              className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+                              onClick={() => onSelectJob && onSelectJob(job)}
+                            >
+                              Unlock &amp; Apply
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {isLoggedIn && (
         <div className="space-y-8 sm:space-y-10">
           <div className="space-y-8 sm:space-y-12">
@@ -294,53 +433,6 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
         </div>
       )}
 
-      {/* Jobs from conversations - employers messaged you about these */}
-      {jobsFromConversations.length > 0 && (
-        <div className="space-y-6">
-          <h3 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
-            <MessageSquare size={28} className="text-[#148F8B]" />
-            Employers want to hear from you
-          </h3>
-          <p className="text-gray-600 font-medium text-sm sm:text-base">
-            An employer messaged you about the job below. Unlock the job to apply, then reply in Messages.
-          </p>
-          <div className="grid gap-4">
-            {jobsFromConversations.map((job: any) => {
-              const isUnlocked = unlockedJobs?.some((j: any) => j.id === job.id);
-              return (
-                <div
-                  key={job.id}
-                  className="p-5 sm:p-6 bg-white border border-[#148F8B]/20 rounded-2xl shadow-sm hover:shadow-md transition-all"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <h4 className="font-black text-lg text-gray-900 truncate">{job.title}</h4>
-                      <p className="text-sm text-gray-500 mt-0.5">{job.company_name || 'Company'} · {job.location}</p>
-                      {job.pay_range && <p className="text-xs text-[#148F8B] font-bold mt-1">{job.pay_range}</p>}
-                    </div>
-                    <div className="flex flex-wrap gap-2 shrink-0">
-                      <Button
-                        variant="outline"
-                        className="rounded-xl font-black text-xs uppercase tracking-widest"
-                        onClick={() => onSelectJob && onSelectJob(job)}
-                      >
-                        {isUnlocked ? 'View job' : 'Unlock & apply'}
-                      </Button>
-                      <Button
-                        className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
-                        onClick={() => onNavigate('messages')}
-                      >
-                        <MessageSquare size={14} className="mr-1.5" /> Messages
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Unlocked Jobs Section - Always visible when there are unlocked jobs */}
       {unlockedJobs && unlockedJobs.length > 0 && (
         <div className="space-y-8">
@@ -356,6 +448,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
               const matchMeta = getMatchMeta(job);
               const application = applications.find(a => a.job_id === job.id);
               const hasApplied = !!application;
+              const isContacted = !!application?.contact_method || !!conversationsByJobId?.[job.id];
               const statusKey = application?.status || null;
               const statusCfg = statusKey ? (STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending) : null;
               const appliedAgo = toAgo(application?.applied_at);
@@ -385,6 +478,11 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                         {statusCfg && (
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusCfg.bg} ${statusCfg.text}`}>
                             {statusCfg.label}
+                          </span>
+                        )}
+                        {isContacted && (
+                          <span style={{ background: '#A63F8E', color: '#ffffff', fontSize: '10px', fontWeight: 900, borderRadius: '999px', padding: '2px 10px', display: 'inline-flex', alignItems: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Contacted ✓
                           </span>
                         )}
                         {matchMeta && (
@@ -478,7 +576,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                         )}
                         {job.contact_phone && (
                           <p className="text-sm font-bold text-gray-900">
-                            Phone: <span className="text-[#148F8B]">{job.contact_phone}</span>
+                            Phone: <a href={`tel:${job.contact_phone}`} className="text-[#148F8B] hover:underline">{job.contact_phone}</a>
                           </p>
                         )}
                       </div>

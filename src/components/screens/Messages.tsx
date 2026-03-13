@@ -296,7 +296,7 @@ export const Messages: React.FC<MessagesProps> = ({
                     <h4 className="text-lg font-black text-gray-900 mb-2">Messages are locked</h4>
                     <p className="text-sm text-gray-600 max-w-sm mb-6">
                       {userRole === "seeker"
-                        ? "Apply to this employer’s job to read and reply to messages."
+                        ? "Apply to the job this employer messaged you about to unlock the conversation."
                         : "Unlock this candidate to read and reply to messages."}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -308,7 +308,7 @@ export const Messages: React.FC<MessagesProps> = ({
                         className="mt-6 bg-[#148F8B] hover:bg-[#148F8B]/90 text-white rounded-xl px-6 py-3 font-black uppercase tracking-widest"
                         onClick={() => onNavigate("seeker")}
                       >
-                        Go to My Applications
+                        View employer interest
                       </Button>
                     )}
                     {userRole === "employer" && (

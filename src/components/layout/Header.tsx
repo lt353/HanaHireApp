@@ -17,6 +17,7 @@ interface HeaderProps {
   onReset: () => void;
   isPaymentModalOpen?: boolean;
   isDemoAccount?: boolean;
+  totalUnreadMessages?: number;
 }
 
 export const Header = ({
@@ -31,6 +32,7 @@ export const Header = ({
   onReset,
   isPaymentModalOpen = false,
   isDemoAccount = false,
+  totalUnreadMessages = 0,
 }: HeaderProps) => {
 
   const borderStyle = !isRoleSelected
@@ -38,6 +40,8 @@ export const Header = ({
     : role === 'seeker'
       ? '#148F8B'
       : '#A63F8E';
+
+  console.log('[Header] totalUnreadMessages:', totalUnreadMessages, 'isLoggedIn:', isLoggedIn, 'isRoleSelected:', isRoleSelected);
 
   if (isPaymentModalOpen) {
     return null;
@@ -93,12 +97,17 @@ export const Header = ({
                 </button>
                 <button
                   onClick={() => onNavigate("messages")}
-                  className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                  className={`inline-flex items-center gap-1.5 text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
                     currentTab === "messages" ? "font-black" : "font-bold hover:text-gray-900"
                   }`}
                   style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
                 >
                   Messages
+                  {totalUnreadMessages > 0 && (
+                    <span style={{ background: '#ef4444', color: '#ffffff', fontSize: '9px', fontWeight: 900, borderRadius: '999px', minWidth: '1rem', height: '1rem', padding: '0 3px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
+                      {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+                    </span>
+                  )}
                 </button>
               </>
             )}

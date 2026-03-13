@@ -188,10 +188,64 @@ export default function App() {
       .then(({ data }) => { if (data) setEmployerApplications(data); });
   }, [userRole, userProfile?.employerId, jobs]);
 
+
+  // Always keep a ref to the latest fetchConversations so the polling interval
+  // never calls a stale closure. Initialized with a no-op; the update effect
+  // below wires in the real function after every render.
+  const fetchConversationsRef = useRef<() => void>(() => {});
+  useEffect(() => { fetchConversationsRef.current = fetchConversations; });
+
+  // Fetch conversations whenever login state or profile changes so the unread
+  // badge is accurate on all tabs.
   useEffect(() => {
-    if (currentView !== 'messages' || !isLoggedIn || !userProfile?.email) return;
-    fetchConversations();
-  }, [currentView, isLoggedIn, userProfile?.email, userRole, userProfile?.employerId, userProfile?.candidateId, userProfile?.id, applications?.length, unlockedCandidateIds?.length]);
+    if (!isLoggedIn || !userProfile?.email) return;
+    fetchConversationsRef.current();
+  }, [isLoggedIn, userProfile?.email, userRole, userProfile?.employerId, userProfile?.candidateId, userProfile?.id, applications?.length, unlockedCandidateIds?.length]);
+
+  // Re-fetch when navigating to messages, seeker dashboard, or employer dashboard.
+  useEffect(() => {
+    if (!isLoggedIn || !userProfile?.email) return;
+    if (currentView !== 'messages' && currentView !== 'seeker' && currentView !== 'employer') return;
+    fetchConversationsRef.current();
+  }, [currentView]);
+
+  // Lightweight unread-count query — runs independently of fetchConversations so
+  // the nav badge is always accurate even if conversations state is stale.
+  // Real-time: any INSERT or UPDATE on messages triggers a fresh conversations fetch.
+  useEffect(() => {
+    if (!isLoggedIn || !userProfile?.email) return;
+    const channel = supabase
+      .channel('unread-count-watch')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        fetchConversationsRef.current();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, () => {
+        fetchConversationsRef.current();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [isLoggedIn, userProfile?.email]);
+
+  // Refresh when the user returns to the browser tab.
+  useEffect(() => {
+    if (!isLoggedIn || !userProfile?.email) return;
+    const onVisible = () => {
+      if (!document.hidden) {
+        fetchConversationsRef.current();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [isLoggedIn, userProfile?.email]);
+
+  // Poll every 15 s as a final fallback.
+  useEffect(() => {
+    if (!isLoggedIn || !userProfile?.email) return;
+    const interval = setInterval(() => {
+      fetchConversationsRef.current();
+    }, 15_000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, userProfile?.email]);
 
   useEffect(() => {
     if (userRole !== 'employer' || !isLoggedIn || userProfile?.employerId == null) {
@@ -277,23 +331,48 @@ export default function App() {
   }, [selectedConversationId]);
 
   useEffect(() => {
-    if (currentView !== 'seeker' || !isLoggedIn || !userProfile?.candidateId || !jobs?.length) {
+    const cid = Number(userProfile?.candidateId ?? userProfile?.id);
+    if (currentView !== 'seeker' || !isLoggedIn || !cid) {
       setJobsFromConversations([]);
       return;
     }
-    const cid = Number(userProfile.candidateId ?? userProfile.id);
-    if (!cid) return;
     supabase
       .from('conversations')
-      .select('job_id')
+      .select('id, job_id, employer_id')
       .eq('candidate_id', cid)
-      .not('job_id', 'is', null)
       .then(({ data }) => {
-        const jobIds = [...new Set((data || []).map((r: any) => r.job_id).filter(Boolean))];
-        const resolved = jobs.filter((j: any) => jobIds.includes(Number(j.id)));
-        setJobsFromConversations(resolved);
+        // Deduplicate by job_id (for job-linked convs) and employer_id (across all convs).
+        const seenJobIds = new Set<string>();
+        const seenEmployerIds = new Set<number>();
+        const results: any[] = [];
+        for (const conv of (data || [])) {
+          const empId = Number(conv.employer_id);
+          if (conv.job_id) {
+            const jobKey = String(conv.job_id);
+            if (seenJobIds.has(jobKey)) continue;
+            seenJobIds.add(jobKey);
+            seenEmployerIds.add(empId);
+            const job = jobs.find((j: any) => Number(j.id) === Number(conv.job_id));
+            if (job) results.push({ ...job, _conversationId: conv.id });
+          } else {
+            // No job tagged — show the employer conversation directly.
+            if (seenEmployerIds.has(empId)) continue;
+            seenEmployerIds.add(empId);
+            const employer = employers.find((e: any) => Number(e.id) === empId);
+            results.push({
+              id: null,
+              _conversationId: conv.id,
+              _employerId: conv.employer_id,
+              title: employer?.business_name || 'Employer',
+              company_name: employer?.business_name || null,
+              location: employer?.location || null,
+              pay_range: null,
+            });
+          }
+        }
+        setJobsFromConversations(results);
       });
-  }, [currentView, isLoggedIn, userProfile?.candidateId, userProfile?.id, jobs]);
+  }, [currentView, isLoggedIn, userProfile?.candidateId, userProfile?.id, jobs, employers]);
 
   // Don't block landing page on initial load
   useEffect(() => {
@@ -509,7 +588,7 @@ export default function App() {
       //   ALTER TABLE applications ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
       const { data: appData, error } = await supabase
         .from('applications')
-        .select('id, job_id, status, video_url, video_thumbnail_url, question_answers, applied_at, updated_at, reviewed_at')
+        .select('id, job_id, status, video_url, video_thumbnail_url, question_answers, applied_at, updated_at, reviewed_at, contact_method')
         .eq('candidate_id', candidateId)
         .order('applied_at', { ascending: false });
 
@@ -559,18 +638,19 @@ export default function App() {
       if (convIds.length > 0) {
         const { data: msgRows } = await supabase
           .from('messages')
-          .select('id, conversation_id, from_email, to_email, subject, body, sent_at, is_read')
+          .select('id, conversation_id, to_email, subject, body, sent_at, is_read')
           .in('conversation_id', convIds)
           .order('sent_at', { ascending: false });
         const byConv = new Map<string, { body: string; subject: string | null; sent_at: string }>();
         const unreadByConv = new Map<string, number>();
-        const myEmail = (email as string).toLowerCase();
+        const myEmail = email.toLowerCase();
         (msgRows || []).forEach((m: any) => {
           if (!byConv.has(m.conversation_id)) byConv.set(m.conversation_id, { body: m.body, subject: m.subject ?? null, sent_at: m.sent_at });
           if (m.to_email?.toLowerCase() === myEmail && !m.is_read) {
             unreadByConv.set(m.conversation_id, (unreadByConv.get(m.conversation_id) || 0) + 1);
           }
         });
+        console.log('[badge debug] role:', role, 'email:', email, 'convs:', convList.length, 'msgs:', (msgRows||[]).length, 'unread by conv:', Object.fromEntries(unreadByConv), 'sample msg is_read values:', (msgRows||[]).slice(0,3).map((m:any) => ({ to: m.to_email, is_read: m.is_read })));
         lastMessages = Array.from(byConv.entries()).map(([k, v]) => ({ conversation_id: k, ...v }));
         unreadCounts = Array.from(unreadByConv.entries()).map(([conversation_id, count]) => ({ conversation_id, count }));
       }
@@ -587,7 +667,11 @@ export default function App() {
         const last = lastMessages.find((l: any) => l.conversation_id === c.id);
         const unread = unreadCounts.find((u: any) => u.conversation_id === c.id)?.count ?? 0;
         const canRead = isSeeker
-          ? appliedEmployerIds.has(Number(c.employer_id))
+          ? (c.job_id != null
+              // Job-tagged conversation: require an application to that specific job.
+              ? (applications || []).some((a: any) => Number(a.job_id) === Number(c.job_id))
+              // Legacy/untagged conversation: fall back to any application with this employer.
+              : appliedEmployerIds.has(Number(c.employer_id)))
           : unlockedCandidateIds.some((id: any) => Number(id) === Number(c.candidate_id));
         const job = c.job_id ? jobs.find((j: any) => j.id === c.job_id) : null;
         return {
@@ -675,12 +759,26 @@ export default function App() {
   const markConversationMessagesRead = async (conversationId: string) => {
     const email = userProfile?.email;
     if (!email) return;
+    const recipientId = userRole === 'seeker'
+      ? (userProfile?.candidateId ?? userProfile?.id)
+      : userProfile?.employerId;
+    const recipientType = userRole === 'seeker' ? 'seeker' : 'employer';
     try {
-      await supabase
-        .from('messages')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('conversation_id', conversationId)
-        .eq('to_email', email);
+      await Promise.all([
+        supabase
+          .from('messages')
+          .update({ is_read: true, read_at: new Date().toISOString() })
+          .eq('conversation_id', conversationId)
+          .eq('to_email', email),
+        recipientId != null
+          ? supabase
+              .from('notifications')
+              .update({ is_read: true })
+              .eq('conversation_id', conversationId)
+              .eq('recipient_id', recipientId)
+              .eq('recipient_type', recipientType)
+          : Promise.resolve(),
+      ]);
       setConversations((prev) =>
         prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
       );
@@ -699,17 +797,41 @@ export default function App() {
         ? (employers.find((e: any) => e.id === conv.employer_id)?.email)
         : (candidates.find((c: any) => c.id === conv.candidate_id)?.email);
       if (!toEmail) return;
+      const isFirstMessage = messagesForSelected.length === 0;
+      const subject = isFirstMessage
+        ? (conv.job_id
+            ? `Re: ${jobs.find((j: any) => j.id === conv.job_id)?.title ?? 'Job Opportunity'}`
+            : userRole === 'employer'
+              ? `Opportunity at ${userProfile?.businessName ?? 'our company'}`
+              : `Message from ${userProfile?.name ?? 'a candidate'}`)
+        : null;
       const { error } = await supabase.from('messages').insert([{
         conversation_id: conversationId,
         from_email: email,
         to_email: toEmail,
         body: body.trim(),
-        subject: null,
+        subject,
       }]);
       if (error) {
         console.error("Error sending message:", error);
         toast.error("Failed to send message.");
         return;
+      }
+
+      // Notify the recipient of the new message.
+      try {
+        const recipientId = userRole === 'seeker' ? conv.employer_id : conv.candidate_id;
+        const recipientType = userRole === 'seeker' ? 'employer' : 'seeker';
+        await supabase.from('notifications').insert([{
+          recipient_id: recipientId,
+          recipient_type: recipientType,
+          type: 'new_message',
+          conversation_id: conversationId,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        }]);
+      } catch (notifErr) {
+        console.error("Error inserting notification:", notifErr);
       }
 
       // If employer is the sender and this conversation is tied to a job,
@@ -727,7 +849,7 @@ export default function App() {
               .order('applied_at', { ascending: false })
               .limit(1)
               .maybeSingle();
-            if (!appErr && appRow && appRow.id) {
+            if (!appErr && appRow && appRow.id && !appRow.contact_method) {
               const applicationId = appRow.id;
               const updatedAt = new Date().toISOString();
               const payload: any = { contact_method: 'messaging', updated_at: updatedAt };
@@ -853,10 +975,15 @@ export default function App() {
     markViewed();
   }, [selectedCandidate?.id, selectedCandidate?.application?.id, userRole, userProfile?.email]);
 
-  const handleNavigate = (view: ViewType) => {
-  setCurrentView(view);
-  window.scrollTo(0, 0);
-};
+  const handleNavigate = (view: ViewType, options?: { selectConversation?: string }) => {
+    if (view === 'messages' && !options?.selectConversation) {
+      setSelectedConversationId(null);
+    } else if (options?.selectConversation) {
+      setSelectedConversationId(options.selectConversation);
+    }
+    setCurrentView(view);
+    window.scrollTo(0, 0);
+  };
 
   const selectRole = (selectedRole: 'seeker' | 'employer') => {
     if (selectedRole === 'employer') {
@@ -1114,6 +1241,12 @@ export default function App() {
   const markEmployerContacted = async (applicationId: number, method: 'phone' | 'email') => {
     if (userRole !== 'employer' || !applicationId) return;
     try {
+      // De-duplicate: contact_method records the *first* outreach channel only.
+      const existing = employerApplications.find((a: any) => Number(a.id) === Number(applicationId));
+      if (existing?.contact_method) {
+        toast("Already marked as contacted via " + existing.contact_method);
+        return;
+      }
       const updatedAt = new Date().toISOString();
       const payload: any = { contact_method: method, updated_at: updatedAt };
       const { error } = await supabase.from('applications').update(payload).eq('id', applicationId);
@@ -1193,7 +1326,10 @@ export default function App() {
     });
   };
 
-  const filteredJobs = jobs.filter(j => 
+  const totalUnreadMessages = conversations.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
+  console.log('[totalUnread]', totalUnreadMessages, 'convs:', conversations.map(c => ({ id: c.id.slice(0,8), unread: c.unreadCount })));
+
+  const filteredJobs = jobs.filter(j =>
     j.status !== 'filled' &&
     (filters.industries.length === 0 || filters.industries.includes(j.company_industry)) &&
     (filters.locations.length === 0 || filters.locations.includes(j.location)) &&
@@ -1445,12 +1581,20 @@ export default function App() {
               const candidateId = userProfile?.candidateId ?? userProfile?.id;
               if (!eid || !candidateId) return;
               getOrCreateConversation(eid, candidateId).then((id) => {
-                if (id) setSelectedConversationId(id);
                 setMessagesPreselectEmployerId(null);
-                handleNavigate("messages");
+                handleNavigate("messages", id ? { selectConversation: id } : undefined);
               });
             }}
             jobsFromConversations={jobsFromConversations}
+            conversationsByJobId={conversations.reduce((acc, c) => {
+              if (c.job_id != null) acc[c.job_id] = c;
+              // Also key by conversation id so orphan (no job_id) cards can find their conv.
+              acc[c.id] = c;
+              return acc;
+            }, {} as Record<string | number, any>)}
+            onSelectConversation={(convId) => {
+              handleNavigate("messages", { selectConversation: convId });
+            }}
           />
         );
       case "employer":
@@ -1566,6 +1710,7 @@ export default function App() {
             }}
             candidateJobLinks={candidateJobLinks}
             onMarkContacted={markEmployerContacted}
+            conversations={conversations}
           />
         );
       case "messages":
@@ -1919,6 +2064,7 @@ export default function App() {
         onReset={() => { setCurrentView("landing"); }}
         isPaymentModalOpen={showPaymentModal}
         isDemoAccount={userProfile?.isDemoAccount === true}
+        totalUnreadMessages={totalUnreadMessages}
       />
 
       <main>
@@ -3014,8 +3160,7 @@ export default function App() {
                     setMessageJobPickerCandidateId(null);
                     setMessageJobPickerSelectedJobId(null);
                     setMessageJobPickerTemplateKey(null);
-                    if (id) setSelectedConversationId(id);
-                    handleNavigate("messages");
+                    handleNavigate("messages", id ? { selectConversation: id } : undefined);
                   }}
                 >
                   Start conversation
@@ -3042,10 +3187,9 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   setSelectedConversationCandidateId(conv.candidate_id);
-                  setSelectedConversationId(conv.id);
                   setChooseThreadCandidateId(null);
                   setChooseThreadOptions([]);
-                  handleNavigate("messages");
+                  handleNavigate("messages", { selectConversation: conv.id });
                 }}
                 className="w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-[#148F8B]/40 hover:bg-[#148F8B]/5 transition-all"
               >
@@ -3407,7 +3551,14 @@ export default function App() {
      </button>
      {isLoggedIn && (
        <button onClick={() => handleNavigate("messages")} className={`flex flex-row items-center justify-center gap-2 ${currentView === "messages" ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
-         <Mail size={20} />
+         <div className="relative">
+           <Mail size={20} />
+           {totalUnreadMessages > 0 && (
+             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+               {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+             </span>
+           )}
+         </div>
          <span className="text-xs font-black uppercase tracking-widest">CHAT</span>
        </button>
      )}

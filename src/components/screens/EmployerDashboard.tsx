@@ -35,6 +35,7 @@ interface EmployerDashboardProps {
   onOrganizeCandidateJobs?: (candidateId: number) => void;
   candidateJobLinks?: Record<string, number[]>;
   onMarkContacted?: (applicationId: number, method: 'phone' | 'email') => void;
+  conversations?: any[];
 }
 
 export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
@@ -55,6 +56,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   onOrganizeCandidateJobs,
   candidateJobLinks = {},
   onMarkContacted,
+  conversations = [],
 }) => {
   const parseAppTimestamp = (value: string | null | undefined) => {
     if (!value) return null;
@@ -117,7 +119,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const filledJobsCount = myJobs.filter((job) => job.status === "filled").length;
   const reviewedCount = applications.filter((application) => !!application.reviewed_at).length;
   const shortlistedCount = applications.filter((application) => application.status === "shortlisted").length;
-  const contactedCount = applications.filter((application) => !!application.contact_method).length;
+  // contacted = has contact_method set OR has an existing conversation (message sent via app).
+  const contactedCandidateIds = new Set(conversations.map((c: any) => c.candidate_id));
+  const contactedCount = applications.filter((application) =>
+    !!application.contact_method || contactedCandidateIds.has(application.candidate_id)
+  ).length;
 
   return (
     <>
@@ -436,11 +442,18 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
                         <h4 className="text-lg sm:text-xl font-black tracking-tight truncate">{cand.name || cand.display_title}</h4>
-                        {candStatusStyle && (
-                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap shrink-0 ${candStatusStyle.bg} ${candStatusStyle.text}`}>
-                            {candStatus}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {candStatusStyle && (
+                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap ${candStatusStyle.bg} ${candStatusStyle.text}`}>
+                              {candStatus}
+                            </span>
+                          )}
+                          {contactedCandidateIds.has(cand.id) && (
+                            <span style={{ background: '#A63F8E', color: '#ffffff', fontSize: '10px', fontWeight: 900, borderRadius: '8px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                              Contacted ✓
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                         <MapPin size={12} /> {cand.location}
@@ -483,14 +496,28 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                         Organize
                       </button>
                     )}
-                    <button type="button" className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
-                      <Phone aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
-                      <span className="font-black text-[10px] uppercase tracking-widest">Call</span>
-                    </button>
-                    <button type="button" className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
-                      <Mail aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
-                      <span className="font-black text-[10px] uppercase tracking-widest">Email</span>
-                    </button>
+                    {cand.phone ? (
+                      <a href={`tel:${cand.phone}`} onClick={(e) => e.stopPropagation()} className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                        <Phone aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        <span className="font-black text-[10px] uppercase tracking-widest">Call</span>
+                      </a>
+                    ) : (
+                      <button type="button" disabled className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 cursor-not-allowed">
+                        <Phone aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        <span className="font-black text-[10px] uppercase tracking-widest">Call</span>
+                      </button>
+                    )}
+                    {cand.email ? (
+                      <a href={`mailto:${cand.email}`} onClick={(e) => e.stopPropagation()} className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                        <Mail aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        <span className="font-black text-[10px] uppercase tracking-widest">Email</span>
+                      </a>
+                    ) : (
+                      <button type="button" disabled className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 cursor-not-allowed">
+                        <Mail aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        <span className="font-black text-[10px] uppercase tracking-widest">Email</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -584,10 +611,17 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             <h4 className="text-base sm:text-lg font-black tracking-tight break-words leading-tight">
               {applicant.name}
             </h4>
-            {/* Status Badge */}
-            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal ${statusStyle.bg} ${statusStyle.text} whitespace-nowrap shrink-0`}>
-              {applicant.status}
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Status Badge */}
+              <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal ${statusStyle.bg} ${statusStyle.text} whitespace-nowrap`}>
+                {applicant.status}
+              </span>
+              {(!!applicant.application?.contact_method || contactedCandidateIds.has(applicant.id)) && (
+                <span style={{ background: '#A63F8E', color: '#ffffff', fontSize: '10px', fontWeight: 900, borderRadius: '8px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                  Contacted ✓
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1 text-xs font-semibold text-gray-400">
@@ -744,30 +778,44 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             Message
           </button>
         )}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            const appId = applicant?.application?.id;
-            if (appId && onMarkContacted) onMarkContacted(Number(appId), 'phone');
-          }}
-          className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
-        >
-          <Phone aria-hidden="true" size={16} />
-          Call
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            const appId = applicant?.application?.id;
-            if (appId && onMarkContacted) onMarkContacted(Number(appId), 'email');
-          }}
-          className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
-        >
-          <Mail aria-hidden="true" size={16} />
-          Email
-        </button>
+        {applicant.phone ? (
+          <a
+            href={`tel:${applicant.phone}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              const appId = applicant?.application?.id;
+              if (appId && onMarkContacted) onMarkContacted(Number(appId), 'phone');
+            }}
+            className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+          >
+            <Phone aria-hidden="true" size={16} />
+            Call
+          </a>
+        ) : (
+          <button type="button" disabled className="px-8 h-12 rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 font-black text-sm uppercase tracking-wide cursor-not-allowed">
+            <Phone aria-hidden="true" size={16} />
+            Call
+          </button>
+        )}
+        {applicant.email ? (
+          <a
+            href={`mailto:${applicant.email}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              const appId = applicant?.application?.id;
+              if (appId && onMarkContacted) onMarkContacted(Number(appId), 'email');
+            }}
+            className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+          >
+            <Mail aria-hidden="true" size={16} />
+            Email
+          </a>
+        ) : (
+          <button type="button" disabled className="px-8 h-12 rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 font-black text-sm uppercase tracking-wide cursor-not-allowed">
+            <Mail aria-hidden="true" size={16} />
+            Email
+          </button>
+        )}
       </div>
     </motion.div>
   );
