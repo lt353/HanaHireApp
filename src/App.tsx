@@ -3529,41 +3529,41 @@ export default function App() {
 
      {/* Mobile Nav */}
 {currentView !== "landing" && !showPaymentModal && !showVideoUpdateModal && (
-  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 md:hidden flex flex-row items-center justify-center gap-10 z-50 shadow-2xl">
-     <button onClick={() => handleNavigate("landing")} className="flex flex-row items-center justify-center gap-2 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200">
+  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 md:hidden flex flex-row items-center justify-center gap-10 z-50 shadow-2xl">
+     <button onClick={() => handleNavigate("landing")} className="flex flex-col items-center justify-center gap-1 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200">
        <Eye size={20} />
-       <span className="text-xs font-black uppercase tracking-widest">EXPLORE</span>
+       <span className="text-[10px] font-black uppercase tracking-widest">EXPLORE</span>
      </button>
-     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-row items-center justify-center gap-2 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+     <button onClick={() => handleNavigate(userRole === 'seeker' ? "jobs" : "candidates")} className={`flex flex-col items-center justify-center gap-1 ${(currentView === "jobs" || currentView === "candidates") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <Briefcase size={20} />
-       <span className="text-xs font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
+       <span className="text-[10px] font-black uppercase tracking-widest">{userRole === 'seeker' ? 'JOBS' : 'TALENT'}</span>
      </button>
-     <button onClick={() => handleNavigate("cart")} className={`flex flex-row items-center justify-center gap-2 relative ${currentView === "cart" ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
-       <div className="relative">
+     <button onClick={() => handleNavigate("cart")} className={`flex flex-col items-center justify-center gap-1 px-2 ${currentView === "cart" ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+       <span style={{ position: 'relative', display: 'inline-flex' }}>
          <FolderOpen size={20} />
          {(userRole === 'seeker' ? seekerQueue.length : employerQueue.length) > 0 && (
-           <span className="absolute -top-2 -right-2 bg-[#148F8B] text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+           <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#148F8B', color: '#ffffff', fontSize: '9px', fontWeight: 900, borderRadius: '999px', minWidth: '1rem', height: '1rem', padding: '0 3px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
              {userRole === 'seeker' ? seekerQueue.length : employerQueue.length}
            </span>
          )}
-       </div>
-       <span className="text-xs font-black uppercase tracking-widest">APPLY</span>
+       </span>
+       <span className="text-[10px] font-black uppercase tracking-widest">APPLY</span>
      </button>
-     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-row items-center justify-center gap-2 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+     <button onClick={() => isLoggedIn ? handleNavigate(userRole === 'seeker' ? "seeker" : "employer") : handleShowAuth("login")} className={`flex flex-col items-center justify-center gap-1 ${(currentView === "seeker" || currentView === "employer") ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
        <User size={20} />
-       <span className="text-xs font-black uppercase tracking-widest">HUB</span>
+       <span className="text-[10px] font-black uppercase tracking-widest">HUB</span>
      </button>
      {isLoggedIn && (
-       <button onClick={() => handleNavigate("messages")} className={`flex flex-row items-center justify-center gap-2 ${currentView === "messages" ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
-         <div className="relative">
+       <button onClick={() => handleNavigate("messages")} className={`flex flex-col items-center justify-center gap-1 px-2 ${currentView === "messages" ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+         <span style={{ position: 'relative', display: 'inline-flex' }}>
            <Mail size={20} />
            {totalUnreadMessages > 0 && (
-             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+             <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#ffffff', fontSize: '9px', fontWeight: 900, borderRadius: '999px', minWidth: '1rem', height: '1rem', padding: '0 3px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
                {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
              </span>
            )}
-         </div>
-         <span className="text-xs font-black uppercase tracking-widest">CHAT</span>
+         </span>
+         <span className="text-[10px] font-black uppercase tracking-widest">CHAT</span>
        </button>
      )}
   </div>

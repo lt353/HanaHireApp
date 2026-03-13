@@ -315,26 +315,44 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
     resetCard();
   };
 
+  // Direction-aware touch handling so vertical scroll still works
   const touchStartX = React.useRef(0);
+  const touchStartY = React.useRef(0);
   const isDragging = React.useRef(false);
+  const gestureDirection = React.useRef<'horizontal' | 'vertical' | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     isDragging.current = true;
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    gestureDirection.current = null;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging.current) return;
-    e.preventDefault();
     const currentX = e.touches[0].clientX;
-    const diff = currentX - touchStartX.current;
-    x.set(diff);
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - touchStartX.current;
+    const diffY = currentY - touchStartY.current;
+
+    if (gestureDirection.current === null && (Math.abs(diffX) > 5 || Math.abs(diffY) > 5)) {
+      gestureDirection.current = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+    }
+
+    if (gestureDirection.current === 'horizontal') {
+      e.preventDefault();
+      x.set(diffX);
+    }
+    // vertical — let the browser handle page scroll naturally
   };
 
   const handleTouchEnd = () => {
     if (!isDragging.current) return;
     isDragging.current = false;
-    handleDragEnd();
+    if (gestureDirection.current === 'horizontal') {
+      handleDragEnd();
+    }
+    gestureDirection.current = null;
   };
 
   return (
