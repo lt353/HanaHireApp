@@ -33,6 +33,8 @@ interface SeekerDashboardProps {
   onSelectJob?: (job: any) => void;
   onAnswerQuestions?: (job: any) => void;
   applicationCount?: number;
+  onOpenMessageWithEmployer?: (employerId: number) => void;
+  jobsFromConversations?: any[];
 }
 
 export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
@@ -48,7 +50,9 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
   profileViewsCount = 0,
   onSelectJob,
   onAnswerQuestions,
-  applicationCount = 0
+  applicationCount = 0,
+  onOpenMessageWithEmployer,
+  jobsFromConversations = [],
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -290,6 +294,53 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
         </div>
       )}
 
+      {/* Jobs from conversations - employers messaged you about these */}
+      {jobsFromConversations.length > 0 && (
+        <div className="space-y-6">
+          <h3 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+            <MessageSquare size={28} className="text-[#148F8B]" />
+            Employers want to hear from you
+          </h3>
+          <p className="text-gray-600 font-medium text-sm sm:text-base">
+            An employer messaged you about the job below. Unlock the job to apply, then reply in Messages.
+          </p>
+          <div className="grid gap-4">
+            {jobsFromConversations.map((job: any) => {
+              const isUnlocked = unlockedJobs?.some((j: any) => j.id === job.id);
+              return (
+                <div
+                  key={job.id}
+                  className="p-5 sm:p-6 bg-white border border-[#148F8B]/20 rounded-2xl shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <h4 className="font-black text-lg text-gray-900 truncate">{job.title}</h4>
+                      <p className="text-sm text-gray-500 mt-0.5">{job.company_name || 'Company'} · {job.location}</p>
+                      {job.pay_range && <p className="text-xs text-[#148F8B] font-bold mt-1">{job.pay_range}</p>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        className="rounded-xl font-black text-xs uppercase tracking-widest"
+                        onClick={() => onSelectJob && onSelectJob(job)}
+                      >
+                        {isUnlocked ? 'View job' : 'Unlock & apply'}
+                      </Button>
+                      <Button
+                        className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+                        onClick={() => onNavigate('messages')}
+                      >
+                        <MessageSquare size={14} className="mr-1.5" /> Messages
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Unlocked Jobs Section - Always visible when there are unlocked jobs */}
       {unlockedJobs && unlockedJobs.length > 0 && (
         <div className="space-y-8">
@@ -434,17 +485,25 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                     </div>
                   )}
 
-                  {/* Apply CTA */}
-                  {onAnswerQuestions && (
-                    <div className="pt-4 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                  {/* Message employer (when applied) + Apply CTA */}
+                  <div className="pt-4 border-t border-gray-100 space-y-2" onClick={(e) => e.stopPropagation()}>
+                    {hasApplied && onOpenMessageWithEmployer && job.employer_id != null && (
+                      <Button
+                        className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white shadow-lg shadow-[#148F8B]/20 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-black uppercase tracking-widest"
+                        onClick={() => onOpenMessageWithEmployer(Number(job.employer_id))}
+                      >
+                        <MessageSquare size={16} /> Message Employer
+                      </Button>
+                    )}
+                    {onAnswerQuestions && (
                       <Button
                         className="w-full h-14 rounded-2xl bg-[#780262] hover:bg-[#780262]/90 text-white shadow-lg shadow-[#780262]/20 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-black uppercase tracking-widest"
                         onClick={() => onAnswerQuestions(job)}
                       >
                         <MessageSquare size={16} /> {hasApplied ? "Update Application" : "Apply to Job"}
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );})}

@@ -10,6 +10,7 @@ import {
   Trash2,
   RotateCcw,
   X,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 
@@ -39,6 +40,7 @@ interface CandidatesListProps {
   interactionFee: number;
   viewerLocation?: string;
   viewerIndustry?: string;
+  onOpenMessageWithCandidate?: (candidateId: number) => void;
 }
 
 function useIsMobile(breakpointPx = 768) {
@@ -81,6 +83,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   onSelectCandidate,
   viewerLocation,
   viewerIndustry,
+  onOpenMessageWithCandidate,
 }) => {
   const isMobile = useIsMobile(768);
 
@@ -90,6 +93,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   const unlockedIds: any[] = Array.isArray(unlockedCandidateIds)
     ? unlockedCandidateIds
     : [];
+  const isUnlocked = (id: any) => unlockedIds.some((uid: any) => Number(uid) === Number(id));
   const queue: any[] = Array.isArray(employerQueue) ? employerQueue : [];
 
   // Mobile swipe state
@@ -231,7 +235,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   };
 
   const isInQueue = (id: any) => queue.some((q) => q?.id === id);
-  const isUnlocked = (id: any) => unlockedIds.includes(id);
 
   // Toggle bookmark - add or remove from queue
   const handleToggleBookmark = (candidate: any) => {
@@ -509,6 +512,15 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
               {/* Action buttons */}
               <div className="pt-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+                {isUnlocked(currentCandidate.id) && onOpenMessageWithCandidate && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenMessageWithCandidate(Number(currentCandidate.id))}
+                    className="w-full h-14 rounded-xl bg-[#148F8B] text-white font-bold uppercase tracking-wide text-sm flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
+                  >
+                    <MessageSquare size={18} /> Message
+                  </button>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
@@ -666,8 +678,18 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   <p className="text-[10px] font-black text-[#148F8B] uppercase tracking-widest">Tap to see full profile details →</p>
                 </div>
 
-                {/* Bookmark button */}
+                {/* Bookmark + Message (when unlocked) */}
                 <div className="flex gap-3 lg:gap-4 shrink-0 w-full lg:w-auto justify-center" onClick={(e) => e.stopPropagation()}>
+                  {isUnlocked(c.id) && onOpenMessageWithCandidate && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenMessageWithCandidate(Number(c.id))}
+                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-[#148F8B] text-white hover:bg-[#148F8B]/90 transition-all font-black text-xs uppercase tracking-wide"
+                    >
+                      <MessageSquare size={20} />
+                      <span>Message</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleToggleBookmark(c)}

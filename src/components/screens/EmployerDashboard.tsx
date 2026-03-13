@@ -31,6 +31,10 @@ interface EmployerDashboardProps {
   onShowAuth: (mode: "login" | "signup") => void;
   onLogout: () => void;
   interactionFee: number;
+  onOpenMessageWithCandidate?: (candidateId: number) => void;
+  onOrganizeCandidateJobs?: (candidateId: number) => void;
+  candidateJobLinks?: Record<string, number[]>;
+  onMarkContacted?: (applicationId: number, method: 'phone' | 'email') => void;
 }
 
 export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
@@ -47,6 +51,10 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   onShowPayment,
   onShowAuth,
   onLogout,
+  onOpenMessageWithCandidate,
+  onOrganizeCandidateJobs,
+  candidateJobLinks = {},
+  onMarkContacted,
 }) => {
   const parseAppTimestamp = (value: string | null | undefined) => {
     if (!value) return null;
@@ -57,7 +65,9 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
 
-  const unlockedCandidates = candidates.filter(c => unlockedCandidateIds.includes(c.id));
+  const unlockedCandidates = candidates.filter(c =>
+    unlockedCandidateIds.some((id: any) => Number(id) === Number(c.id))
+  );
   const isVerified = isLoggedIn && userProfile?.businessLicense;
   const applicantsRef = useRef<HTMLDivElement>(null);
 
@@ -99,8 +109,9 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const filteredApplicants = filterByJobId
     ? actualApplicants.filter(a => a.appliedToJob?.id === filterByJobId)
     : actualApplicants;
-  const lockedApplicants = filteredApplicants.filter(a => !unlockedCandidateIds.includes(a.id));
-  const unlockedApplicants = filteredApplicants.filter(a => unlockedCandidateIds.includes(a.id));
+  const isCandidateUnlocked = (id: any) => unlockedCandidateIds.some((uid: any) => Number(uid) === Number(id));
+  const lockedApplicants = filteredApplicants.filter(a => !isCandidateUnlocked(a.id));
+  const unlockedApplicants = filteredApplicants.filter(a => isCandidateUnlocked(a.id));
   const filterJobTitle = filterByJobId ? jobs.find(j => j.id === filterByJobId)?.title : null;
   const openJobsCount = myJobs.filter((job) => job.status !== "filled").length;
   const filledJobsCount = myJobs.filter((job) => job.status === "filled").length;
@@ -307,9 +318,31 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </section>
 
         <section className="space-y-8 sm:space-y-12">
-          <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
-            <Star size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> Unlocked Talent
-          </h3>
+          <div className="space-y-4">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight flex items-center gap-3 sm:gap-5">
+              <Star size={28} className="sm:w-9 sm:h-9 md:w-10 md:h-10 text-[#A63F8E]" /> Unlocked Talent
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 font-medium">
+              Organize unlocked candidates into job-specific sections so it’s clear who you’re considering for each role.
+            </p>
+            {(() => {
+              const fromApplications = unlockedCandidates.filter((c: any) => actualApplicants.some((a: any) => Number(a.id) === Number(c.id))).length;
+              const fromPool = Math.max(0, unlockedCandidates.length - fromApplications);
+              return (
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest">
+                    Total unlocked: {unlockedCandidates.length}
+                  </span>
+                  <span className="px-3 py-1.5 rounded-full bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest">
+                    From talent pool: {fromPool}
+                  </span>
+                  <span className="px-3 py-1.5 rounded-full bg-[#A63F8E]/10 text-[#A63F8E] text-[10px] font-black uppercase tracking-widest">
+                    From applications: {fromApplications}
+                  </span>
+                </div>
+              );
+            })()}
+          </div>
 
           {unlockedCandidates.length === 0 ? (
             <div className="p-12 sm:p-16 md:p-20 bg-[#F3EAF5]/30 rounded-[3rem] sm:rounded-[3.5rem] md:rounded-[4rem] border-4 border-dashed border-gray-100 text-center space-y-4 sm:space-y-6">
@@ -320,11 +353,69 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4 sm:gap-6">
-              {unlockedCandidates.map(cand => {
+            <div className="grid gap-6">
+              {/* Grouped by job tags (candidate can appear in multiple groups) */}
+              {(() => {
+                const myJobs = jobs.filter((j: any) => Number(j.employer_id) === Number(userProfile?.employerId));
+                const getTaggedJobIds = (cid: any) => candidateJobLinks[String(cid)] || [];
+                const byJob: Record<number, any[]> = {};
+                const untagged: any[] = [];
+
+                unlockedCandidates.forEach((cand: any) => {
+                  const tagIds = getTaggedJobIds(cand.id);
+                  if (!tagIds.length) {
+                    untagged.push(cand);
+                    return;
+                  }
+                  tagIds.forEach((jid) => {
+                    if (!byJob[jid]) byJob[jid] = [];
+                    byJob[jid].push(cand);
+                  });
+                });
+
+                const sections: { key: string; title: string; jobId?: number; items: any[] }[] = [];
+                myJobs.forEach((job: any) => {
+                  const items = byJob[Number(job.id)] || [];
+                  if (items.length) sections.push({ key: `job-${job.id}`, title: job.title, jobId: Number(job.id), items });
+                });
+                // Untagged first so it’s obvious what still needs organizing.
+                if (untagged.length) sections.unshift({ key: 'untagged', title: 'Untagged (needs organizing to specific job(s))', items: untagged }); 
+
+                return sections.map((section) => (
+                  <div key={section.key} className={`space-y-4 rounded-[2rem] sm:rounded-[2.5rem] border-2 p-4 sm:p-6 ${
+                    section.jobId ? 'border-[#148F8B]/20 bg-[#148F8B]/5' : 'border-amber-200 bg-amber-50'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <h4 className={`text-xs font-black uppercase tracking-[0.22em] ${
+                          section.jobId ? 'text-[#148F8B]' : 'text-amber-700'
+                        }`}>
+                          {section.jobId ? `Job group` : `Untagged`}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg sm:text-xl font-black tracking-tight text-gray-900">
+                            {section.jobId ? section.title : 'Needs organizing into specific job(s)'}
+                          </span>
+                          {section.jobId && (
+                            <span className="px-2.5 py-1 rounded-full bg-white/80 border border-[#148F8B]/15 text-[9px] font-black uppercase tracking-widest text-gray-700">
+                              Tagged group
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="px-3 py-1.5 rounded-full bg-white/80 border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-700">
+                        {section.items.length} candidate{section.items.length !== 1 ? 's' : ''} 
+                      </span>
+                    </div>
+                    <div className="grid gap-4 sm:gap-6">
+                      {section.items.map((cand: any) => {
                 const candApplicant = actualApplicants.find(a => a.id === cand.id);
                 const candStatus = candApplicant?.status || null;
                 const candStatusStyle = candStatus ? (STATUS_COLORS[candStatus] || STATUS_COLORS['pending']) : null;
+                const taggedJobIds = candidateJobLinks[String(cand.id)] || [];
+                const taggedTitles = taggedJobIds
+                  .map((jid) => myJobs.find((j: any) => Number(j.id) === Number(jid))?.title)
+                  .filter(Boolean) as string[];
                 return (
                 <div
                   key={cand.id}
@@ -354,21 +445,60 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                       <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                         <MapPin size={12} /> {cand.location}
                       </div>
+                      {taggedTitles.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {taggedTitles.slice(0, 2).map((t) => (
+                            <span key={t} className="px-3 py-1 rounded-full bg-[#A63F8E]/10 text-[#A63F8E] text-[9px] font-black uppercase tracking-widest">
+                              {t}
+                            </span>
+                          ))}
+                          {taggedTitles.length > 2 && (
+                            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[9px] font-black uppercase tracking-widest">
+                              +{taggedTitles.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-50 flex gap-2 sm:gap-3">
-                    <button type="button" className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                  <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-50 flex flex-wrap gap-2 sm:gap-3" onClick={(e) => e.stopPropagation()}>
+                    {onOpenMessageWithCandidate && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenMessageWithCandidate(Number(cand.id))}
+                        className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#148F8B]/90 transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
+                      >
+                        <MessageSquare aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        Message
+                      </button>
+                    )}
+                    {onOrganizeCandidateJobs && (
+                      <button
+                        type="button"
+                        onClick={() => onOrganizeCandidateJobs(Number(cand.id))}
+                        className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:border-[#A63F8E] hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest"
+                      >
+                        <Pencil aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        Organize
+                      </button>
+                    )}
+                    <button type="button" className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
                       <Phone aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Call</span>
                     </button>
-                    <button type="button" className="flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
+                    <button type="button" className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200">
                       <Mail aria-hidden="true" size={16} className="sm:w-[18px] sm:h-[18px]" />
                       <span className="font-black text-[10px] uppercase tracking-widest">Email</span>
                     </button>
                   </div>
                 </div>
-              ); })}
+              );
+                      })}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           )}
         </section>
@@ -603,10 +733,24 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       })()}
 
       {/* Action Buttons */}
-      <div className="px-5 sm:px-6 pt-2 pb-10 flex gap-3 justify-center">
+      <div className="px-5 sm:px-6 pt-2 pb-10 flex flex-wrap gap-3 justify-center">
+        {onOpenMessageWithCandidate && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenMessageWithCandidate(applicant.id); }}
+            className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#148F8B]/90 transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
+          >
+            <MessageSquare aria-hidden="true" size={16} />
+            Message
+          </button>
+        )}
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            const appId = applicant?.application?.id;
+            if (appId && onMarkContacted) onMarkContacted(Number(appId), 'phone');
+          }}
           className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
         >
           <Phone aria-hidden="true" size={16} />
@@ -614,7 +758,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </button>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            const appId = applicant?.application?.id;
+            if (appId && onMarkContacted) onMarkContacted(Number(appId), 'email');
+          }}
           className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
         >
           <Mail aria-hidden="true" size={16} />

@@ -115,7 +115,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Apply & Unlock</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Apply to reveal the employer. Direct contact info unlocked instantly.
+                  Apply to reveal the employer. Direct contact info unlocked instantly as well as direct messaging.
                 </p>
               </div>
             </div>
@@ -141,7 +141,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Post Your Job</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Use AI assist or manual entry. Add your job details in minutes. Stay anonymous until candidates apply.
+                  Use AI assist or manual entry. Add your job details in minutes. Direct messaging is available for employers who unlock candidates.
                 </p>
               </div>
             </div>
@@ -155,7 +155,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Browse Candidates</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Watch video intros for free. See personality and skills upfront. Swipe to add promising candidates to your queue.
+                  Browse and swipe to add promising candidates to your queue. You can jump straight to this step without posting a job too!
                 </p>
               </div>
             </div>
@@ -169,7 +169,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Unlock & Connect</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Unlock a candidate's full profile and contact info. Reach out directly.
+                  Unlock a candidate's full profile, video intro and contact info. Reach out directly. 
                 </p>
               </div>
             </div>

@@ -79,17 +79,28 @@ export const Header = ({
         {isRoleSelected ? (
           <div className="hidden lg:flex items-center gap-6">
             {isLoggedIn && (
-              <button
-                onClick={() => onNavigate(role === "seeker" ? "seeker" : "employer")}
-                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
-                  (currentTab === "seeker" || currentTab === "employer")
-                    ? "font-black"
-                    : "font-bold hover:text-gray-900"
-                }`}
-                style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
-              >
-                Dashboard
-              </button>
+              <>
+                <button
+                  onClick={() => onNavigate(role === "seeker" ? "seeker" : "employer")}
+                  className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                    (currentTab === "seeker" || currentTab === "employer")
+                      ? "font-black"
+                      : "font-bold hover:text-gray-900"
+                  }`}
+                  style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => onNavigate("messages")}
+                  className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                    currentTab === "messages" ? "font-black" : "font-bold hover:text-gray-900"
+                  }`}
+                  style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
+                >
+                  Messages
+                </button>
+              </>
             )}
 
             {role === "seeker" && (

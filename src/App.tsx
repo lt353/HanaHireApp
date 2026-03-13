@@ -21,8 +21,8 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-  ShoppingCart,
-  FolderOpen
+  FolderOpen,
+  MessageSquare,
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
@@ -54,13 +54,15 @@ import { ProfileEditor } from './components/screens/ProfileEditor';
 import { VideoIntroModal } from "./components/screens/VideoIntroModal";
 import { ApplicationQuestionsModal } from "./components/screens/ApplicationQuestionsModal";
 import type { ApplicationSubmissionPayload } from "./components/screens/ApplicationQuestionsModal";
+import { Messages } from "./components/screens/Messages";
+import type { ConversationRow, MessageRow } from "./components/screens/Messages";
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
 import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } from './data/mockData';
 
 
-export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding";
+export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding" | "messages";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 const STORAGE_KEY_ANON_SAVED_JOB_IDS = "hanahire_anon_saved_job_ids";
@@ -125,6 +127,24 @@ export default function App() {
   const [contactNotesDraft, setContactNotesDraft] = useState("");
   const [isSavingApplicationReview, setIsSavingApplicationReview] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [conversations, setConversations] = useState<ConversationRow[]>([]);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [messagesForSelected, setMessagesForSelected] = useState<MessageRow[]>([]);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [messagesPreselectEmployerId, setMessagesPreselectEmployerId] = useState<number | null>(null);
+  const [messagesPreselectCandidateId, setMessagesPreselectCandidateId] = useState<number | null>(null);
+  const [selectedConversationCandidateId, setSelectedConversationCandidateId] = useState<number | null>(null);
+  const [messageJobPickerCandidateId, setMessageJobPickerCandidateId] = useState<number | null>(null);
+  const [messageJobPickerSelectedJobId, setMessageJobPickerSelectedJobId] = useState<number | null>(null);
+  const [messageJobPickerTemplateKey, setMessageJobPickerTemplateKey] = useState<string | null>(null);
+  const [pendingInitialMessage, setPendingInitialMessage] = useState<string | null>(null);
+  const [chooseThreadCandidateId, setChooseThreadCandidateId] = useState<number | null>(null);
+  const [chooseThreadOptions, setChooseThreadOptions] = useState<ConversationRow[]>([]);
+  const [jobsFromConversations, setJobsFromConversations] = useState<any[]>([]);
+  const [candidateJobLinks, setCandidateJobLinks] = useState<Record<string, number[]>>({});
+  const [organizeCandidateId, setOrganizeCandidateId] = useState<number | null>(null);
+  const [organizeSelectedJobIds, setOrganizeSelectedJobIds] = useState<number[]>([]);
   const loggedCandidateViewsRef = useRef<Set<string>>(new Set());
   const loggedApplicationViewsRef = useRef<Set<string>>(new Set());
   const [filters, setFilters] = useState({
@@ -167,7 +187,114 @@ export default function App() {
       .in('job_id', myJobIds)
       .then(({ data }) => { if (data) setEmployerApplications(data); });
   }, [userRole, userProfile?.employerId, jobs]);
-  
+
+  useEffect(() => {
+    if (currentView !== 'messages' || !isLoggedIn || !userProfile?.email) return;
+    fetchConversations();
+  }, [currentView, isLoggedIn, userProfile?.email, userRole, userProfile?.employerId, userProfile?.candidateId, userProfile?.id, applications?.length, unlockedCandidateIds?.length]);
+
+  useEffect(() => {
+    if (userRole !== 'employer' || !isLoggedIn || userProfile?.employerId == null) {
+      setCandidateJobLinks({});
+      return;
+    }
+    const employerId = Number(userProfile.employerId);
+    if (!employerId) return;
+    supabase
+      .from('candidate_job_links')
+      .select('candidate_id, job_id')
+      .eq('employer_id', employerId)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error fetching candidate-job links:", error);
+          setCandidateJobLinks({});
+          return;
+        }
+        const map: Record<string, number[]> = {};
+        (data || []).forEach((row: any) => {
+          const cid = String(row.candidate_id);
+          const jid = Number(row.job_id);
+          if (!map[cid]) map[cid] = [];
+          if (!map[cid].includes(jid)) map[cid].push(jid);
+        });
+        // Merge in application-derived tags so applicants are always considered tagged.
+        (employerApplications || []).forEach((a: any) => {
+          const cid = String(a.candidate_id);
+          const jid = Number(a.job_id);
+          if (!cid || !jid) return;
+          if (!map[cid]) map[cid] = [];
+          if (!map[cid].includes(jid)) map[cid].push(jid);
+        });
+        setCandidateJobLinks(map);
+      });
+  }, [userRole, isLoggedIn, userProfile?.employerId, employerApplications]);
+
+  // Auto-tag candidates to jobs they already applied for (so they show as tagged by default).
+  useEffect(() => {
+    if (userRole !== 'employer' || !isLoggedIn || userProfile?.employerId == null) return;
+    const employerId = Number(userProfile.employerId);
+    if (!employerId || !Array.isArray(employerApplications) || employerApplications.length === 0) return;
+
+    const rows = employerApplications
+      .map((a: any) => ({ candidate_id: Number(a.candidate_id), job_id: Number(a.job_id) }))
+      .filter((x: any) => x.candidate_id && x.job_id);
+
+    if (rows.length === 0) return;
+    const uniqueKey = new Set<string>();
+    const uniqueRows = rows.filter((r: any) => {
+      const k = `${r.candidate_id}:${r.job_id}`;
+      if (uniqueKey.has(k)) return false;
+      uniqueKey.add(k);
+      return true;
+    });
+
+    supabase
+      .from('candidate_job_links')
+      .upsert(
+        uniqueRows.map((r: any) => ({ employer_id: employerId, candidate_id: r.candidate_id, job_id: r.job_id })),
+        { onConflict: 'employer_id,candidate_id,job_id', ignoreDuplicates: true }
+      )
+      .then(({ error }) => {
+        if (error) console.error("Error upserting application-derived tags:", error);
+      });
+  }, [userRole, isLoggedIn, userProfile?.employerId, employerApplications]);
+
+  useEffect(() => {
+    if (messageJobPickerCandidateId == null || userRole !== 'employer') return;
+    // If this candidate is tagged to exactly one job, default to that.
+    const linked = candidateJobLinks[String(messageJobPickerCandidateId)] || [];
+    if (linked.length === 1) {
+      setMessageJobPickerSelectedJobId(linked[0]);
+    }
+  }, [messageJobPickerCandidateId, userRole, candidateJobLinks]);
+
+  useEffect(() => {
+    if (!selectedConversationId) {
+      setMessagesForSelected([]);
+      return;
+    }
+    fetchMessagesForConversation(selectedConversationId);
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (currentView !== 'seeker' || !isLoggedIn || !userProfile?.candidateId || !jobs?.length) {
+      setJobsFromConversations([]);
+      return;
+    }
+    const cid = Number(userProfile.candidateId ?? userProfile.id);
+    if (!cid) return;
+    supabase
+      .from('conversations')
+      .select('job_id')
+      .eq('candidate_id', cid)
+      .not('job_id', 'is', null)
+      .then(({ data }) => {
+        const jobIds = [...new Set((data || []).map((r: any) => r.job_id).filter(Boolean))];
+        const resolved = jobs.filter((j: any) => jobIds.includes(Number(j.id)));
+        setJobsFromConversations(resolved);
+      });
+  }, [currentView, isLoggedIn, userProfile?.candidateId, userProfile?.id, jobs]);
+
   // Don't block landing page on initial load
   useEffect(() => {
     // If we're on landing page and data hasn't loaded yet, set loading to false immediately
@@ -396,6 +523,237 @@ export default function App() {
       console.log(`Loaded ${(appData || []).length} job applications`);
     } catch (err) {
       console.error("Unexpected error fetching applications:", err);
+    }
+  };
+
+  const fetchConversations = async () => {
+    const email = userProfile?.email;
+    if (!email) return;
+    const role = userRole;
+    const employerId = userProfile?.employerId;
+    const candidateId = userProfile?.candidateId ?? userProfile?.id;
+    if (role === 'seeker' && !candidateId) return;
+    if (role === 'employer' && employerId == null) return;
+
+    setIsLoadingConversations(true);
+    try {
+      const col = role === 'seeker' ? 'candidate_id' : 'employer_id';
+      const id = role === 'seeker' ? candidateId : employerId;
+      const { data: rows, error } = await supabase
+        .from('conversations')
+        .select('id, employer_id, candidate_id, job_id, created_at')
+        .eq(col, id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching conversations:", error);
+        setConversations([]);
+        setIsLoadingConversations(false);
+        return;
+      }
+
+      const convList = rows || [];
+      const convIds = convList.map((c: any) => c.id);
+      let lastMessages: { conversation_id: string; body: string; subject: string | null; sent_at: string }[] = [];
+      let unreadCounts: { conversation_id: string; count: number }[] = [];
+      if (convIds.length > 0) {
+        const { data: msgRows } = await supabase
+          .from('messages')
+          .select('id, conversation_id, from_email, to_email, subject, body, sent_at, is_read')
+          .in('conversation_id', convIds)
+          .order('sent_at', { ascending: false });
+        const byConv = new Map<string, { body: string; subject: string | null; sent_at: string }>();
+        const unreadByConv = new Map<string, number>();
+        const myEmail = (email as string).toLowerCase();
+        (msgRows || []).forEach((m: any) => {
+          if (!byConv.has(m.conversation_id)) byConv.set(m.conversation_id, { body: m.body, subject: m.subject ?? null, sent_at: m.sent_at });
+          if (m.to_email?.toLowerCase() === myEmail && !m.is_read) {
+            unreadByConv.set(m.conversation_id, (unreadByConv.get(m.conversation_id) || 0) + 1);
+          }
+        });
+        lastMessages = Array.from(byConv.entries()).map(([k, v]) => ({ conversation_id: k, ...v }));
+        unreadCounts = Array.from(unreadByConv.entries()).map(([conversation_id, count]) => ({ conversation_id, count }));
+      }
+
+      const appliedEmployerIds = new Set(
+        (applications || []).map((a: any) => jobs.find((j: any) => j.id === a.job_id)?.employer_id).filter(Boolean)
+      );
+      const list: ConversationRow[] = convList.map((c: any) => {
+        const isSeeker = role === 'seeker';
+        const otherEmployer = employers.find((e: any) => e.id === c.employer_id);
+        const otherCandidate = candidates.find((x: any) => x.id === c.candidate_id);
+        const otherPartyName = isSeeker ? (otherEmployer?.business_name || otherEmployer?.email || 'Employer') : (otherCandidate?.name || otherCandidate?.email || 'Candidate');
+        const otherPartySubtitle = isSeeker ? otherEmployer?.industry : otherCandidate?.display_title;
+        const last = lastMessages.find((l: any) => l.conversation_id === c.id);
+        const unread = unreadCounts.find((u: any) => u.conversation_id === c.id)?.count ?? 0;
+        const canRead = isSeeker
+          ? appliedEmployerIds.has(Number(c.employer_id))
+          : unlockedCandidateIds.some((id: any) => Number(id) === Number(c.candidate_id));
+        const job = c.job_id ? jobs.find((j: any) => j.id === c.job_id) : null;
+        return {
+          id: c.id,
+          employer_id: c.employer_id,
+          candidate_id: c.candidate_id,
+          job_id: c.job_id ?? undefined,
+          jobTitle: job?.title ?? null,
+          otherPartyName,
+          otherPartySubtitle: otherPartySubtitle || undefined,
+          lastMessagePreview: last ? (last.body?.slice(0, 60) + (last.body?.length > 60 ? '…' : '')) : null,
+          lastMessageSubject: last?.subject ?? null,
+          lastMessageAt: last?.sent_at ?? null,
+          unreadCount: unread,
+          canRead,
+        };
+      });
+      setConversations(list);
+
+      if (messagesPreselectEmployerId != null || messagesPreselectCandidateId != null) {
+        const preselect = role === 'seeker'
+          ? list.find((c) => c.employer_id === messagesPreselectEmployerId)
+          : list.find((c) => c.candidate_id === messagesPreselectCandidateId);
+        if (preselect) setSelectedConversationId(preselect.id);
+        setMessagesPreselectEmployerId(null);
+        setMessagesPreselectCandidateId(null);
+      }
+    } catch (err) {
+      console.error("Unexpected error fetching conversations:", err);
+      setConversations([]);
+    }
+    setIsLoadingConversations(false);
+  };
+
+  const getOrCreateConversation = async (employerId: number, candidateId: number, jobId?: number | null): Promise<string | null> => {
+    try {
+      const { data: existing } = await supabase
+        .from('conversations')
+        .select('id, job_id')
+        .eq('employer_id', employerId)
+        .eq('candidate_id', candidateId)
+        .maybeSingle();
+      if (existing?.id) {
+        if (jobId != null && existing.job_id == null) {
+          await supabase.from('conversations').update({ job_id: jobId }).eq('id', existing.id);
+        }
+        return existing.id;
+      }
+      const { data: inserted, error } = await supabase
+        .from('conversations')
+        .insert([{ employer_id: employerId, candidate_id: candidateId, job_id: jobId ?? null }])
+        .select('id')
+        .single();
+      if (error) {
+        console.error("Error creating conversation:", error);
+        return null;
+      }
+      return inserted?.id ?? null;
+    } catch (err) {
+      console.error("Unexpected error getOrCreateConversation:", err);
+      return null;
+    }
+  };
+
+  const fetchMessagesForConversation = async (conversationId: string) => {
+    setMessagesForSelected([]);
+    setIsLoadingMessages(true);
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, conversation_id, from_email, to_email, body, sent_at, is_read, read_at')
+        .eq('conversation_id', conversationId)
+        .order('sent_at', { ascending: true });
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return;
+      }
+      setMessagesForSelected(data || []);
+    } catch (err) {
+      console.error("Unexpected error fetching messages:", err);
+    }
+    setIsLoadingMessages(false);
+  };
+
+  const markConversationMessagesRead = async (conversationId: string) => {
+    const email = userProfile?.email;
+    if (!email) return;
+    try {
+      await supabase
+        .from('messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .eq('to_email', email);
+      setConversations((prev) =>
+        prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
+      );
+    } catch (err) {
+      console.error("Error marking messages read:", err);
+    }
+  };
+
+  const sendMessage = async (conversationId: string, body: string) => {
+    const email = userProfile?.email;
+    if (!email?.trim() || !body.trim()) return;
+    try {
+      const conv = conversations.find((c) => c.id === conversationId);
+      if (!conv) return;
+      const toEmail = userRole === 'seeker'
+        ? (employers.find((e: any) => e.id === conv.employer_id)?.email)
+        : (candidates.find((c: any) => c.id === conv.candidate_id)?.email);
+      if (!toEmail) return;
+      const { error } = await supabase.from('messages').insert([{
+        conversation_id: conversationId,
+        from_email: email,
+        to_email: toEmail,
+        body: body.trim(),
+        subject: null,
+      }]);
+      if (error) {
+        console.error("Error sending message:", error);
+        toast.error("Failed to send message.");
+        return;
+      }
+
+      // If employer is the sender and this conversation is tied to a job,
+      // mark the corresponding application as contacted via messaging.
+      if (userRole === 'employer' && conv.job_id && conv.candidate_id) {
+        try {
+          const jobId = Number(conv.job_id);
+          const candidateId = Number(conv.candidate_id);
+          if (jobId && candidateId) {
+            const { data: appRow, error: appErr } = await supabase
+              .from('applications')
+              .select('id, contact_method')
+              .eq('candidate_id', candidateId)
+              .eq('job_id', jobId)
+              .order('applied_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (!appErr && appRow && appRow.id) {
+              const applicationId = appRow.id;
+              const updatedAt = new Date().toISOString();
+              const payload: any = { contact_method: 'messaging', updated_at: updatedAt };
+              const { error: updErr } = await supabase
+                .from('applications')
+                .update(payload)
+                .eq('id', applicationId);
+              if (!updErr) {
+                setEmployerApplications((prev) =>
+                  prev.map((a: any) =>
+                    Number(a.id) === Number(applicationId) ? { ...a, ...payload } : a
+                  )
+                );
+              }
+            }
+          }
+        } catch (markErr) {
+          console.error("Error marking application contacted via messaging:", markErr);
+        }
+      }
+
+      await fetchMessagesForConversation(conversationId);
+      await fetchConversations();
+    } catch (err) {
+      console.error("Unexpected error sending message:", err);
+      toast.error("Failed to send message.");
     }
   };
 
@@ -753,6 +1111,23 @@ export default function App() {
     }
   };
 
+  const markEmployerContacted = async (applicationId: number, method: 'phone' | 'email') => {
+    if (userRole !== 'employer' || !applicationId) return;
+    try {
+      const updatedAt = new Date().toISOString();
+      const payload: any = { contact_method: method, updated_at: updatedAt };
+      const { error } = await supabase.from('applications').update(payload).eq('id', applicationId);
+      if (error) throw error;
+      setEmployerApplications((prev) =>
+        prev.map((a: any) => (Number(a.id) === Number(applicationId) ? { ...a, ...payload } : a))
+      );
+      toast.success("Marked as contacted");
+    } catch (err) {
+      console.error("Error marking contacted:", err);
+      toast.error("Failed to mark contacted");
+    }
+  };
+
   const toggleSelectedJobFilledStatus = async () => {
     if (userRole !== 'employer' || !selectedJob?.id) return;
     const nextStatus = selectedJob.status === 'filled' ? 'active' : 'filled';
@@ -1010,6 +1385,12 @@ export default function App() {
       interactionFee={INTERACTION_FEE}
       viewerLocation={userProfile?.location}
       viewerIndustry={userProfile?.industry}
+      onOpenMessageWithCandidate={userRole === 'employer' && userProfile?.employerId != null ? (candidateId) => {
+        const cid = typeof candidateId === 'number' ? candidateId : Number(candidateId);
+        if (!cid) return;
+        setMessageJobPickerCandidateId(cid);
+        setMessageJobPickerSelectedJobId(null);
+      } : undefined}
     />
   );
       case "cart":
@@ -1059,6 +1440,17 @@ export default function App() {
             applications={applications}
             profileViewsCount={profileViewsCount}
             applicationCount={applications.length}
+            onOpenMessageWithEmployer={(employerId: number) => {
+              const eid = typeof employerId === 'number' ? employerId : Number(employerId);
+              const candidateId = userProfile?.candidateId ?? userProfile?.id;
+              if (!eid || !candidateId) return;
+              getOrCreateConversation(eid, candidateId).then((id) => {
+                if (id) setSelectedConversationId(id);
+                setMessagesPreselectEmployerId(null);
+                handleNavigate("messages");
+              });
+            }}
+            jobsFromConversations={jobsFromConversations}
           />
         );
       case "employer":
@@ -1078,6 +1470,134 @@ export default function App() {
             onShowAuth={handleShowAuth}
             onLogout={handleLogout}
             interactionFee={INTERACTION_FEE}
+            onOpenMessageWithCandidate={(candidateId) => {
+              const candidateIdNum = typeof candidateId === 'number' ? candidateId : Number(candidateId);
+              const employerId = userProfile?.employerId;
+              if (!candidateIdNum || !employerId) return;
+
+              (async () => {
+                try {
+                  const { data: convs, error } = await supabase
+                    .from('conversations')
+                    .select('id, employer_id, candidate_id, job_id, created_at')
+                    .eq('employer_id', employerId)
+                    .eq('candidate_id', candidateIdNum)
+                    .order('created_at', { ascending: false });
+
+                  if (error) {
+                    console.error("Error checking existing conversations:", error);
+                    setMessageJobPickerCandidateId(candidateIdNum);
+                    setMessageJobPickerSelectedJobId(null);
+                    return;
+                  }
+
+                  if (!convs || convs.length === 0) {
+                    // No prior conversations — use full job picker + quick templates.
+                    setMessageJobPickerCandidateId(candidateIdNum);
+                    setMessageJobPickerSelectedJobId(null);
+                    return;
+                  }
+
+                  const convIds = convs.map((c: any) => c.id);
+                  const { data: msgRows, error: msgError } = await supabase
+                    .from('messages')
+                    .select('conversation_id, subject, body, sent_at')
+                    .in('conversation_id', convIds)
+                    .order('sent_at', { ascending: false });
+
+                  if (msgError) {
+                    console.error("Error fetching last messages for chooser:", msgError);
+                  }
+
+                  const firstByConv = new Map<string, { subject: string | null; body: string; sent_at: string }>();
+                  (msgRows || []).forEach((m: any) => {
+                    if (!firstByConv.has(m.conversation_id)) {
+                      firstByConv.set(m.conversation_id, {
+                        subject: m.subject ?? null,
+                        body: m.body,
+                        sent_at: m.sent_at,
+                      });
+                    }
+                  });
+
+                  const taggedIdsForCandidate = candidateJobLinks[String(candidateIdNum)] || [];
+
+                  // Existing conversations found — let employer pick which to continue.
+                  const opts: ConversationRow[] = convs.map((c: any) => {
+                    // Prefer explicit job_id from conversation; if missing, fall back
+                    // to a single tagged job for this candidate (if exactly one).
+                    let effectiveJobId: number | null = c.job_id ?? null;
+                    if (effectiveJobId == null && taggedIdsForCandidate.length === 1) {
+                      effectiveJobId = taggedIdsForCandidate[0];
+                    }
+                    const job = effectiveJobId != null ? jobs.find((j: any) => Number(j.id) === Number(effectiveJobId)) : null;
+                    const last = firstByConv.get(c.id);
+                    return {
+                      id: c.id,
+                      employer_id: c.employer_id,
+                      candidate_id: c.candidate_id,
+                      job_id: effectiveJobId ?? c.job_id ?? undefined,
+                      jobTitle: job?.title ?? null,
+                      otherPartyName: '',
+                      otherPartySubtitle: undefined,
+                      lastMessagePreview: last ? (last.body?.slice(0, 60) + (last.body?.length > 60 ? '…' : '')) : null,
+                      lastMessageSubject: last?.subject ?? null,
+                      lastMessageAt: last?.sent_at ?? null,
+                      unreadCount: 0,
+                      canRead: true,
+                    };
+                  });
+
+                  setChooseThreadCandidateId(candidateIdNum);
+                  setChooseThreadOptions(opts);
+                } catch (e) {
+                  console.error("Unexpected error opening message with candidate:", e);
+                  setMessageJobPickerCandidateId(candidateIdNum);
+                  setMessageJobPickerSelectedJobId(null);
+                }
+              })();
+            }}
+            onOrganizeCandidateJobs={(candidateId) => {
+              const cid = Number(candidateId);
+              if (!cid) return;
+              const linked = candidateJobLinks[String(cid)] || [];
+              setOrganizeCandidateId(cid);
+              setOrganizeSelectedJobIds(linked.slice());
+            }}
+            candidateJobLinks={candidateJobLinks}
+            onMarkContacted={markEmployerContacted}
+          />
+        );
+      case "messages":
+        return (
+          <Messages
+            userRole={userRole}
+            userProfile={userProfile}
+            isLoggedIn={isLoggedIn}
+            conversations={conversations}
+            selectedConversationId={selectedConversationId}
+            messages={messagesForSelected}
+            canReadSelected={(() => {
+              const c = selectedConversationId ? conversations.find((x) => x.id === selectedConversationId) : null;
+              const fromList = c?.canRead ?? false;
+              const employerJustOpenedUnlockedCandidate =
+                userRole === 'employer' &&
+                selectedConversationCandidateId != null &&
+                unlockedCandidateIds.some((id: any) => Number(id) === Number(selectedConversationCandidateId));
+              return fromList || employerJustOpenedUnlockedCandidate || false;
+            })()}
+            isLoadingConversations={isLoadingConversations}
+            isLoadingMessages={isLoadingMessages}
+            onSelectConversation={(id) => { setSelectedConversationCandidateId(null); setSelectedConversationId(id); }}
+            onBackFromThread={() => { setSelectedConversationId(null); setSelectedConversationCandidateId(null); }}
+            onSendMessage={async (body) => {
+              if (selectedConversationId) await sendMessage(selectedConversationId, body);
+            }}
+            onMarkAsRead={markConversationMessagesRead}
+            onShowAuth={handleShowAuth}
+            onNavigate={handleNavigate}
+            initialDraft={pendingInitialMessage}
+            onInitialDraftUsed={() => setPendingInitialMessage(null)}
           />
         );
       case "job-posting":
@@ -2340,6 +2860,320 @@ export default function App() {
          </div>
       </Modal>
 
+      <Modal
+        isOpen={messageJobPickerCandidateId != null && userRole === 'employer'}
+        onClose={() => { setMessageJobPickerCandidateId(null); setMessageJobPickerSelectedJobId(null); setMessageJobPickerTemplateKey(null); }}
+        title="Message about a job"
+      >
+        <div className="space-y-6 pb-4">
+          <p className="text-sm text-gray-600 font-medium">
+            Select the job you’re messaging this candidate about. They’ll see it on their dashboard and can unlock and apply to respond.
+          </p>
+          {(() => {
+            const myJobs = (jobs || []).filter((j: any) => Number(j.employer_id) === Number(userProfile?.employerId));
+            const linkedJobIds = messageJobPickerCandidateId != null ? (candidateJobLinks[String(messageJobPickerCandidateId)] || []) : [];
+            const linkedJobs = myJobs.filter((j: any) => linkedJobIds.includes(Number(j.id)));
+            const otherJobs = myJobs.filter((j: any) => !linkedJobIds.includes(Number(j.id)));
+            return (
+              <>
+                {linkedJobs.length > 0 && (
+                  <div className="p-3 rounded-xl border border-[#148F8B]/15 bg-[#148F8B]/5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">Tagged jobs for this candidate</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {linkedJobs.map((j: any) => (
+                        <span key={j.id} className="px-3 py-1 rounded-full bg-white border border-[#148F8B]/20 text-[10px] font-black uppercase tracking-widest text-gray-700">
+                          {j.title}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-xs text-gray-600 font-medium">
+                      {linkedJobs.length === 1 ? "We’ll default to this job unless you change it." : "Pick which job this message is about."}
+                    </p>
+                  </div>
+                )}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => setMessageJobPickerSelectedJobId(null)}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                      messageJobPickerSelectedJobId == null
+                        ? 'border-[#148F8B] bg-[#148F8B]/5'
+                        : 'border-gray-100 hover:border-gray-200 bg-white'
+                    }`}
+                  >
+                    <span className="font-black text-gray-900 block">No specific job posting</span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      Reach out about general or future opportunities (no job listing required).
+                    </span>
+                  </button>
+                  {linkedJobs.map((job: any) => (
+                    <button
+                      key={job.id}
+                      type="button"
+                      onClick={() => setMessageJobPickerSelectedJobId(Number(job.id))}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                        messageJobPickerSelectedJobId === job.id
+                          ? 'border-[#148F8B] bg-[#148F8B]/5'
+                          : 'border-gray-100 hover:border-gray-200 bg-white'
+                      }`}
+                    >
+                      <span className="font-black text-gray-900 block">{job.title}</span>
+                      <span className="text-xs text-gray-500 font-medium">{job.location} · {job.pay_range}</span>
+                    </button>
+                  ))}
+                  {otherJobs.map((job: any) => (
+                    <button
+                      key={job.id}
+                      type="button"
+                      onClick={() => setMessageJobPickerSelectedJobId(Number(job.id))}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                        messageJobPickerSelectedJobId === job.id
+                          ? 'border-[#148F8B] bg-[#148F8B]/5'
+                          : 'border-gray-100 hover:border-gray-200 bg-white'
+                      }`}
+                    >
+                      <span className="font-black text-gray-900 block">{job.title}</span>
+                      <span className="text-xs text-gray-500 font-medium">{job.location} · {job.pay_range}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="space-y-2 pt-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Quick conversation starters</p>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMessageJobPickerTemplateKey('short')}
+                      className={`w-full text-left px-3 py-2 rounded-xl border text-xs font-medium ${
+                        messageJobPickerTemplateKey === 'short'
+                          ? 'border-[#148F8B] bg-[#148F8B]/5 text-[#148F8B]'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      Aloha [First Name], I found your profile in HanaHire talent pool and think you’re a great fit for our company.
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMessageJobPickerTemplateKey('context')}
+                      className={`w-full text-left px-3 py-2 rounded-xl border text-xs font-medium ${
+                        messageJobPickerTemplateKey === 'context'
+                          ? 'border-[#148F8B] bg-[#148F8B]/5 text-[#148F8B]'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      Aloha [First Name], I’m from [Company]. Your background and intro video really stood out for a job opening we are hiring for.
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMessageJobPickerTemplateKey('casual')}
+                      className={`w-full text-left px-3 py-2 rounded-xl border text-xs font-medium ${
+                        messageJobPickerTemplateKey === 'casual'
+                          ? 'border-[#148F8B] bg-[#148F8B]/5 text-[#148F8B]'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      }`}
+                    >
+                      Hey [First Name], we saw your HanaHire profile and would love to connect about a job opening with our company.
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black uppercase tracking-widest"
+                  onClick={async () => {
+                    const eid = Number(userProfile?.employerId);
+                    const cid = messageJobPickerCandidateId;
+                    const jobId = messageJobPickerSelectedJobId;
+                    if (!eid || !cid) return;
+                    // Build quick template text if selected
+                    let initialBody: string | null = null;
+                    const job = jobs.find((j: any) => Number(j.id) === Number(jobId));
+                    const candidate = candidates.find((c: any) => Number(c.id) === Number(cid));
+                    const firstName = (candidate?.name || '').split(' ')[0] || 'there';
+                    const companyName = (userProfile as any)?.businessName || job?.company_name || 'our company';
+                    const yourName = (userProfile as any)?.contact_name || (userProfile as any)?.name || companyName;
+                    if (messageJobPickerTemplateKey === 'short') {
+                      if (jobId != null && job) {
+                        initialBody = `Aloha ${firstName}, I found your profile in the HanaHire talent pool and I think you’d be a strong fit for our “${job.title}” at ${companyName}. Would you be open to a quick chat about it?`;
+                      } else {
+                        initialBody = `Aloha ${firstName}, I found your profile in the HanaHire talent pool and I think you could be a great fit for opportunities with us at ${companyName}. Would you be open to a quick chat about what you’re looking for?`;
+                      }
+                    } else if (messageJobPickerTemplateKey === 'context') {
+                      if (jobId != null && job) {
+                        initialBody = `Aloha ${firstName}, I’m ${yourName} from ${companyName}. We’re hiring for a “${job.title}” role and your HanaHire profile really stood out—especially your experience in ${job.job_category || 'this area'}. If you’re interested, I’d love to share more about the position and hear what you’re looking for.`;
+                      } else {
+                        initialBody = `Aloha ${firstName}, I’m ${yourName} from ${companyName}. We’re always looking for strong talent and your HanaHire profile really stood out. I’d love to learn what you’re looking for and share how we might work together.`;
+                      }
+                    } else if (messageJobPickerTemplateKey === 'casual') {
+                      if (jobId != null && job) {
+                        initialBody = `Hey ${firstName}, I saw your HanaHire profile and think you could be a great fit for our “${job.title}” role at ${companyName}. No pressure—would you be open to hearing a bit about it?`;
+                      } else {
+                        initialBody = `Hey ${firstName}, I saw your HanaHire profile and think you could be a great fit for our team at ${companyName}. No pressure—would you be open to hearing a bit about potential opportunities?`;
+                      }
+                    }
+                    setPendingInitialMessage(initialBody);
+                    setSelectedConversationCandidateId(cid);
+                    const id = await getOrCreateConversation(eid, cid, jobId);
+                    setMessageJobPickerCandidateId(null);
+                    setMessageJobPickerSelectedJobId(null);
+                    setMessageJobPickerTemplateKey(null);
+                    if (id) setSelectedConversationId(id);
+                    handleNavigate("messages");
+                  }}
+                >
+                  Start conversation
+                </Button>
+              </>
+            );
+          })()}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={chooseThreadCandidateId != null && userRole === 'employer'}
+        onClose={() => { setChooseThreadCandidateId(null); setChooseThreadOptions([]); }}
+        title="Message candidate"
+      >
+        <div className="space-y-6 pb-4">
+          <p className="text-sm text-gray-600 font-medium">
+            You already have conversation history with this candidate. Continue an existing thread or start a new one.
+          </p>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {chooseThreadOptions.map((conv) => (
+              <button
+                key={conv.id}
+                type="button"
+                onClick={() => {
+                  setSelectedConversationCandidateId(conv.candidate_id);
+                  setSelectedConversationId(conv.id);
+                  setChooseThreadCandidateId(null);
+                  setChooseThreadOptions([]);
+                  handleNavigate("messages");
+                }}
+                className="w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-[#148F8B]/40 hover:bg-[#148F8B]/5 transition-all"
+              >
+                <span className="font-black text-gray-900 block">
+                  {conv.lastMessageSubject || conv.jobTitle || 'Conversation'}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  {conv.jobTitle ? `Job: ${conv.jobTitle}` : 'General opportunity'}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="pt-2 space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Start something new</p>
+            <Button
+              variant="outline"
+              className="w-full h-12 rounded-2xl border-gray-200 text-xs font-black uppercase tracking-widest"
+              onClick={() => {
+                const cid = chooseThreadCandidateId;
+                setChooseThreadCandidateId(null);
+                setChooseThreadOptions([]);
+                if (!cid) return;
+                setMessageJobPickerCandidateId(cid);
+                setMessageJobPickerSelectedJobId(null);
+              }}
+            >
+              New conversation about a job
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={organizeCandidateId != null && userRole === 'employer'}
+        onClose={() => { setOrganizeCandidateId(null); setOrganizeSelectedJobIds([]); }}
+        title="Organize candidate to jobs"
+      >
+        <div className="space-y-6 pb-4">
+          <p className="text-sm text-gray-600 font-medium">
+            Tag this candidate to one or more of your jobs. Next time you hit Message, we’ll default to the tagged job(s).
+          </p>
+          {(() => {
+            const myJobs = (jobs || []).filter((j: any) => Number(j.employer_id) === Number(userProfile?.employerId));
+            if (myJobs.length === 0) {
+              return <p className="text-gray-500 font-medium py-4">You have no active jobs to tag.</p>;
+            }
+            return (
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {myJobs.map((job: any) => {
+                  const selected = organizeSelectedJobIds.includes(Number(job.id));
+                  return (
+                    <button
+                      key={job.id}
+                      type="button"
+                      onClick={() => {
+                        const jid = Number(job.id);
+                        setOrganizeSelectedJobIds((prev) =>
+                          prev.includes(jid) ? prev.filter((x) => x !== jid) : [...prev, jid]
+                        );
+                      }}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                        selected ? 'border-[#A63F8E] bg-[#A63F8E]/5' : 'border-gray-100 hover:border-gray-200 bg-white'
+                      }`}
+                    >
+                      <span className="font-black text-gray-900 block">{job.title}</span>
+                      <span className="text-xs text-gray-500 font-medium">{job.location} · {job.pay_range}</span>
+                      {selected && (
+                        <span className="mt-2 inline-flex px-2.5 py-1 rounded-full bg-[#A63F8E] text-white text-[9px] font-black uppercase tracking-widest">
+                          Tagged
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          <Button
+            className="w-full h-14 rounded-2xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white font-black uppercase tracking-widest"
+            onClick={async () => {
+              const employerId = Number(userProfile?.employerId);
+              const candidateId = organizeCandidateId;
+              if (!employerId || !candidateId) return;
+
+              try {
+                // Remove existing links for this candidate
+                const { error: delErr } = await supabase
+                  .from('candidate_job_links')
+                  .delete()
+                  .eq('employer_id', employerId)
+                  .eq('candidate_id', candidateId);
+                if (delErr) {
+                  console.error("Error clearing candidate-job links:", delErr);
+                  toast.error("Failed to save tags");
+                  return;
+                }
+
+                // Insert new links
+                if (organizeSelectedJobIds.length > 0) {
+                  const { error: insErr } = await supabase.from('candidate_job_links').insert(
+                    organizeSelectedJobIds.map((jobId) => ({
+                      employer_id: employerId,
+                      candidate_id: candidateId,
+                      job_id: jobId,
+                    }))
+                  );
+                  if (insErr) {
+                    console.error("Error saving candidate-job links:", insErr);
+                    toast.error("Failed to save tags");
+                    return;
+                  }
+                }
+
+                setCandidateJobLinks((prev) => ({ ...prev, [String(candidateId)]: organizeSelectedJobIds.slice() }));
+                setOrganizeCandidateId(null);
+                setOrganizeSelectedJobIds([]);
+                toast.success("Candidate organized to jobs");
+              } catch (e) {
+                console.error("Unexpected error saving candidate-job links:", e);
+                toast.error("Failed to save candidate job tags");
+              }
+            }}
+          >
+            Save tags
+          </Button>
+        </div>
+      </Modal>
+
       <Modal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)} title="Update Intro">
          <div className="space-y-10">
             <p className="text-center text-gray-500 font-medium">Choose how you want to show your personality.</p>
@@ -2571,6 +3405,12 @@ export default function App() {
        <User size={20} />
        <span className="text-xs font-black uppercase tracking-widest">HUB</span>
      </button>
+     {isLoggedIn && (
+       <button onClick={() => handleNavigate("messages")} className={`flex flex-row items-center justify-center gap-2 ${currentView === "messages" ? 'text-[#148F8B]' : 'text-gray-600'} hover:scale-105 active:scale-95 transition-all duration-200`}>
+         <Mail size={20} />
+         <span className="text-xs font-black uppercase tracking-widest">CHAT</span>
+       </button>
+     )}
   </div>
 )}
 
@@ -2770,6 +3610,33 @@ export default function App() {
                    <div className="space-y-1 flex-1 text-center sm:text-left">
                       <h3 className="text-4xl font-black tracking-tighter leading-none">{selectedCandidate.name}</h3>
                       <p className="text-lg font-black text-[#148F8B] uppercase tracking-[0.2em]">{selectedCandidate.location}</p>
+                      {userRole === 'employer' && (
+                        (() => {
+                          const taggedJobIds = candidateJobLinks[String(selectedCandidate.id)] || [];
+                          const myJobs = (jobs || []).filter((j: any) => Number(j.employer_id) === Number(userProfile?.employerId));
+                          const taggedTitles = taggedJobIds
+                            .map((jid) => myJobs.find((j: any) => Number(j.id) === Number(jid))?.title)
+                            .filter(Boolean) as string[];
+                          if (!taggedTitles.length) return null;
+                          return (
+                            <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+                              {taggedTitles.slice(0, 3).map((t) => (
+                                <span
+                                  key={t}
+                                  className="px-3 py-1 rounded-full bg-[#A63F8E]/10 text-[#A63F8E] text-[9px] font-black uppercase tracking-widest"
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                              {taggedTitles.length > 3 && (
+                                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[9px] font-black uppercase tracking-widest">
+                                  +{taggedTitles.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()
+                      )}
                    </div>
                 </div>
 
@@ -3080,7 +3947,21 @@ export default function App() {
               )}
             </div>
 
-            {!unlockedCandidateIds.includes(selectedCandidate.id) && (
+            {unlockedCandidateIds.some((id: any) => Number(id) === Number(selectedCandidate.id)) && userRole === 'employer' && userProfile?.employerId && (
+              <Button
+                className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
+                onClick={() => {
+                  const cid = Number(selectedCandidate.id);
+                  if (!cid) return;
+                  setMessageJobPickerCandidateId(cid);
+                  setMessageJobPickerSelectedJobId(null);
+                  setSelectedCandidate(null);
+                }}
+              >
+                <MessageSquare size={20} className="inline-block mr-2" /> Message Candidate
+              </Button>
+            )}
+            {!unlockedCandidateIds.some((id: any) => Number(id) === Number(selectedCandidate.id)) && (
               <Button className="w-full h-20 text-xl rounded-3xl bg-[#A63F8E] hover:bg-[#5C014A] text-white font-black uppercase tracking-widest shadow-2xl shadow-[#A63F8E]/25 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'employer', items: [selectedCandidate] }); setShowPaymentModal(true); setSelectedCandidate(null); }}>
   Unlock Full Video & Contact
 </Button>
