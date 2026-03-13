@@ -597,7 +597,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 onClick={() => onSelectCandidate(c)}
                 className="p-6 lg:p-8 bg-white border border-gray-100 rounded-2xl flex flex-col lg:flex-row items-center gap-6 lg:gap-8 hover:shadow-2xl transition-all group cursor-pointer overflow-hidden"
               >
-                {/* Blurred video thumbnail - DESKTOP */}
+                {/* Blurred / unlocked video thumbnail - DESKTOP */}
                 <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-[#F3EAF5]/30 group-hover:scale-[1.02] transition-transform duration-500">
                   <ImageWithFallback
                     src={c.thumbnail || c.video_thumbnail_url || "/api/placeholder/800/450"}
@@ -609,7 +609,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     </div>
                   </div>
 
-                  {/* Demo tag - desktop card */}
+                  {/* Locked demo tag - desktop card */}
                   {!isUnlocked(c.id) && (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
                       <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Locked Preview</p>
@@ -618,14 +618,35 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       </p>
                     </div>
                   )}
+
+                  {/* Unlocked badge - desktop card */}
+                  {isUnlocked(c.id) && (
+                    <div
+                      className="absolute top-2 left-2 px-3 py-1.5 rounded-full bg-[#780262] text-white text-[10px] font-black uppercase tracking-[0.18em] shadow-lg"
+                      style={{ zIndex: 20 }}
+                    >
+                      Unlocked
+                    </div>
+                  )}
                 </div>
 
                 {/* Candidate info */}
                 <div className="flex-1 space-y-3 text-center lg:text-left min-w-0 w-full lg:w-auto">
                   <div className="space-y-1">
-                    <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#148F8B] transition-colors truncate">
-                      {c.display_title || "Verified Talent"}
-                    </h3>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-center lg:justify-start gap-2">
+                        <h3 className="text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight leading-none group-hover:text-[#148F8B] transition-colors truncate">
+                          {c.display_title || "Verified Talent"}
+                        </h3>
+                      </div>
+                      {isUnlocked(c.id) && (
+                        <div className="flex justify-center lg:justify-start">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#A63F8E] text-white text-[9px] font-black uppercase tracking-[0.2em]">
+                            Unlocked Candidate
+                          </span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-wrap justify-center lg:justify-start gap-3 lg:gap-5 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
                       <span className="flex items-center gap-2"><MapPin size={16} /> {c.location}</span>
                       <span className="flex items-center gap-2"><Briefcase size={16} /> {c.years_experience} yrs exp</span>

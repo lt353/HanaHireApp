@@ -218,32 +218,68 @@ export default function App() {
         });
         
         const newData = await newResponse.json();
-        setCandidates(newData.candidates || []);
-        // Load employers and jobs from Supabase (authoritative source with application_questions)
-        const [{ data: supabaseEmployers }, { data: supabaseJobs, error: supabaseJobsError }] = await Promise.all([
+        // Load candidates, employers, and jobs from Supabase (authoritative source)
+        const [
+          { data: supabaseCandidates, error: supabaseCandidatesError },
+          { data: supabaseEmployers },
+          { data: supabaseJobs, error: supabaseJobsError },
+        ] = await Promise.all([
+          supabase
+            .from('candidates')
+            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views')
+            .eq('visibility_preference', 'broad'),
           supabase.from('employers').select('*'),
           supabase.from('jobs').select('*').eq('status', 'active'),
         ]);
+
+        if (supabaseCandidatesError) {
+          console.error("Failed to fetch candidates from Supabase:", supabaseCandidatesError);
+        }
+
+        const candidatesSource = (supabaseCandidates && supabaseCandidates.length > 0)
+          ? supabaseCandidates
+          : (newData.candidates || []);
+
+        setCandidates(candidatesSource);
+
         if (supabaseJobsError) console.error("Failed to fetch jobs from Supabase:", supabaseJobsError);
         const employers = supabaseEmployers && supabaseEmployers.length > 0 ? supabaseEmployers : (newData.employers || []);
         const allJobs = supabaseJobs && supabaseJobs.length > 0 ? supabaseJobs : (newData.jobs || []);
         setEmployers(employers);
         setJobs(mergeJobsWithEmployers(allJobs, employers));
-        console.log(`Successfully seeded and loaded ${allJobs.length} jobs and ${newData.candidates?.length || 0} candidates`);
+        console.log(`Successfully seeded and loaded ${allJobs.length} jobs and ${candidatesSource.length || 0} candidates`);
         toast.success('Marketplace initialized!');
       } else {
-        setCandidates(data.candidates);
-        // Load employers and jobs from Supabase (authoritative source with application_questions)
-        const [{ data: supabaseEmployers }, { data: supabaseJobs, error: supabaseJobsError }] = await Promise.all([
+        // Load candidates, employers, and jobs from Supabase (authoritative source)
+        const [
+          { data: supabaseCandidates, error: supabaseCandidatesError },
+          { data: supabaseEmployers },
+          { data: supabaseJobs, error: supabaseJobsError },
+        ] = await Promise.all([
+          supabase
+            .from('candidates')
+            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views')
+            .eq('visibility_preference', 'broad'),
           supabase.from('employers').select('*'),
           supabase.from('jobs').select('*').eq('status', 'active'),
         ]);
+
+        if (supabaseCandidatesError) {
+          console.error("Failed to fetch candidates from Supabase:", supabaseCandidatesError);
+        }
+
+        const candidatesSource = (supabaseCandidates && supabaseCandidates.length > 0)
+          ? supabaseCandidates
+          : (data.candidates || []);
+
+        setCandidates(candidatesSource);
+
         if (supabaseJobsError) console.error("Failed to fetch jobs from Supabase:", supabaseJobsError);
         const employers = supabaseEmployers && supabaseEmployers.length > 0 ? supabaseEmployers : (data.employers || []);
         const allJobs = supabaseJobs && supabaseJobs.length > 0 ? supabaseJobs : (data.jobs || []);
         setEmployers(employers);
         setJobs(mergeJobsWithEmployers(allJobs, employers));
-        console.log(`Loaded ${allJobs.length} jobs from Supabase`);
+        console.log(`Loaded ${allJobs.length} jobs and ${candidatesSource.length || 0} candidates from Supabase`);
       }
     } catch (err) {
       console.error("Error loading data:", err);
@@ -2780,11 +2816,6 @@ export default function App() {
         <p className="text-white/90 text-xs sm:text-sm font-black uppercase tracking-widest drop-shadow-md">Video Intro + Direct Contact</p>
       </div>
    </div>
-   <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
-      <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#A63F8E] text-white rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl">
-        ${INTERACTION_FEE.toFixed(2)}
-      </div>
-   </div>
    {/* Demo tag - remove once real videos are uploaded */}
    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
      <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Visual Demo Only</p>
@@ -2859,9 +2890,16 @@ export default function App() {
 
               {/* Work Style */}
               {selectedCandidate.work_style && (
-                <div className="flex items-center justify-between gap-2 border-t border-gray-50 pt-4 sm:pt-5">
-                  <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Work Style</span>
-                  <span className="text-xs font-black text-gray-900 uppercase">{selectedCandidate.work_style}</span>
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Work Style</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(typeof selectedCandidate.work_style === 'string'
+                      ? selectedCandidate.work_style.split(/,\s*/).filter(Boolean)
+                      : [selectedCandidate.work_style]
+                    ).map((s: string, i: number) => (
+                      <span key={i} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest">{s.trim()}</span>
+                    ))}
+                  </div>
                 </div>
               )}
 
