@@ -895,13 +895,18 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
       </div>
 
       {/* Applied To Job Tag */}
-      <div className="px-4 sm:px-6 pb-3">
+      <div className="px-4 sm:px-6 pb-3 space-y-1.5">
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Applied to:</span>
           <span className="text-xs sm:text-sm font-black text-[#148F8B] tracking-tight truncate">
             {applicant.appliedToJob?.title || 'Your Job Post'}
           </span>
         </div>
+        {(Array.isArray(applicant.application?.question_answers) && applicant.application.question_answers.length > 0) || applicant.application?.video_url ? (
+          <p className="text-[10px] font-semibold text-amber-700">
+            Answered application questions · Unlock to view
+          </p>
+        ) : null}
       </div>
 
       {/* Skills Section - IMPROVED WITH BETTER SPACING */}

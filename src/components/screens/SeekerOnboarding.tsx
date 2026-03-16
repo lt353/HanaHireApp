@@ -600,7 +600,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell employers about yourself — your personality, work ethic, what drives you..."
               rows={4}
-              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-medium text-base resize-none"
+              className="w-full min-h-[120px] p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-medium text-base resize-y"
             />
           </div>
 

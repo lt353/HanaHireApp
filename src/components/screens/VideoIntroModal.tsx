@@ -17,6 +17,7 @@ function formatBytes(bytes: number): string {
 }
 
 type Step = "choose" | "record" | "upload" | "preview";
+type UploadStatus = "uploading" | "saving" | "done" | "error";
 
 interface VideoIntroModalProps {
 	isOpen: boolean;
@@ -76,6 +77,10 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 		null,
 	);
 
+	const [uploadProgress, setUploadProgress] = useState(0);
+	const [uploadStatus, setUploadStatus] = useState<UploadStatus | null>(null);
+	const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
+
 	useEffect(() => {
 		if (!isOpen) {
 			setStep("choose");
@@ -87,6 +92,9 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 			setUploadDuration(0);
 			setThumbnailTimeSeconds(2);
 			setThumbnailPreviewUrl(null);
+			setUploadProgress(0);
+			setUploadStatus(null);
+			setUploadErrorMessage(null);
 			stopStream();
 		}
 	}, [isOpen]);
@@ -295,15 +303,16 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 		const preview = getPreviewBlob();
 		if (!preview) return;
 
-		// Let parent know upload is starting so it can show progress while user continues the form
 		onUploadStart?.({
 			estimatedSizeBytes: preview.blob.size ?? 0,
 			durationSeconds: preview.duration,
 		});
 
 		setError(null);
-		// Close the modal immediately; the rest runs in the background
-		onClose();
+		setUploadProgress(0);
+		setUploadStatus("uploading");
+		setUploadErrorMessage(null);
+		setStep("upload");
 
 		(async () => {
 			try {
@@ -374,9 +383,13 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 					bucket,
 					videoPath,
 					contentType,
-					(percent) => onUploadProgress?.(percent)
+					(percent) => {
+						setUploadProgress(percent);
+						onUploadProgress?.(percent);
+					}
 				);
 
+				setUploadStatus("saving");
 				onComplete(videoUrl, videoUrl, preview.duration);
 
 				const thumbBlob = await generateThumbnail(
@@ -397,11 +410,17 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 						.getPublicUrl(thumbPath);
 					onThumbnailReady(thumbData.publicUrl);
 				}
+
+				setUploadStatus("done");
+				await new Promise((r) => setTimeout(r, 1500));
+				onClose();
 			} catch (err: any) {
 				const message =
 					err?.message ||
 					(typeof err === "string" ? err : "Upload failed. Try again.");
 				console.error("Video save error:", err);
+				setUploadStatus("error");
+				setUploadErrorMessage(message);
 				onUploadError?.(message);
 			}
 		})();
@@ -471,7 +490,15 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 				? isRecording
 					? "Recording…"
 					: "Get ready to record"
-				: "Video Intro";
+				: step === "upload"
+					? uploadStatus === "done"
+						? "Saved"
+						: uploadStatus === "error"
+							? "Upload failed"
+							: uploadStatus === "saving"
+								? "Saving to your profile…"
+								: "Uploading video…"
+					: "Video Intro";
 
 	return createPortal(
 		<div
@@ -485,14 +512,15 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 				zIndex: 999999,
 			}}
 			onClick={(e) => {
-				if (e.target === e.currentTarget) {
-					if (step === "preview") {
-						setStep("choose");
-						setRecordedBlob(null);
-						setUploadFile(null);
-					} else {
-						onClose();
-					}
+				if (e.target !== e.currentTarget) return;
+				const busy = step === "upload" && (uploadStatus === "uploading" || uploadStatus === "saving");
+				if (busy) return;
+				if (step === "preview") {
+					setStep("choose");
+					setRecordedBlob(null);
+					setUploadFile(null);
+				} else {
+					onClose();
 				}
 			}}
 		>
@@ -508,6 +536,8 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 					<button
 						type="button"
 						onClick={() => {
+							const busy = step === "upload" && (uploadStatus === "uploading" || uploadStatus === "saving");
+							if (busy) return;
 							if (step === "preview") {
 								setStep("choose");
 								setRecordedBlob(null);
@@ -517,7 +547,8 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 							}
 						}}
 						aria-label={step === "preview" ? "Back to choose" : "Close"}
-					className="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+						className="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+						disabled={step === "upload" && (uploadStatus === "uploading" || uploadStatus === "saving")}
 					>
 						<X aria-hidden="true" size={22} />
 					</button>
@@ -721,6 +752,66 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 											</p>
 										)}
 									</>
+								)}
+							</div>
+						)}
+
+						{step === "upload" && (
+							<div className="space-y-6 py-4">
+								<p className="text-gray-600 font-medium text-center">
+									{uploadStatus === "uploading" &&
+										"Uploading your video. Please don't close this window."}
+									{uploadStatus === "saving" && "Saving to your profile…"}
+									{uploadStatus === "done" && "Your video has been saved."}
+									{uploadStatus === "error" && "Something went wrong."}
+								</p>
+								{uploadStatus !== "error" && uploadStatus !== "done" && (
+									<div className="space-y-2">
+										<div
+											className="h-2 rounded-full bg-gray-200 overflow-hidden"
+											role="progressbar"
+											aria-valuenow={uploadStatus === "saving" ? 100 : uploadProgress}
+											aria-valuemin={0}
+											aria-valuemax={100}
+										>
+											<div
+												className="h-full rounded-full bg-[#148F8B] transition-all duration-300"
+												style={{
+													width: `${uploadStatus === "saving" ? 100 : uploadProgress}%`,
+												}}
+											/>
+										</div>
+										<p className="text-sm font-medium text-gray-500 text-center tabular-nums">
+											{uploadStatus === "saving"
+												? "100%"
+												: `${uploadProgress}%`}
+										</p>
+									</div>
+								)}
+								{uploadStatus === "done" && (
+									<div className="flex justify-center">
+										<div
+											className="w-12 h-12 rounded-full flex items-center justify-center"
+											style={{ backgroundColor: "#148F8B" }}
+										>
+											<Check size={24} className="text-white" strokeWidth={3} />
+										</div>
+									</div>
+								)}
+								{uploadStatus === "error" && uploadErrorMessage && (
+									<div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium">
+										<AlertCircle size={18} className="shrink-0" />
+										{uploadErrorMessage}
+									</div>
+								)}
+								{(uploadStatus === "error" || uploadStatus === "done") && (
+									<button
+										type="button"
+										onClick={onClose}
+										className="w-full py-3 rounded-xl bg-[#148F8B] text-white font-bold hover:bg-[#136068] transition-colors"
+									>
+										{uploadStatus === "error" ? "Close" : "Done"}
+									</button>
 								)}
 							</div>
 						)}

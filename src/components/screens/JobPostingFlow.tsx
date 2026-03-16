@@ -844,7 +844,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                     </div>
                     <textarea
                       rows={4}
-                      className="w-full p-6 rounded-[2rem] bg-white border border-gray-200 outline-none font-medium leading-relaxed text-gray-900 shadow-sm"
+                      className="w-full min-h-[120px] p-6 rounded-[2rem] bg-white border border-gray-200 outline-none font-medium leading-relaxed text-gray-900 shadow-sm resize-y"
                       value={formData.description}
                       onChange={(e) =>
                         setFormData((prev: any) => ({ ...prev, description: e.target.value }))
@@ -1564,7 +1564,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       </div>
       <div className="space-y-4 sm:space-y-6">
         <div className="relative">
-          <textarea rows={6} className="w-full p-4 sm:p-6 md:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#F3EAF5]/30 outline-none font-medium text-base sm:text-lg md:text-xl resize-none text-gray-900" placeholder="e.g. Experienced line cook for Waikiki resort. $22/hr, must work weekends." value={prompt} onChange={(e) => setPrompt(e.target.value.slice(0, 500))} />
+          <textarea rows={6} className="w-full min-h-[120px] p-4 sm:p-6 md:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-[#F3EAF5]/30 outline-none font-medium text-base sm:text-lg md:text-xl resize-y text-gray-900" placeholder="e.g. Experienced line cook for Waikiki resort. $22/hr, must work weekends." value={prompt} onChange={(e) => setPrompt(e.target.value.slice(0, 500))} />
           <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 flex items-center gap-4"><Mic size={18} className="sm:w-5 sm:h-5 text-gray-600" /></div>
         </div>
         <div className="space-y-2 sm:space-y-3">

@@ -194,3 +194,17 @@ html {
     border-radius: var(--radius) !important;
   }
 }
+
+/* Message composer: ReactQuill expands with content */
+.messages-composer-quill .ql-container {
+  height: auto;
+  resize: vertical;
+  overflow: auto;
+  min-height: 100px;
+}
+.messages-composer-quill .ql-editor {
+  min-height: 100px;
+  height: auto;
+  overflow-x: hidden;
+  word-break: break-word;
+}

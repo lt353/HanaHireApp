@@ -1,0 +1,80 @@
+/* iOS-style chat bubbles with pseudo-element tails. See e.g. "How to create iOS chat bubbles in CSS" */
+/* :before = colored tail shape, :after = cutout (page bg) overlaid to form the tail */
+
+.bubbleList {
+  --sentColor: #72d5bf;
+  --receiveColor: #C9A0B8;
+  --bg: #fff;
+  overflow-x: hidden;
+  min-width: 0;
+}
+
+.shared {
+  position: relative;
+  max-width: 100%;
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+  border-radius: 1rem;
+}
+
+.shared::before {
+  width: 20px;
+}
+
+.shared::after {
+  width: 26px;
+  background-color: var(--bg);
+}
+
+.shared::before,
+.shared::after {
+  position: absolute;
+  bottom: 0;
+  height: 20px;
+  content: '';
+}
+
+.sent {
+  align-self: flex-end;
+  color: #1f2937;
+  background: var(--sentColor);
+}
+
+.sent::before {
+  right: -7px;
+  background-color: var(--sentColor);
+  border-bottom-left-radius: 16px 14px;
+}
+
+.sent::after {
+  right: -26px;
+  border-bottom-left-radius: 10px;
+}
+
+.received {
+  align-self: flex-start;
+  color: #1f2937;
+  background: var(--receiveColor);
+}
+
+.received::before {
+  left: -7px;
+  background-color: var(--receiveColor);
+  border-bottom-right-radius: 16px 14px;
+}
+
+.received::after {
+  left: -26px;
+  border-bottom-right-radius: 10px;
+}
+
+.noTail {
+  margin-bottom: 2px;
+}
+
+.noTail::before,
+.noTail::after {
+  opacity: 0;
+}

@@ -41,15 +41,13 @@ export const Header = ({
       ? '#148F8B'
       : '#A63F8E';
 
-  console.log('[Header] totalUnreadMessages:', totalUnreadMessages, 'isLoggedIn:', isLoggedIn, 'isRoleSelected:', isRoleSelected);
-
   if (isPaymentModalOpen) {
     return null;
   }
 
   return (
     <nav
-      className="hidden md:flex sticky top-0 z-40 px-3 sm:px-4 md:px-8 h-20 items-center justify-between gap-2 transition-colors duration-200 relative"
+      className="hidden md:flex sticky top-0 z-40 px-4 md:px-5 lg:px-6 xl:px-8 h-20 items-center justify-between gap-2 transition-colors duration-200 relative"
       style={{ backgroundColor: '#FAF9F7' }}
     >
       {/* Bottom border — gradient on landing, solid on role pages */}
@@ -64,7 +62,7 @@ export const Header = ({
       }} />
 
       {/* Left */}
-      <div className="flex items-center gap-2 sm:gap-4 md:gap-10 min-w-0 flex-1">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-8 min-w-0 flex-1">
         <button
           onClick={onReset}
           className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter flex items-center gap-1 sm:gap-2 group shrink-0 hover:scale-105 active:scale-95 transition-all duration-200"
@@ -81,12 +79,12 @@ export const Header = ({
         </button>
 
         {isRoleSelected ? (
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 xl:gap-6 flex-nowrap shrink min-w-0">
             {isLoggedIn && (
               <>
                 <button
                   onClick={() => onNavigate(role === "seeker" ? "seeker" : "employer")}
-                  className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                  className={`text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                     (currentTab === "seeker" || currentTab === "employer")
                       ? "font-black"
                       : "font-bold hover:text-gray-900"
@@ -97,7 +95,7 @@ export const Header = ({
                 </button>
                 <button
                   onClick={() => onNavigate("messages")}
-                  className={`inline-flex items-center gap-1.5 text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                  className={`inline-flex items-center gap-1 md:gap-1.5 text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                     currentTab === "messages" ? "font-black" : "font-bold hover:text-gray-900"
                   }`}
                   style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
@@ -115,7 +113,7 @@ export const Header = ({
             {role === "seeker" && (
               <button
                 onClick={() => onNavigate("jobs")}
-                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                className={`text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                   currentTab === "jobs" ? "font-black" : "font-bold hover:text-gray-900"
                 }`}
                 style={{ color: "#148F8B" }}
@@ -127,7 +125,7 @@ export const Header = ({
             {role === "employer" && (
               <button
                 onClick={() => onNavigate("job-posting")}
-                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                className={`text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                   currentTab === "job-posting" ? "font-black" : "font-bold hover:text-gray-900"
                 }`}
                 style={{ color: "#A63F8E" }}
@@ -139,7 +137,7 @@ export const Header = ({
             {role === "employer" && (
               <button
                 onClick={() => onNavigate("candidates")}
-                className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+                className={`text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                   currentTab === "candidates" ? "font-black" : "font-bold hover:text-gray-900"
                 }`}
                 style={{ color: "#A63F8E" }}
@@ -150,7 +148,7 @@ export const Header = ({
 
             <button
               onClick={() => onNavigate("about")}
-              className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+              className={`text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                 currentTab === "about" ? "font-black" : "font-bold hover:text-gray-900"
               }`}
               style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
@@ -160,20 +158,20 @@ export const Header = ({
 
             <button
               onClick={() => onNavigate("settings")}
-              className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+              className={`text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                 currentTab === "settings" ? "font-black" : "font-bold hover:text-gray-900"
               }`}
               style={{ color: role === "seeker" ? "#148F8B" : "#A63F8E" }}
             >
-              <SettingsIcon size={20} className="sm:w-6 sm:h-6" />
+              <SettingsIcon className="w-4 h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 shrink-0" />
             </button>
           </div>
         ) : (
           /* Landing page — show About link */
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-2 lg:gap-3 xl:gap-6 flex-nowrap shrink-0">
             <button
               onClick={() => onNavigate("about")}
-              className={`text-sm sm:text-base uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-200 ${
+              className={`text-[11px] md:text-xs lg:text-sm xl:text-base uppercase tracking-[0.08em] md:tracking-[0.1em] lg:tracking-[0.15em] xl:tracking-[0.2em] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 ${
                 currentTab === "about" ? "font-black" : "font-bold hover:text-gray-900"
               }`}
               style={{ color: "#A63F8E" }}
@@ -185,24 +183,25 @@ export const Header = ({
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-4 shrink-0">
+      <div className="flex items-center gap-2 md:gap-3 lg:gap-4 shrink-0">
         {isRoleSelected && (
           <>
             {/* Role Toggle - Desktop Only */}
             {isDemoAccount ? (
-              <span className="hidden lg:block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-2 select-none">
+              <span className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 py-1.5 lg:px-3 lg:py-2 select-none shrink-0">
                 Switch roles unavailable in demo
               </span>
             ) : (
               <button
                 onClick={onToggleRole}
-                className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-100 transition-all text-xs sm:text-sm font-black uppercase tracking-widest text-gray-600 hover:scale-105 active:scale-95 duration-200 ${
+                className={`hidden md:flex flex-col items-center justify-center leading-tight gap-0 px-2 py-1.5 lg:px-3 lg:py-2 rounded-xl border border-gray-100 transition-all text-[11px] md:text-xs lg:text-sm xl:text-base font-black uppercase tracking-widest text-gray-600 hover:scale-105 active:scale-95 duration-200 shrink-0 ${
                   role === "seeker"
                     ? "hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:text-[#148F8B]"
                     : "hover:border-[#A63F8E] hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
                 }`}
               >
-                Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
+                <span>Switch to</span>
+                <span>{role === "seeker" ? "Employer" : "Job Seeker"}</span>
               </button>
             )}
           </>
@@ -212,7 +211,7 @@ export const Header = ({
         {isLoggedIn ? (
           <button
             onClick={onLogout}
-            className="h-9 sm:h-10 md:h-12 px-3 sm:px-4 md:px-6 text-sm sm:text-base md:text-lg hover:scale-105 active:scale-95 transition-all duration-200 rounded-2xl font-black text-white hover:opacity-90"
+            className="h-9 md:h-10 xl:h-12 px-3 md:px-4 xl:px-6 text-xs md:text-sm xl:text-base hover:scale-105 active:scale-95 transition-all duration-200 rounded-2xl font-black text-white hover:opacity-90 whitespace-nowrap shrink-0"
             style={{ backgroundColor: '#A63F8E' }}
           >
             Sign Out

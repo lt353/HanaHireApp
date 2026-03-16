@@ -420,9 +420,14 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                     </div>
                   )}
                   {userProfile.skills && (
-                    <div className="flex flex-wrap gap-1.5 pt-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {userProfile.skills.slice(0, 4).map((s: string) => (
-                        <span key={s} className="px-2.5 py-1 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest">{s}</span>
+                        <span
+                          key={s}
+                          className="mr-2 mb-2 px-2.5 py-1 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest"
+                        >
+                          {s}
+                        </span>
                       ))}
                     </div>
                   )}

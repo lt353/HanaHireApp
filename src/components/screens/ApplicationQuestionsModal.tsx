@@ -373,7 +373,7 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
                             placeholder="Type your answer here..."
                             aria-label={question}
                             rows={3}
-                            className="w-full p-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-medium text-sm text-gray-900 resize-none transition-colors placeholder:text-gray-300"
+                            className="w-full min-h-[80px] p-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-[#148F8B] focus:ring-4 ring-[#148F8B]/10 outline-none font-medium text-sm text-gray-900 resize-y transition-colors placeholder:text-gray-300"
                           />
                           <div className="flex justify-end">
                             {hasSpeechSupport && (

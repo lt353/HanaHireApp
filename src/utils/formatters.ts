@@ -1,3 +1,18 @@
+/**
+ * Parse a timestamp from Supabase/API as UTC so it displays correctly in the user's local timezone.
+ * Supabase often returns timestamptz without "Z" (e.g. "2025-03-15T22:24:00.000000"), and JS then
+ * parses that as local time, which shows the wrong time (e.g. 10:24 PM instead of 12:24 PM in HST).
+ */
+export function parseUtcTimestamp(value: string | null | undefined): Date | null {
+  if (value == null || value === "") return null;
+  const s = String(value).trim();
+  if (!s) return null;
+  const hasTimezone = /[zZ]|[+-]\d{2}:?\d{2}$/.test(s);
+  const normalized = hasTimezone ? s : s.replace(/\.\d+$/, "").replace(" ", "T") + "Z";
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /** Format phone as (XXX) XXX-XXXX. Input: raw string (digits or existing formatted). Output: formatted, max 10 digits. */
 export function formatPhoneInput(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 10);

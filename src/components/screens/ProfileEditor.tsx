@@ -58,37 +58,38 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name || !email) {
       toast.error("Name and email are required");
       return;
     }
 
     setIsSaving(true);
-    setTimeout(() => {
-      const updatedProfile = {
-        ...userProfile,
-        name,
-        email,
-        phone,
-        location,
-        displayTitle: profileTitle,
-        customTitle: profileTitle,
-        bio,
-        skills: selectedSkills,
-        experience,
-        education,
-        industries: selectedIndustries,
-        workStyles: selectedWorkStyles,
-        jobTypesSeeking,
-        availability,
-        targetPay,
-        preferredJobCategories,
-      };
-      onSave(updatedProfile);
+    const updatedProfile = {
+      ...userProfile,
+      name,
+      email,
+      phone,
+      location,
+      displayTitle: profileTitle,
+      customTitle: profileTitle,
+      bio,
+      skills: selectedSkills,
+      experience,
+      education,
+      industries: selectedIndustries,
+      workStyles: selectedWorkStyles,
+      jobTypesSeeking,
+      availability,
+      targetPay,
+      preferredJobCategories,
+    };
+    try {
+      await onSave(updatedProfile);
+      // Success toast is shown by parent after Supabase update succeeds
+    } finally {
       setIsSaving(false);
-      toast.success("Profile updated successfully!");
-    }, 500);
+    }
   };
 
   return (
@@ -203,7 +204,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Tell employers about yourself, your experience, and what you're looking for..."
                   rows={4}
-                  className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-medium resize-none"
+                  className="w-full min-h-[120px] p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-medium resize-y"
                 />
               </div>
 

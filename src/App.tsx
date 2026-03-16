@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   CreditCard,
   ArrowRight,
@@ -67,6 +67,10 @@ const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95
 
 const STORAGE_KEY_ANON_SAVED_JOB_IDS = "hanahire_anon_saved_job_ids";
 const STORAGE_KEY_PENDING_UNLOCK_JOB_IDS = "hanahire_pending_unlock_job_ids";
+
+/** Truncate string to max length for DB columns to avoid 22001 "value too long" error. Use after widening columns in Supabase if you want no truncation. */
+const truncStr = (s: string | null | undefined, maxLen: number): string | null =>
+  s == null || s === '' ? null : String(s).slice(0, maxLen);
 
 // Demo account emails for demo flow (go through onboarding but don't create new records)
 const DEMO_ACCOUNTS = {
@@ -208,6 +212,13 @@ export default function App() {
     if (currentView !== 'messages' && currentView !== 'seeker' && currentView !== 'employer') return;
     fetchConversationsRef.current();
   }, [currentView]);
+
+  // Sync unlocks with DB when opening seeker or employer dashboard so list matches DB (no stale extra IDs).
+  useEffect(() => {
+    if (!isLoggedIn || !userProfile?.email) return;
+    if (currentView !== 'seeker' && currentView !== 'employer') return;
+    fetchUnlocks(userProfile.email);
+  }, [currentView, isLoggedIn, userProfile?.email]);
 
   // Lightweight unread-count query — runs independently of fetchConversations so
   // the nav badge is always accurate even if conversations state is stale.
@@ -514,13 +525,19 @@ export default function App() {
         return;
       }
 
-      if (unlocks && unlocks.length > 0) {
-        const jobUnlocks = unlocks.filter(u => u.target_type === 'job').map(u => u.target_id);
-        const candidateUnlocks = unlocks.filter(u => u.target_type === 'candidate').map(u => u.target_id);
+      // Always set from DB so we don't leave stale IDs (e.g. 6 in state when DB has 5)
+      const list = unlocks ?? [];
+      const jobUnlocks = [...new Set(
+        list.filter(u => u.target_type === 'job').map(u => Number(u.target_id)).filter(n => !Number.isNaN(n))
+      )];
+      const candidateUnlocks = [...new Set(
+        list.filter(u => u.target_type === 'candidate').map(u => Number(u.target_id)).filter(n => !Number.isNaN(n))
+      )];
 
-        setUnlockedJobIds(jobUnlocks);
-        setUnlockedCandidateIds(candidateUnlocks);
+      setUnlockedJobIds(jobUnlocks);
+      setUnlockedCandidateIds(candidateUnlocks);
 
+      if (list.length > 0) {
         console.log(`Loaded ${jobUnlocks.length} job unlocks and ${candidateUnlocks.length} candidate unlocks`);
       }
     } catch (err) {
@@ -658,19 +675,36 @@ export default function App() {
       const appliedEmployerIds = new Set(
         (applications || []).map((a: any) => jobs.find((j: any) => j.id === a.job_id)?.employer_id).filter(Boolean)
       );
+      const businessInitials = (name: string) => {
+        const words = (name || '').trim().split(/\s+/).filter(Boolean);
+        if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+        if (words[0]?.length >= 2) return words[0].slice(0, 2).toUpperCase();
+        return words[0]?.[0]?.toUpperCase() ?? '';
+      };
+      const personInitials = (name: string) => {
+        const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        if (parts[0]?.length >= 2) return parts[0].slice(0, 2).toUpperCase();
+        return parts[0]?.[0]?.toUpperCase() ?? '';
+      };
+
       const list: ConversationRow[] = convList.map((c: any) => {
         const isSeeker = role === 'seeker';
         const otherEmployer = employers.find((e: any) => e.id === c.employer_id);
         const otherCandidate = candidates.find((x: any) => x.id === c.candidate_id);
         const otherPartyName = isSeeker ? (otherEmployer?.business_name || otherEmployer?.email || 'Employer') : (otherCandidate?.name || otherCandidate?.email || 'Candidate');
         const otherPartySubtitle = isSeeker ? otherEmployer?.industry : otherCandidate?.display_title;
+        const otherPartyAvatarUrl = isSeeker
+          ? (otherEmployer?.company_logo_url ?? null)
+          : (otherCandidate?.video_thumbnail_url ?? otherCandidate?.video_url ?? null);
+        const otherPartyInitials = isSeeker
+          ? businessInitials(otherEmployer?.business_name || otherPartyName)
+          : personInitials(otherCandidate?.name || otherPartyName);
         const last = lastMessages.find((l: any) => l.conversation_id === c.id);
         const unread = unreadCounts.find((u: any) => u.conversation_id === c.id)?.count ?? 0;
         const canRead = isSeeker
           ? (c.job_id != null
-              // Job-tagged conversation: require an application to that specific job.
               ? (applications || []).some((a: any) => Number(a.job_id) === Number(c.job_id))
-              // Legacy/untagged conversation: fall back to any application with this employer.
               : appliedEmployerIds.has(Number(c.employer_id)))
           : unlockedCandidateIds.some((id: any) => Number(id) === Number(c.candidate_id));
         const job = c.job_id ? jobs.find((j: any) => j.id === c.job_id) : null;
@@ -682,6 +716,8 @@ export default function App() {
           jobTitle: job?.title ?? null,
           otherPartyName,
           otherPartySubtitle: otherPartySubtitle || undefined,
+          otherPartyAvatarUrl: otherPartyAvatarUrl || null,
+          otherPartyInitials: otherPartyInitials || undefined,
           lastMessagePreview: last ? (last.body?.slice(0, 60) + (last.body?.length > 60 ? '…' : '')) : null,
           lastMessageSubject: last?.subject ?? null,
           lastMessageAt: last?.sent_at ?? null,
@@ -756,7 +792,7 @@ export default function App() {
     setIsLoadingMessages(false);
   };
 
-  const markConversationMessagesRead = async (conversationId: string) => {
+  const markConversationMessagesRead = useCallback(async (conversationId: string) => {
     const email = userProfile?.email;
     if (!email) return;
     const recipientId = userRole === 'seeker'
@@ -764,28 +800,34 @@ export default function App() {
       : userProfile?.employerId;
     const recipientType = userRole === 'seeker' ? 'seeker' : 'employer';
     try {
-      await Promise.all([
-        supabase
-          .from('messages')
-          .update({ is_read: true, read_at: new Date().toISOString() })
+      // Update messages first (primary source of read state)
+      await supabase
+        .from('messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .eq('to_email', email);
+
+      // Update notifications separately so a 400 here doesn't block or spam
+      if (recipientId != null && typeof conversationId === 'string' && conversationId.length > 0) {
+        const { error } = await supabase
+          .from('notifications')
+          .update({ is_read: true })
           .eq('conversation_id', conversationId)
-          .eq('to_email', email),
-        recipientId != null
-          ? supabase
-              .from('notifications')
-              .update({ is_read: true })
-              .eq('conversation_id', conversationId)
-              .eq('recipient_id', recipientId)
-              .eq('recipient_type', recipientType)
-          : Promise.resolve(),
-      ]);
+          .eq('recipient_id', recipientId)
+          .eq('recipient_type', recipientType);
+        if (error) {
+          // Log once; often RLS or missing row — don't retry or spam console
+          if (import.meta.env.DEV) console.warn('Notifications mark read:', error.message);
+        }
+      }
+
       setConversations((prev) =>
         prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
       );
     } catch (err) {
       console.error("Error marking messages read:", err);
     }
-  };
+  }, [userProfile?.email, userProfile?.candidateId, userProfile?.id, userProfile?.employerId, userRole]);
 
   const sendMessage = async (conversationId: string, body: string) => {
     const email = userProfile?.email;
@@ -876,6 +918,52 @@ export default function App() {
     } catch (err) {
       console.error("Unexpected error sending message:", err);
       toast.error("Failed to send message.");
+    }
+  };
+
+  const updateMessage = async (conversationId: string, messageId: number, newBody: string) => {
+    const email = userProfile?.email;
+    if (!email?.trim() || !newBody.trim()) return;
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .update({ body: newBody.trim() })
+        .eq('id', messageId)
+        .eq('from_email', email);
+      if (error) {
+        console.error("Error updating message:", error);
+        toast.error("Failed to update message.");
+        return;
+      }
+      await fetchMessagesForConversation(conversationId);
+      await fetchConversations();
+      toast.success("Message updated.");
+    } catch (err) {
+      console.error("Unexpected error updating message:", err);
+      toast.error("Failed to update message.");
+    }
+  };
+
+  const deleteMessage = async (conversationId: string, messageId: number) => {
+    const email = userProfile?.email;
+    if (!email?.trim()) return;
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId)
+        .eq('from_email', email);
+      if (error) {
+        console.error("Error deleting message:", error);
+        toast.error("Failed to delete message.");
+        return;
+      }
+      await fetchMessagesForConversation(conversationId);
+      await fetchConversations();
+      toast.success("Message deleted.");
+    } catch (err) {
+      console.error("Unexpected error deleting message:", err);
+      toast.error("Failed to delete message.");
     }
   };
 
@@ -1331,7 +1419,6 @@ export default function App() {
   };
 
   const totalUnreadMessages = conversations.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
-  console.log('[totalUnread]', totalUnreadMessages, 'convs:', conversations.map(c => ({ id: c.id.slice(0,8), unread: c.unreadCount })));
 
   const filteredJobs = jobs.filter(j =>
     j.status !== 'filled' &&
@@ -1742,6 +1829,8 @@ export default function App() {
             onSendMessage={async (body) => {
               if (selectedConversationId) await sendMessage(selectedConversationId, body);
             }}
+            onEditMessage={selectedConversationId ? (messageId, newBody) => updateMessage(selectedConversationId, messageId, newBody) : undefined}
+            onDeleteMessage={selectedConversationId ? (messageId) => deleteMessage(selectedConversationId, messageId) : undefined}
             onMarkAsRead={markConversationMessagesRead}
             onShowAuth={handleShowAuth}
             onNavigate={handleNavigate}
@@ -1799,22 +1888,10 @@ export default function App() {
                     await fetchSavedItems(seekerEmail, 'seeker');
                     localStorage.removeItem(STORAGE_KEY_ANON_SAVED_JOB_IDS);
                   }
-                  const pendingRaw = localStorage.getItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
-                  const pendingIds: number[] = pendingRaw ? JSON.parse(pendingRaw) : [];
-                  if (pendingIds.length && candidateId) {
-                    await supabase.from('unlocks').insert(pendingIds.map((jobId: number) => ({
-                      user_email: seekerEmail,
-                      user_role: 'seeker',
-                      target_type: 'job',
-                      target_id: jobId,
-                      amount_paid: INTERACTION_FEE,
-                      payment_method: 'card',
-                      payment_status: 'completed'
-                    })));
-                    setUnlockedJobIds(prev => [...prev, ...pendingIds]);
-                    setPendingUnlockJobIds([]);
-                    localStorage.removeItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
-                  }
+                  // Do not migrate pending unlock job IDs to unlocks — unlocking is something the user does after signup (pay to unlock).
+                  // Clear any stale pending list so new seekers don't see jobs in "Your Unlocked Jobs" they didn't unlock.
+                  localStorage.removeItem(STORAGE_KEY_PENDING_UNLOCK_JOB_IDS);
+                  setPendingUnlockJobIds([]);
                 } catch (e) {
                   console.error("Migration of saved jobs or pending unlocks failed:", e);
                 }
@@ -1866,42 +1943,49 @@ export default function App() {
               // Regular account: migrate anon saved + pending unlocks, then update candidates table
               await migrateAnonSavedAndPendingUnlocks();
 
-              // Regular account: update candidates table with onboarding data
-              if (profileData.candidateId) {
+              // Regular account: update candidates table with onboarding data (use candidateId or id so we never skip the update)
+              const idToUpdate = candidateId != null ? Number(candidateId) : null;
+              if (idToUpdate != null && !Number.isNaN(idToUpdate)) {
                 try {
+                  const workStyleStr = Array.isArray(profileData.workStyles) ? profileData.workStyles?.join(', ') : (profileData.workStyles ?? null);
+                  const payload: Record<string, unknown> = {
+                    bio: truncStr(profileData.bio, 10000),
+                    skills: Array.isArray(profileData.skills) ? profileData.skills : [],
+                    years_experience: profileData.experience ? parseInt(profileData.experience, 10) : null,
+                    education: truncStr(profileData.education, 500),
+                    availability: truncStr(profileData.availability, 255),
+                    preferred_pay_range: truncStr(profileData.targetPay, 255),
+                    industries_interested: Array.isArray(profileData.industries) ? profileData.industries : [],
+                    work_style: workStyleStr == null ? null : String(workStyleStr).slice(0, 5000),
+                    job_types_seeking: Array.isArray(profileData.jobTypesSeeking) ? profileData.jobTypesSeeking : [],
+                    preferred_job_categories: Array.isArray(profileData.preferredJobCategories) ? profileData.preferredJobCategories : [],
+                    display_title: truncStr(profileData.displayTitle, 255),
+                    video_url: truncStr(profileData.video_url, 500),
+                    video_thumbnail_url: truncStr(profileData.video_thumbnail_url, 500),
+                    visibility_preference: truncStr(profileData.visibility_preference ?? 'broad', 50),
+                    is_profile_complete: !!(profileData.video_url ?? profileData.videoUrl),
+                    updated_at: new Date().toISOString(),
+                  };
                   const { error: updateError } = await supabase
                     .from('candidates')
-                    .update({
-                      bio: profileData.bio || null,
-                      skills: profileData.skills || [],
-                      years_experience: profileData.experience ? parseInt(profileData.experience) : null,
-                      education: profileData.education || null,
-                      availability: profileData.availability || null,
-                      preferred_pay_range: profileData.targetPay || null,
-                      industries_interested: profileData.industries || [],
-                      work_style: profileData.workStyles?.join(', ') || null,
-                      job_types_seeking: profileData.jobTypesSeeking || [],
-                      preferred_job_categories: profileData.preferredJobCategories || [],
-                      display_title: profileData.displayTitle || null,
-                      video_url: profileData.video_url || null,
-                      video_thumbnail_url: profileData.video_thumbnail_url || null,
-                      visibility_preference: profileData.visibility_preference || 'broad',
-                      is_profile_complete: true,
-                      updated_at: new Date().toISOString()
-                    })
-                    .eq('id', profileData.candidateId);
+                    .update(payload)
+                    .eq('id', idToUpdate);
 
                   if (updateError) {
                     console.error("Error updating candidate profile:", updateError);
-                    toast.error("Profile saved locally, but failed to sync to database.");
+                    toast.error("Profile saved locally, but failed to sync to database. Please try saving again from Settings.");
+                  } else {
+                    toast.success("Profile saved! Welcome to your dashboard.");
                   }
                 } catch (err) {
                   console.error("Unexpected error updating candidate:", err);
+                  toast.error("Profile could not be saved to the database. Please try again from Settings.");
                 }
+              } else {
+                toast.success("Profile saved! Welcome to your dashboard.");
               }
               setUserProfile(profileData);
               handleNavigate("seeker");
-              toast.success("Profile saved! Welcome to your dashboard.");
             }}
           />
         );
@@ -1998,33 +2082,62 @@ export default function App() {
           <ProfileEditor
             onBack={() => handleNavigate("seeker")}
             onSave={async (profileData) => {
-              // Update candidates table with new data
-              if (profileData.candidateId) {
-                try {
-                  const { error } = await supabase
-                    .from('candidates')
-                    .update({
-                      name: profileData.name,
-                      email: profileData.email,
-                      phone: profileData.phone || null,
-                      location: profileData.location || null,
-                    })
-                    .eq('id', profileData.candidateId);
+              const candidateId = profileData.candidateId ?? profileData.id;
+              const idToUpdate = candidateId != null ? Number(candidateId) : null;
+              if (idToUpdate == null || Number.isNaN(idToUpdate)) {
+                toast.error("Cannot save: profile ID missing. Try logging out and back in.");
+                return;
+              }
+              try {
+                const expNum = profileData.experience ? parseInt(profileData.experience, 10) : null;
+                const workStyleStr = Array.isArray(profileData.workStyles) ? profileData.workStyles.join(', ') : (profileData.workStyles ?? null);
+                const payload: Record<string, unknown> = {
+                  name: truncStr(profileData.name, 255),
+                  email: truncStr(profileData.email, 255),
+                  phone: truncStr(profileData.phone, 50),
+                  location: truncStr(profileData.location, 255),
+                  display_title: truncStr(profileData.displayTitle ?? profileData.customTitle, 255),
+                  bio: truncStr(profileData.bio, 10000),
+                  skills: Array.isArray(profileData.skills) ? profileData.skills : [],
+                  years_experience: expNum != null && !Number.isNaN(expNum) ? expNum : null,
+                  education: truncStr(profileData.education, 500),
+                  availability: truncStr(profileData.availability, 255),
+                  preferred_pay_range: truncStr(profileData.targetPay, 255),
+                  industries_interested: Array.isArray(profileData.industries) ? profileData.industries : [],
+                  work_style: workStyleStr == null ? null : String(workStyleStr).slice(0, 5000),
+                  job_types_seeking: Array.isArray(profileData.jobTypesSeeking) ? profileData.jobTypesSeeking : [],
+                  preferred_job_categories: Array.isArray(profileData.preferredJobCategories) ? profileData.preferredJobCategories : [],
+                  visibility_preference: truncStr(profileData.visibility_preference ?? 'broad', 50),
+                  is_profile_complete: true,
+                  updated_at: new Date().toISOString(),
+                };
+                const { data, error } = await supabase
+                  .from('candidates')
+                  .update(payload)
+                  .eq('id', idToUpdate)
+                  .select('id')
+                  .single();
 
-                  if (error) {
-                    console.error("Error updating candidate:", error);
-                    toast.error("Failed to save profile changes");
-                    return;
+                if (error) {
+                  console.error("Error updating candidate:", error);
+                  if (error.code === 'PGRST116') {
+                    toast.error("Profile could not be updated. Row not found or permission denied (check RLS policies on candidates table).");
+                  } else {
+                    toast.error(`Failed to save profile: ${error.message}`);
                   }
-                } catch (err) {
-                  console.error("Unexpected error:", err);
-                  toast.error("Failed to save profile changes");
                   return;
                 }
+                if (!data) {
+                  toast.error("Profile could not be updated (no rows updated). Check Supabase RLS allows UPDATE on candidates.");
+                  return;
+                }
+                toast.success("Profile updated successfully!");
+                setUserProfile(profileData);
+                handleNavigate("seeker");
+              } catch (err) {
+                console.error("Unexpected error:", err);
+                toast.error("Failed to save profile changes");
               }
-
-              setUserProfile(profileData);
-              handleNavigate("seeker");
             }}
             userProfile={userProfile}
           />
@@ -3922,7 +4035,7 @@ export default function App() {
                         onChange={(e) => setEmployerNotesDraft(e.target.value)}
                         rows={4}
                         placeholder="Private notes about this candidate..."
-                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
+                        className="w-full min-h-[100px] p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-y"
                       />
                     </label>
                     <label className="space-y-2">
@@ -3932,7 +4045,7 @@ export default function App() {
                         onChange={(e) => setContactNotesDraft(e.target.value)}
                         rows={4}
                         placeholder="How or when you contacted them..."
-                        className="w-full p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-none"
+                        className="w-full min-h-[100px] p-4 rounded-2xl border border-gray-200 bg-white text-sm font-medium text-gray-700 resize-y"
                       />
                     </label>
                   </div>
@@ -3946,41 +4059,59 @@ export default function App() {
                   </Button>
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    {selectedCandidate.video_url && (
-                      <button
-                        type="button"
-                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.video_url)}
-                        className="p-4 rounded-2xl border border-[#148F8B]/20 bg-[#148F8B]/5 text-left hover:bg-[#148F8B]/10 transition-colors"
-                      >
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">Intro Video</p>
-                        <p className="mt-2 text-sm font-semibold text-gray-700">Play candidate intro video</p>
-                      </button>
-                    )}
-                    {selectedCandidate.application.video_url && (
-                      <button
-                        type="button"
-                        onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.application.video_url)}
-                        className="p-4 rounded-2xl border border-[#A63F8E]/20 bg-[#A63F8E]/5 text-left hover:bg-[#A63F8E]/10 transition-colors"
-                      >
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[#A63F8E]">Personalized Video</p>
-                        <p className="mt-2 text-sm font-semibold text-gray-700">Play job-specific application video</p>
-                      </button>
+                    {unlockedCandidateIds.some((id: any) => Number(id) === Number(selectedCandidate.id)) ? (
+                      <>
+                        {selectedCandidate.video_url && (
+                          <button
+                            type="button"
+                            onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.video_url)}
+                            className="p-4 rounded-2xl border border-[#148F8B]/20 bg-[#148F8B]/5 text-left hover:bg-[#148F8B]/10 transition-colors"
+                          >
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">Intro Video</p>
+                            <p className="mt-2 text-sm font-semibold text-gray-700">Play candidate intro video</p>
+                          </button>
+                        )}
+                        {selectedCandidate.application.video_url && (
+                          <button
+                            type="button"
+                            onClick={() => setCandidateVideoPlayerUrl(selectedCandidate.application.video_url)}
+                            className="p-4 rounded-2xl border border-[#A63F8E]/20 bg-[#A63F8E]/5 text-left hover:bg-[#A63F8E]/10 transition-colors"
+                          >
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#A63F8E]">Personalized Video</p>
+                            <p className="mt-2 text-sm font-semibold text-gray-700">Play job-specific application video</p>
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      (selectedCandidate.video_url || selectedCandidate.application?.video_url) && (
+                        <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50 text-center col-span-full">
+                          <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Unlock to view intro and application videos</p>
+                        </div>
+                      )
                     )}
                   </div>
 
                   {Array.isArray(selectedCandidate.application.question_answers) && selectedCandidate.application.question_answers.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Question Answers</h4>
-                      <div className="space-y-3">
-                        {selectedCandidate.application.question_answers.map((answer: any, idx: number) => (
-                          <div key={`${answer.question}-${idx}`} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{answer.question}</p>
-                            <p className="text-sm text-gray-700 font-medium">
-                              {answer.answer_text || (selectedCandidate.application.video_url ? "Answered in personalized video." : "No answer provided")}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                      {unlockedCandidateIds.some((id: any) => Number(id) === Number(selectedCandidate.id)) ? (
+                        <div className="space-y-3">
+                          {selectedCandidate.application.question_answers.map((answer: any, idx: number) => (
+                            <div key={`${answer.question}-${idx}`} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#148F8B]">{answer.question}</p>
+                              <p className="text-sm text-gray-700 font-medium">
+                                {answer.answer_text || (selectedCandidate.application.video_url ? "Answered in personalized video." : "No answer provided")}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                          <p className="text-sm font-medium text-amber-800">
+                            This candidate answered the application questions. Unlock their profile to view their answers.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
