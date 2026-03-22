@@ -18,10 +18,10 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
 
   const handleForceRefresh = async () => {
     if (!confirm("This will reset all marketplace data (jobs & candidates) to factory defaults. Proceed?")) return;
-    
+
     setIsRefreshing(true);
     toast.loading("Resetting marketplace database...");
-    
+
     try {
       const response = await fetch(`${API_BASE}/seed?force=true`, {
         method: "POST",
@@ -30,9 +30,9 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
           "Content-Type": "application/json"
         }
       });
-      
+
       if (!response.ok) throw new Error("Reset failed");
-      
+
       toast.dismiss();
       toast.success("Marketplace data successfully reset!");
       if (onRefreshData) onRefreshData();
@@ -46,47 +46,47 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 py-16 grid lg:grid-cols-4 gap-12">
-      <aside className="lg:col-span-1 space-y-4">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 py-8 sm:py-16 grid lg:grid-cols-4 gap-6 sm:gap-12">
+      <aside className="lg:col-span-1 space-y-2 sm:space-y-4">
         {["Account info", "Payment method", "Transaction history", "Support", "System"].map(tab => (
-          <button key={tab} className="w-full text-left p-6 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] border border-gray-50 bg-white hover:bg-[#F3EAF5]/30 transition-all flex justify-between items-center group">
+          <button key={tab} className="w-full text-left p-4 sm:p-6 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] border border-gray-50 bg-white hover:bg-[#F3EAF5]/30 transition-all flex justify-between items-center group">
             {tab} <ChevronRight size={16} className="text-gray-600 group-hover:translate-x-1 transition-transform" />
           </button>
         ))}
       </aside>
-      
-      <div className="lg:col-span-3 space-y-12">
-        <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter">Account Settings</h2>
-          <div className="grid md:grid-cols-2 gap-8">
+
+      <div className="lg:col-span-3 space-y-6 sm:space-y-12">
+        <section className="bg-white p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-gray-100 shadow-sm space-y-6 sm:space-y-10">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tighter">Account Settings</h2>
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
             <div className="space-y-2">
               <label htmlFor="settings-fullname" className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Full Name</label>
-              <input id="settings-fullname" type="text" placeholder="Identity Name" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
+              <input id="settings-fullname" type="text" placeholder="Identity Name" className="w-full p-4 sm:p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
               <label htmlFor="settings-email" className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Email Address</label>
-              <input id="settings-email" type="email" placeholder="contact@domain.com" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
+              <input id="settings-email" type="email" placeholder="contact@domain.com" className="w-full p-4 sm:p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="space-y-2">
               <label htmlFor="settings-phone" className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Phone Number</label>
-              <input id="settings-phone" type="tel" placeholder="+1 (808) 000-0000" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
+              <input id="settings-phone" type="tel" placeholder="+1 (808) 000-0000" className="w-full p-4 sm:p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 outline-none font-bold" />
             </div>
             <div className="flex items-end">
-              <Button className="h-16 px-10 rounded-2xl w-full" onClick={() => toast.success("Info Updated")}>Update Info</Button>
+              <Button className="h-14 sm:h-16 px-8 sm:px-10 rounded-2xl w-full" onClick={() => toast.success("Info Updated")}>Update Info</Button>
             </div>
           </div>
         </section>
 
-        <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><Database aria-hidden="true" className="text-[#A63F8E]" /> System Data</h2>
-          <div className="p-10 bg-red-50/30 border border-red-100 rounded-[3rem] space-y-6">
+        <section className="bg-white p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-gray-100 shadow-sm space-y-6 sm:space-y-10">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tighter flex items-center gap-3"><Database aria-hidden="true" className="text-[#A63F8E]" /> System Data</h2>
+          <div className="p-6 sm:p-10 bg-red-50/30 border border-red-100 rounded-[2rem] sm:rounded-[3rem] space-y-4 sm:space-y-6">
             <div className="space-y-2">
-              <p className="font-black text-lg tracking-tight uppercase text-red-600">Factory Reset</p>
+              <p className="font-black text-base sm:text-lg tracking-tight uppercase text-red-600">Factory Reset</p>
               <p className="text-sm text-gray-500 font-medium leading-relaxed">If images are missing or the marketplace data seems outdated, you can force a re-seed of the database. This will overwrite all current KV store data for jobs and candidates with fresh high-quality Unsplash URLs.</p>
             </div>
-            <Button 
-              variant="outline" 
-              className="h-14 px-8 border-red-200 text-red-600 hover:bg-red-50 rounded-2xl gap-3" 
+            <Button
+              variant="outline"
+              className="h-12 sm:h-14 px-6 sm:px-8 border-red-200 text-red-600 hover:bg-red-50 rounded-2xl gap-3"
               onClick={handleForceRefresh}
               disabled={isRefreshing}
             >
@@ -96,20 +96,20 @@ export const Settings: React.FC<SettingsProps> = ({ onRefreshData }) => {
           </div>
         </section>
 
-        <section className="bg-white p-12 rounded-[4rem] border border-gray-100 shadow-sm space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><CreditCard aria-hidden="true" className="text-[#148F8B]" /> Payment Setup</h2>
-          <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-[#F3EAF5]/30 flex items-center justify-center text-gray-600"><Plus size={32} /></div>
-            <p className="text-gray-400 font-bold">Secure Stripe Connection</p>
-            <Button variant="outline" className="h-14 px-10 rounded-2xl bg-white" onClick={() => toast.info("Redirecting to Stripe...")}>Add Card</Button>
+        <section className="bg-white p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-gray-100 shadow-sm space-y-6 sm:space-y-10">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tighter flex items-center gap-3"><CreditCard aria-hidden="true" className="text-[#148F8B]" /> Payment Setup</h2>
+          <div className="p-6 sm:p-8 border-2 border-dashed border-gray-100 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-4 sm:space-y-6">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#F3EAF5]/30 flex items-center justify-center text-gray-600"><Plus size={28} /></div>
+            <p className="text-gray-400 font-bold text-sm sm:text-base">Secure Stripe Connection</p>
+            <Button variant="outline" className="h-12 sm:h-14 px-8 sm:px-10 rounded-2xl bg-white" onClick={() => toast.info("Redirecting to Stripe...")}>Add Card</Button>
           </div>
         </section>
 
-        <section className="bg-[#148F8B]/5 p-12 rounded-[4rem] border border-[#148F8B]/10 space-y-10">
-          <h2 className="text-4xl font-black tracking-tighter flex items-center gap-4"><HelpCircle aria-hidden="true" className="text-[#148F8B]" /> Support</h2>
-          <div className="grid md:grid-cols-2 gap-8 text-sm">
+        <section className="bg-[#148F8B]/5 p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-[#148F8B]/10 space-y-6 sm:space-y-10">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tighter flex items-center gap-3"><HelpCircle aria-hidden="true" className="text-[#148F8B]" /> Support</h2>
+          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 text-sm">
             <div className="space-y-4">
-              <p className="font-black text-xl tracking-tight leading-none">Contact HanaHire</p>
+              <p className="font-black text-lg sm:text-xl tracking-tight leading-none">Contact HanaHire</p>
               <div className="space-y-2 font-bold">
                 <a href="mailto:support@hanahire.com" className="flex items-center gap-3 hover:text-[#148F8B] transition-colors"><Mail aria-hidden="true" size={18} className="text-[#148F8B]" /> support@hanahire.com</a>
                 <a href="tel:+18085550199" className="flex items-center gap-3 hover:text-[#148F8B] transition-colors"><Phone aria-hidden="true" size={18} className="text-[#148F8B]" /> +1 (808) 555-0199</a>

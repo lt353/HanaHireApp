@@ -31,7 +31,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
       <section className="py-12 sm:py-24 px-4 max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-16 items-center">
         <div className="space-y-6 sm:space-y-10 text-center lg:text-left">
           <div className="space-y-4 sm:space-y-6">
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-gray-900 tracking-tight leading-none">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-gray-900 tracking-tight leading-none">
               Hire the <span className="text-[#148F8B]">Person</span>, <br className="hidden sm:inline" />
               Not the Paper
             </h1>

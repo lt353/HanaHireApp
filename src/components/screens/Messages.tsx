@@ -470,7 +470,7 @@ export const Messages: React.FC<MessagesProps> = ({
       animate={{ opacity: 1 }}
       className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-24 sm:pb-12"
     >
-      <div className="flex flex-col sm:flex-row gap-0 h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] min-h-[400px] bg-white border border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+      <div className="flex flex-col sm:flex-row gap-0 h-[calc(100vh-11rem)] sm:h-[calc(100vh-10rem)] min-h-[400px] bg-white border border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
         {/* Conversation list */}
         <div
           className={`w-full sm:w-80 sm:border-r border-gray-100 flex flex-col shrink-0 ${

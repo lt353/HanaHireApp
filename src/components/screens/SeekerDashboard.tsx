@@ -154,7 +154,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 sm:gap-10">
         <div className="space-y-3 sm:space-y-4">
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none">Seeker Hub</h2>
+          <h2 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none">Seeker Hub</h2>
           <p className="text-lg sm:text-xl md:text-2xl text-gray-500 font-medium">
             {isLoggedIn
               ? `Welcome back${userProfile?.name ? `, ${userProfile.name}` : ''}. Manage your profile and track activity.`
@@ -358,48 +358,26 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
               <h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
                 <BarChart3 size={24} className="text-[#148F8B]" /> Activity
               </h3>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "nowrap",
-                  width: "100%",
-                  gap: "12px",
-                }}
-              >
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
-                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Profile Views</span>
-                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{profileViewsCount}</span>
+              <div className="grid grid-cols-3 sm:flex sm:flex-row gap-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[10px] sm:text-[11px] leading-tight">Profile Views</span>
+                  <span className="mt-1 block text-lg sm:text-xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{profileViewsCount}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
-                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Applied</span>
-                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{applicationCount}</span>
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[10px] sm:text-[11px] leading-tight">Jobs Applied</span>
+                  <span className="mt-1 block text-lg sm:text-xl font-black tracking-tight transition-all group-hover:text-[#780262]">{applicationCount}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
-                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Unlocked</span>
-                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[10px] sm:text-[11px] leading-tight">Jobs Unlocked</span>
+                  <span className="mt-1 block text-lg sm:text-xl font-black tracking-tight transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
-                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">App Views</span>
-                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{applicationViewsCount}</span>
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[10px] sm:text-[11px] leading-tight">App Views</span>
+                  <span className="mt-1 block text-lg sm:text-xl font-black tracking-tight transition-all group-hover:text-yellow-400">{applicationViewsCount}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
-                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Shortlisted</span>
-                  <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 col-span-2 sm:col-span-1">
+                  <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[10px] sm:text-[11px] leading-tight">Shortlisted</span>
+                  <span className="mt-1 block text-lg sm:text-xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
                 </div>
               </div>
             </div>
