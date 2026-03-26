@@ -5,6 +5,21 @@ import { Button } from "../ui/Button";
 import { ViewType } from '../../App';
 import { TEAM_MEMBERS, INTERACTION_FEE } from "../../data/mockData";
 
+// Auto-load team photos from `src/assets` by filename.
+// Expected filenames (case-insensitive): `tea.png`, `lindsay.png`, `brisa.png`, `dj.png`, `ethan.png`, etc.
+const teamPhotos = import.meta.glob("../../assets/*.{png,jpg,jpeg,webp}", {
+  eager: true,
+  import: "default",
+});
+
+const teamPhotoByKey = Object.fromEntries(
+  Object.entries(teamPhotos).map(([path, url]) => {
+    const filename = path.split("/").pop() ?? "";
+    const key = filename.replace(/\.[^.]+$/, "").toLowerCase();
+    return [key, url as string];
+  })
+) as Record<string, string>;
+
 interface AboutProps {
   onSelectRole: (role: 'seeker' | 'employer') => void;
   onNavigate: (view: ViewType) => void;
@@ -29,16 +44,17 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
           <h3 className="text-2xl sm:text-3xl font-black tracking-tight">How It Works</h3>
           <div className="space-y-4 text-gray-600 font-medium text-sm sm:text-base">
             <p className="font-black text-gray-900">For Job Seekers:</p>
-            <p>You're more than a resume. Show it. Record a intro in seconds. Be yourself. Browse jobs and apply with one click for ${INTERACTION_FEE.toFixed(2)}. No cover letters. No endless forms.</p>
+            <p>You're more than a resume. Show it. Record your intro once. Browse jobs and apply instantly. But here's the real power: employers can find YOU, even for jobs you never saw. Join the talent pool. Get discovered. Land opportunities you didn't know existed. Completely free.</p>
             <p className="font-black text-gray-900 pt-4">For Employers:</p>
-            <p>Stop reading resumes. Start seeing people. Post your job easily. Browse video applications from real candidates. Pay ${INTERACTION_FEE.toFixed(2)} to unlock the profiles you want.</p>
+            <p>Stop reading resumes. Start seeing people. Post your job and let candidates apply easily. But don't wait around for the right candidate to find you, browse the talent pool for active job seekers before you even post a job. Pay ${INTERACTION_FEE.toFixed(2)} only when you find a candidate you want to connect with.</p>
           </div>
         </div>
         <div className="p-6 sm:p-10 bg-gray-900 text-white rounded-[2rem] sm:rounded-[3rem] space-y-4 sm:space-y-6">
           <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-[#A63F8E]">What Makes Us Different</h3>
           <div className="space-y-4 text-white/70 font-medium text-sm sm:text-base">
             <p><span className="text-white font-black">Video-first, not video-required.</span> Want to show your face? Great. Prefer a voice intro or a transcript? That works too.</p>
-            <p><span className="text-white font-black">No subscriptions.</span> Pay ${INTERACTION_FEE.toFixed(2)} when you apply or unlock. No monthly fees.</p>
+            <p><span className="text-white font-black">The talent pool works both ways.</span> Job seekers don't just apply—they get discovered. Employers don't just wait for applications—they can search the entire pool of active candidates. Find each other, not just whoever applied today.</p>
+            <p><span className="text-white font-black">No subscriptions.</span> Free for job seekers. Employers pay just pay just ${INTERACTION_FEE.toFixed(2)} per unlock when they find someone they want to connect with. No monthly fees.</p>
             <p><span className="text-white font-black">Browse before you commit.</span> Explore without barriers.</p>
           </div>
         </div>
@@ -51,9 +67,17 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-8">
           {TEAM_MEMBERS.map((m, i) => (
-            <div key={i} className="space-y-3 text-center group">
-              <div className="aspect-square rounded-[1.5rem] sm:rounded-[2rem] bg-gray-100 border border-gray-100 flex items-center justify-center grayscale group-hover:grayscale-0 transition-all">
-                <User size={48} className="text-gray-600" />
+            <div key={i} className="space-y-3 text-center">
+              <div className="aspect-square rounded-[1.5rem] sm:rounded-[2rem] bg-gray-100 border border-gray-100 flex items-center justify-center overflow-hidden">
+                {teamPhotoByKey[m.name.toLowerCase()] ? (
+                  <img
+                    src={teamPhotoByKey[m.name.toLowerCase()]}
+                    alt={m.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User size={48} className="text-gray-600" />
+                )}
               </div>
               <div>
                 <p className="font-black text-base sm:text-xl tracking-tight leading-none">{m.name}</p>
