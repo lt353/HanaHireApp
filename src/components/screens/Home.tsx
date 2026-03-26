@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Video, Search, DollarSign, CheckCircle, Sparkles, Clock, Shield, Users, Briefcase } from "lucide-react";
+import { Video, Search, CheckCircle, Sparkles, Clock, Shield, Users, Briefcase } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { INTERACTION_FEE } from "../../data/mockData";
 import heroImg from "../../assets/hero-image.jpg";
@@ -87,7 +87,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Create Your Profile</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Record a quick video intro (or voice/text). Show your personality in 30 seconds. No lengthy resumes required.
+                  Record a quick video intro (or voice/text). Show your personality in 60 seconds. No lengthy resumes required. 
                 </p>
               </div>
             </div>
@@ -98,10 +98,10 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-4xl sm:text-5xl font-black text-[#148F8B]">2</span>
-                  <h3 className="text-xl sm:text-2xl font-black tracking-tight">Browse Jobs</h3>
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight">Browse & Save Jobs</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Swipe through jobs for free. Filter by location, pay, and industry. No commitments until you apply.
+                Swipe through jobs for free. Filter by location, pay, and industry. Save the ones you like. Apply to multiple jobs at once—just answer a few job-specific questions. No cover letters. No endless forms.
                 </p>
               </div>
             </div>
@@ -112,10 +112,10 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-4xl sm:text-5xl font-black text-[#148F8B]">3</span>
-                  <h3 className="text-xl sm:text-2xl font-black tracking-tight">Apply & Unlock</h3>
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight">Track Your Progress</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Apply to reveal the employer. Direct contact info unlocked instantly as well as direct messaging.
+                Your activity board keeps you up to date on your progress. See how many jobs you've applied to, how many are actively looking for you, and where you stand. With our in-app messaging, you can even coordinate with employers directly.
                 </p>
               </div>
             </div>
@@ -141,7 +141,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Post Your Job</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Use AI assist or manual entry. Add your job details in minutes. Direct messaging is available for employers who unlock candidates.
+                Use AI assist or manual entry. Add your job details and a few custom application questions in minutes. Post your job and let candidates apply easily.
                 </p>
               </div>
             </div>
@@ -155,7 +155,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Browse Candidates</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Browse and swipe to add promising candidates to your queue. You can jump straight to this step without posting a job too!
+                Don't just wait for applications. Search the entire pool of active job seekers. Filter by skills, location, experience. Watch video intros. Find people who never applied but are exactly who you need. Save promising candidates to your queue.
                 </p>
               </div>
             </div>
@@ -169,7 +169,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Unlock & Connect</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Unlock a candidate's full profile, video intro and contact info. Reach out directly. 
+                Pay ${INTERACTION_FEE.toFixed(2)} to unlock anyone you want to meet—whether they applied to your job or you discovered them browsing the pool. Get their full profile, contact info, and direct in-app messaging. One price per real connection. 
                 </p>
               </div>
             </div>
@@ -182,29 +182,39 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 sm:mb-16 space-y-3 sm:space-y-4">
             <h2 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">Why HanaHire?</h2>
-            <p className="text-lg sm:text-xl text-gray-500 font-medium">Built for Hawaii's unique job market</p>
+            <p className="text-lg sm:text-xl text-gray-500 font-medium">Built for small businesses and job seekers alike</p>
           </div>
-          <div className="flex flex-col sm:flex-row justify-center gap-6 sm:gap-8">
-            <div className="text-center space-y-3 sm:space-y-4">
-              <div className="flex items-center justify-center mx-auto">
-                <Clock size={24} className="sm:w-7 sm:h-7 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
-              </div>
-              <h4 className="text-lg sm:text-xl font-black tracking-tight">No Wasted Time</h4>
-              <p className="text-xs sm:text-sm text-gray-800 font-medium">Browse for free, pay only when you connect</p>
-            </div>
-            <div className="text-center space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-6 sm:gap-8">
+          <div className="text-center space-y-3 sm:space-y-4 flex-1 min-w-0">
+  <div className="flex items-center justify-center mx-auto">
+    <Clock size={24} className="sm:w-7 sm:h-7 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
+  </div>
+  <h4 className="text-lg sm:text-xl font-black tracking-tight">No Wasted Time</h4>
+  <div className="space-y-0">
+    <p className="text-xs sm:text-sm text-gray-800 font-medium">Browse for free, pay only when you connect.</p>
+    <p className="text-xs sm:text-sm text-gray-800 font-medium">Track progress with your activity board.</p>
+    <p className="text-xs sm:text-sm text-gray-800 font-medium">Message directly through the app.</p>
+  </div>
+</div>
+            <div className="text-center space-y-3 sm:space-y-4 flex-1 min-w-0">
               <div className="flex items-center justify-center mx-auto">
                 <Shield size={24} className="sm:w-7 sm:h-7 text-[#A63F8E]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
               </div>
               <h4 className="text-lg sm:text-xl font-black tracking-tight">Privacy First</h4>
-              <p className="text-xs sm:text-sm text-gray-800 font-medium">Stay anonymous until you choose to reveal</p>
+              <div className="space-y-0">
+                <p className="text-xs sm:text-sm text-gray-800 font-medium">Stay anonymous until you choose to reveal.</p>
+                <p className="text-xs sm:text-sm text-gray-800 font-medium">Both sides explore freely, commit only when ready.</p>
+              </div>
             </div>
-            <div className="text-center space-y-3 sm:space-y-4">
+            <div className="text-center space-y-3 sm:space-y-4 flex-1 min-w-0">
               <div className="flex items-center justify-center mx-auto">
-                <Video size={24} className="sm:w-7 sm:h-7 text-[#A63F8E]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
+                <Video size={24} className="sm:w-7 sm:h-7 text-[#148F8B]" style={{ filter: 'drop-shadow(0 0 2px #e8e4de)' }} />
               </div>
               <h4 className="text-lg sm:text-xl font-black tracking-tight">Video-Friendly</h4>
-              <p className="text-xs sm:text-sm text-gray-700 font-medium">Video, voice, or text - your choice</p>
+              <div className="space-y-0">
+                <p className="text-xs sm:text-sm text-gray-700 font-medium">Video, voice, or text—your choice.</p>
+                <p className="text-xs sm:text-sm text-gray-700 font-medium">See personality and communication style before the first conversation.</p>
+              </div>
             </div>
           </div>
         </div>
