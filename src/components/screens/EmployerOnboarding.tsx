@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Building2, Zap, CheckCircle, Upload, ChevronRight, Shield, Sparkles, BadgeCheck, Mic } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
-import { JOB_CATEGORIES, DEMO_PROFILES } from "../../data/mockData";
+import { JOB_CATEGORIES, DEMO_PROFILES, LOCATIONS_BY_ISLAND } from "../../data/mockData";
 import { ViewType } from '../../App';
 import { supabase } from "../../utils/supabase/client";
 import { formatPhoneInput } from "../../utils/formatters";
@@ -19,17 +19,25 @@ interface EmployerOnboardingProps {
   userProfile: any;
   onComplete: (profileData: any) => void;
   onNavigate?: (view: ViewType) => void;
+  isEditing?: boolean;
 }
 
-export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProfile, onComplete }) => {
-  const [bio, setBio] = useState("");
+export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProfile, onComplete, isEditing = false }) => {
+  // Prefill bio when profile (or AI import) provides it.
+  const [bio, setBio] = useState(userProfile?.bio || "");
   const [industry, setIndustry] = useState(userProfile?.industry || "");
-  const [companySize, setCompanySize] = useState("");
+  const [companySize, setCompanySize] = useState(userProfile?.companySize || "");
   const [location, setLocation] = useState(userProfile?.location || "");
+  const [island, setIsland] = useState<string>("");
+  const [area, setArea] = useState<string>("");
+  const [otherLocation, setOtherLocation] = useState<string>("");
   const [phone, setPhone] = useState(formatPhoneInput(userProfile?.phone || ""));
   const [website, setWebsite] = useState(userProfile?.website || "");
+  const [companyLogoUrl, setCompanyLogoUrl] = useState(userProfile?.companyLogoUrl || "");
+  const [isLogoUploading, setIsLogoUploading] = useState(false);
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
   const [wantsBadge, setWantsBadge] = useState(false);
+  const logoFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // --- Speech to Text (Web Speech API) for Business Description ---
   const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
@@ -60,6 +68,82 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
     }
   }, []);
 
+  const normalizeForMatch = (s: string) =>
+    s
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[ʻ’']/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const MANUAL_TOWN_VALUE = "__manual__";
+
+  // Initialize Island/Area selection from existing location string (AI import / saved profile).
+  useEffect(() => {
+    if (!location) return;
+    const locNorm = normalizeForMatch(location);
+
+    // If location is already in our "Area, Island" format, parse it.
+    const parts = location.split(",").map((p: string) => p.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      const maybeArea = parts[0];
+      const maybeIsland = parts.slice(1).join(", ").trim();
+      if (LOCATIONS_BY_ISLAND[maybeIsland]) {
+        setIsland(maybeIsland);
+        const matchArea = LOCATIONS_BY_ISLAND[maybeIsland].find((a) => normalizeForMatch(a) === normalizeForMatch(maybeArea));
+        if (matchArea) {
+          setArea(matchArea);
+          setOtherLocation("");
+        } else {
+          setArea(MANUAL_TOWN_VALUE);
+          setOtherLocation(maybeArea);
+        }
+        return;
+      }
+    }
+
+    // Otherwise, best-effort match: find an island+area that appears in the location string.
+    for (const [isl, areas] of Object.entries(LOCATIONS_BY_ISLAND)) {
+      for (const a of areas) {
+        if (locNorm.includes(normalizeForMatch(a))) {
+          setIsland(isl);
+          setArea(a);
+          setOtherLocation("");
+          return;
+        }
+      }
+    }
+
+    // Next, see if the location includes an island name even without a known town.
+    for (const isl of Object.keys(LOCATIONS_BY_ISLAND)) {
+      if (locNorm.includes(normalizeForMatch(isl))) {
+        setIsland(isl);
+        setArea(MANUAL_TOWN_VALUE);
+        const guessTown = parts.length >= 2 ? parts[0] : "";
+        setOtherLocation(guessTown || "");
+        return;
+      }
+    }
+
+    // Otherwise, leave island unset and keep the full string as the manual town guess.
+    setIsland("");
+    setArea("");
+    setOtherLocation(location);
+  }, [location]);
+
+  const islandOptions = Object.keys(LOCATIONS_BY_ISLAND);
+  const areasForSelectedIsland = island ? LOCATIONS_BY_ISLAND[island] || [] : [];
+
+  const setLocationFromPicker = (nextIsland: string, nextArea: string) => {
+    if (!nextIsland) return;
+    if (!nextArea) {
+      setLocation(nextIsland);
+      return;
+    }
+    setLocation(`${nextArea}, ${nextIsland}`);
+  };
+
   const toggleBioSpeechToText = () => {
     if (!bioRecognitionRef.current || !hasSpeechSupport) return;
 
@@ -82,7 +166,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         }
 
         if (transcript) {
-          setBio((prev) =>
+          setBio((prev: string) =>
             prev ? `${prev.trim()} ${transcript.trim()}` : transcript.trim(),
           );
         }
@@ -129,6 +213,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
       setLocation(employer.location || "");
       setPhone(formatPhoneInput(employer.phone || ""));
       setWebsite(employer.website || "");
+      setCompanyLogoUrl(employer.company_logo_url || "");
       setBusinessLicense(employer.business_license_number || "");
 
       toast.success("Demo business info loaded from Supabase.");
@@ -143,18 +228,72 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
       return;
     }
 
+    if (!island) {
+      toast.error("Please select an island.");
+      return;
+    }
+
+    const manualTown = otherLocation.trim();
+    const locationForSave = manualTown
+      ? `${manualTown}, ${island}`
+      : area
+        ? `${area}, ${island}`
+        : island;
+
     const profileData = {
       ...userProfile,
       bio,
       industry,
       companySize,
-      location,
+      location: locationForSave,
       phone,
       website,
+      companyLogoUrl,
       businessLicense,
       wantsBadge: businessLicense.length > 0 ? wantsBadge : false,
     };
     onComplete(profileData);
+  };
+
+  const handleLogoFileChange = async (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file (PNG, JPG, SVG, etc).");
+      return;
+    }
+    setIsLogoUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const safeExt = /^[a-z0-9]+$/.test(ext) ? ext : "png";
+      const path = `employer-logos/${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+      const bucket = "candidate-videos";
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, {
+          contentType: file.type || "image/png",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        toast.error(`Logo upload failed: ${uploadError.message}`);
+        return;
+      }
+
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      if (!data?.publicUrl) {
+        toast.error("Logo uploaded but URL could not be generated.");
+        return;
+      }
+
+      setCompanyLogoUrl(data.publicUrl);
+      toast.success("Logo uploaded.");
+    } catch (err: any) {
+      toast.error(err?.message || "Logo upload failed.");
+    } finally {
+      setIsLogoUploading(false);
+      if (logoFileInputRef.current) logoFileInputRef.current.value = "";
+    }
   };
 
   const filledSections = [
@@ -175,9 +314,11 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
           <div className="w-20 h-20 rounded-[1.5rem] bg-[#A63F8E]/10 flex items-center justify-center mx-auto">
             <Building2 size={36} className="text-[#A63F8E]" />
           </div>
-          <h1 className="text-4xl font-black tracking-tighter">Set Up Your Business</h1>
+          <h1 className="text-4xl font-black tracking-tighter">{isEditing ? "Edit Your Business Profile" : "Set Up Your Business"}</h1>
           <p className="text-gray-500 font-medium text-lg max-w-md mx-auto">
-            Add your business details once and they'll auto-fill every job post you create.
+            {isEditing
+              ? "Update your business details to keep job posts and candidate communication accurate."
+              : "Add your business details once and they'll auto-fill every job post you create."}
           </p>
         </div>
 
@@ -196,16 +337,18 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         </div>
 
         {/* Demo Fill Button */}
-        <button
-          onClick={handleDemoFill}
-          disabled={isDemoFilling}
-          className="w-full mb-8 p-4 rounded-2xl border-2 border-[#A63F8E]/20 bg-[#A63F8E]/5 hover:bg-[#A63F8E]/10 transition-all flex items-center justify-center gap-3 group"
-        >
-          <Zap size={18} className="text-[#A63F8E] group-hover:scale-110 transition-transform" />
-          <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">
-            {isDemoFilling ? "Loading Demo Business..." : "Auto-fill Demo Business"}
-          </span>
-        </button>
+        {!isEditing && (
+          <button
+            onClick={handleDemoFill}
+            disabled={isDemoFilling}
+            className="w-full mb-8 p-4 rounded-2xl border-2 border-[#A63F8E]/20 bg-[#A63F8E]/5 hover:bg-[#A63F8E]/10 transition-all flex items-center justify-center gap-3 group"
+          >
+            <Zap size={18} className="text-[#A63F8E] group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-black uppercase tracking-widest text-[#A63F8E]">
+              {isDemoFilling ? "Loading Demo Business..." : "Auto-fill Demo Business"}
+            </span>
+          </button>
+        )}
 
         <div className="space-y-8">
           {/* Business Description */}
@@ -276,23 +419,73 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
             </div>
           </div>
 
-          {/* Location & Phone Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Location + Phone (stacked rows) */}
+          <div className="space-y-6">
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-3">
                 {location.length > 0 && <CheckCircle size={18} className="text-[#A63F8E]" />}
                 <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Location</h2>
               </div>
-              <select
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
-              >
-                <option value="">Select...</option>
-                {JOB_CATEGORIES.locations.map(loc => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <select
+                  value={island}
+                  onChange={(e) => {
+                    const nextIsland = e.target.value;
+                    setIsland(nextIsland);
+                    setArea("");
+                    if (!nextIsland) {
+                      setOtherLocation("");
+                      setLocation("");
+                      return;
+                    }
+                    if (otherLocation.trim()) {
+                      setLocation(`${otherLocation.trim()}, ${nextIsland}`);
+                    } else {
+                      setLocation(nextIsland);
+                    }
+                  }}
+                  className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
+                >
+                  <option value="">Island...</option>
+                  {islandOptions.map((isl) => (
+                    <option key={isl} value={isl}>{isl}</option>
+                  ))}
+                </select>
+                <select
+                  value={area}
+                  onChange={(e) => {
+                    const nextArea = e.target.value;
+                    setArea(nextArea);
+                    if (nextArea !== MANUAL_TOWN_VALUE) setOtherLocation("");
+                    if (nextArea === MANUAL_TOWN_VALUE) {
+                      setLocation(otherLocation.trim() ? `${otherLocation.trim()}, ${island}` : island);
+                      return;
+                    }
+                    setLocationFromPicker(island, nextArea);
+                  }}
+                  disabled={!island}
+                  className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select...</option>
+                  <option value={MANUAL_TOWN_VALUE}>Manual Entry (Type your town)</option>
+                  {areasForSelectedIsland.map((a) => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
+              {area === MANUAL_TOWN_VALUE ? (
+                <input
+                  value={otherLocation}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setOtherLocation(v);
+                    if (island) setLocation(v.trim() ? `${v.trim()}, ${island}` : island);
+                    else setLocation("");
+                  }}
+                  placeholder="Town"
+                  className="w-full p-4 rounded-xl bg-white border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base"
+                />
+              ) : null}
             </div>
 
             <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
@@ -383,12 +576,40 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
           {/* Logo Upload Placeholder */}
           <div className="bg-white rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-sm">
             <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Business Logo (optional)</h2>
+            {companyLogoUrl ? (
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white border border-gray-100 shrink-0">
+                  <img src={companyLogoUrl} alt="Business logo" className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-gray-600 uppercase tracking-widest">Imported logo</p>
+                  <p className="text-xs text-gray-500 font-medium truncate">{companyLogoUrl}</p>
+                </div>
+              </div>
+            ) : null}
+            <input
+              type="url"
+              value={companyLogoUrl}
+              onChange={(e) => setCompanyLogoUrl(e.target.value)}
+              placeholder="https://yourcompany.com/logo.png"
+              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base"
+            />
+            <input
+              ref={logoFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handleLogoFileChange(e.target.files?.[0] || null)}
+            />
             <button
-              onClick={() => {}}
-              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#A63F8E] hover:border-[#A63F8E]/30 transition-all"
+              onClick={() => logoFileInputRef.current?.click()}
+              disabled={isLogoUploading}
+              className="w-full py-12 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#A63F8E] hover:border-[#A63F8E]/30 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Upload size={36} />
-              <span className="font-black text-xs uppercase tracking-widest">Upload Your Logo</span>
+              <span className="font-black text-xs uppercase tracking-widest">
+                {isLogoUploading ? "Uploading Logo..." : "Upload Your Logo"}
+              </span>
               <span className="text-[10px] text-gray-400 font-medium">PNG, JPG, or SVG &middot; 500x500 recommended</span>
             </button>
           </div>
@@ -409,7 +630,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
               className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 shadow-[#A63F8E]/20 flex items-center justify-center gap-3"
             >
               <Sparkles size={22} />
-              Launch Business Profile
+              {isEditing ? "Update Business Profile" : "Launch Business Profile"}
               <ChevronRight size={22} />
             </Button>
             <p className="text-center text-xs text-gray-400 font-medium">

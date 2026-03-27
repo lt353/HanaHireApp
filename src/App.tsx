@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   CreditCard,
   ArrowRight,
@@ -37,7 +37,7 @@ import { removeStorageFilesFromUrls } from './utils/deleteCandidate';
 import { Header } from './components/layout/Header';
 import { Modal } from './components/ui/Modal';
 import { Button } from './components/ui/Button';
-import { CollapsibleFilter } from './components/CollapsibleFilter';
+import { MarketplaceFilterModal } from "./components/filters/MarketplaceFilterModal";
 import { Home } from './components/screens/Home';
 import { About } from './components/screens/About';
 import { Settings } from './components/screens/Settings';
@@ -59,10 +59,15 @@ import type { ConversationRow, MessageRow } from "./components/screens/Messages"
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
-import { JOB_CATEGORIES, CANDIDATE_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } from './data/mockData';
+import { JOB_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } from './data/mockData';
+import { createLocationMatcher } from "./utils/marketplaceLocationFilter";
+import {
+  matchesEducation,
+  matchesExperience,
+} from "./utils/candidateEducationExperience";
 
 
-export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding" | "messages";
+export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding" | "employer-profile-edit" | "messages";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 const STORAGE_KEY_ANON_SAVED_JOB_IDS = "hanahire_anon_saved_job_ids";
@@ -91,6 +96,8 @@ export default function App() {
   const [signupStep, setSignupStep] = useState<'role-select' | 'form'>('role-select');
   const [signupRole, setSignupRole] = useState<'seeker' | 'employer' | null>(null);
   const [signupFormData, setSignupFormData] = useState<Record<string, string>>({});
+  const [employerImportWebsite, setEmployerImportWebsite] = useState("");
+  const [isEmployerImporting, setIsEmployerImporting] = useState(false);
   
   // Modals
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -160,6 +167,7 @@ export default function App() {
     skills: [] as string[],
     jobCategories: [] as string[],
   });
+  const [islandFilters, setIslandFilters] = useState<string[]>([]);
   const [userVisibility, setUserVisibility] = useState("broader");
   const [mediaType, setMediaType] = useState<"video" | "voice">("video");
   // Anonymous flow: job IDs paid for but user not yet signed up — show signup modal and process after onboarding
@@ -1372,58 +1380,21 @@ export default function App() {
     }
   };
 
-  const getEducationRank = (edu: string) => {
-    if (!edu) return -1;
-    // Handle cases where data might have slightly different strings
-    if (edu.includes('Doctorate')) return 5;
-    if (edu.includes('Master')) return 4;
-    if (edu.includes('Bachelor')) return 3;
-    if (edu.includes('Associate')) return 2;
-    if (edu.includes('Vocational')) return 1;
-    if (edu.includes('High School')) return 0;
-    return -1;
-  };
-
-  const matchesEducation = (candidateEdu: string, selectedLevels: string[]) => {
-    if (selectedLevels.length === 0) return true;
-    const candidateRank = getEducationRank(candidateEdu);
-    
-    // If a candidate has a Master's (Rank 4), they should match if the filter is 
-    // "High School" (Rank 0), "Bachelor's" (Rank 3), or "Master's" (Rank 4).
-    // So for each selected filter, we check if the candidate's rank is >= that filter's rank.
-    return selectedLevels.some(level => {
-      const filterRank = getEducationRank(level);
-      return candidateRank >= filterRank;
-    });
-  };
-
-  const matchesExperience = (years: number | string, levels: string[]) => {
-    if (levels.length === 0) return true;
-    
-    // Normalize years to a number
-    let y = 0;
-    if (typeof years === 'number') {
-      y = years;
-    } else if (typeof years === 'string') {
-      const match = years.match(/\d+/);
-      y = match ? parseInt(match[0]) : 0;
-    }
-
-    return levels.some(level => {
-      if (level === '0-2 years') return y <= 2;
-      if (level === '2-5 years') return y > 2 && y <= 5;
-      if (level === '5-10 years') return y > 5 && y <= 10;
-      if (level === '10+ years') return y > 10;
-      return false;
-    });
-  };
+  const locationMatchesFilters = useMemo(
+    () =>
+      createLocationMatcher({
+        selectedLocations: filters.locations,
+        islandFilters,
+      }),
+    [filters.locations, islandFilters]
+  );
 
   const totalUnreadMessages = conversations.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
 
   const filteredJobs = jobs.filter(j =>
     j.status !== 'filled' &&
     (filters.industries.length === 0 || filters.industries.includes(j.company_industry)) &&
-    (filters.locations.length === 0 || filters.locations.includes(j.location)) &&
+    locationMatchesFilters(j.location) &&
     (filters.payRanges.length === 0 || filters.payRanges.includes(j.pay_range)) &&
     (filters.jobCategories.length === 0 || (j.job_category && filters.jobCategories.includes(j.job_category))) &&
     (searchQuery === "" || 
@@ -1433,7 +1404,7 @@ export default function App() {
   );
 
   const filteredCandidates = candidates.filter(c =>
-    (filters.locations.length === 0 || filters.locations.includes(c.location)) &&
+    locationMatchesFilters(c.location) &&
     (filters.payRanges.length === 0 || filters.payRanges.includes(c.preferred_pay_range) || filters.payRanges.includes(c.target_pay)) &&
     (filters.skills.length === 0 || filters.skills.some(s => c.skills?.includes(s))) &&
     (filters.industries.length === 0 || (c.industries_interested && c.industries_interested.some((ind: string) => filters.industries.includes(ind)))) &&
@@ -1445,17 +1416,6 @@ export default function App() {
     )
   );
 
-  const toggleFilter = (category: keyof typeof filters, value: string) => {
-    setFilters(prev => {
-      const current = prev[category] as string[];
-      if (current.includes(value)) {
-        return { ...prev, [category]: current.filter(v => v !== value) };
-      } else {
-        return { ...prev, [category]: [...current, value] };
-      }
-    });
-  };
-
   const clearFilters = () => {
     setFilters({
       industries: [],
@@ -1466,6 +1426,14 @@ export default function App() {
       skills: [],
       jobCategories: [],
     });
+    setIslandFilters([]);
+  };
+
+  const setMultiSelectFilter = (
+    category: keyof typeof filters,
+    values: string[]
+  ) => {
+    setFilters((prev) => ({ ...prev, [category]: values }));
   };
 
   const renderScreen = () => {
@@ -1992,6 +1960,7 @@ export default function App() {
       case "employer-onboarding":
         return (
           <EmployerOnboarding
+            isEditing={false}
             userProfile={userProfile}
             onComplete={async (profileData) => {
               // Check if this is a demo account
@@ -2057,6 +2026,43 @@ export default function App() {
               setUserProfile(profileData);
               handleNavigate("employer");
               toast.success("Business profile saved! Welcome to your dashboard.");
+            }}
+          />
+        );
+      case "employer-profile-edit":
+        return (
+          <EmployerOnboarding
+            isEditing={true}
+            userProfile={userProfile}
+            onComplete={async (profileData) => {
+              if (profileData.employerId) {
+                try {
+                  const { error: updateError } = await supabase
+                    .from('employers')
+                    .update({
+                      company_size: profileData.companySize || null,
+                      company_description: profileData.bio || null,
+                      location: profileData.location || null,
+                      phone: profileData.phone || null,
+                      industry: profileData.industry || null,
+                      company_logo_url: profileData.companyLogoUrl || null,
+                      website: profileData.website || null,
+                      business_license_number: profileData.businessLicense || null,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', profileData.employerId);
+
+                  if (updateError) {
+                    console.error("Error updating employer profile:", updateError);
+                    toast.error("Profile saved locally, but failed to sync to database.");
+                  }
+                } catch (err) {
+                  console.error("Unexpected error updating employer:", err);
+                }
+              }
+              setUserProfile(profileData);
+              handleNavigate("employer");
+              toast.success("Business profile updated.");
             }}
           />
         );
@@ -2302,7 +2308,7 @@ export default function App() {
                 }} className="space-y-8">
                    <div className="space-y-6">
                       <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Email Identity</label>
+                        <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Email</label>
                          <input
                            required
                            name="email"
@@ -2314,7 +2320,7 @@ export default function App() {
                          />
                       </div>
                       <div className="space-y-3">
-                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Access Key</label>
+                        <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Password</label>
                          <input
                            required
                            type="password"
@@ -2512,17 +2518,20 @@ export default function App() {
 
                       if (existingEmployer) {
                         await Promise.all([fetchUnlocks(signupFormData.email), fetchSavedItems(signupFormData.email, 'employer')]);
+                        // Treat this like an onboarding entry point so they can review/edit info.
+                        // Also preserve any values already in signupFormData (e.g., AI Import results).
                         setUserProfile({
                           role: 'employer',
                           email: existingEmployer.email,
-                          businessName: existingEmployer.business_name,
-                          phone: existingEmployer.phone,
-                          location: existingEmployer.location,
-                          industry: existingEmployer.industry,
-                          companySize: existingEmployer.company_size,
-                          bio: existingEmployer.company_description,
-                          companyLogoUrl: existingEmployer.company_logo_url,
+                          businessName: signupFormData.businessName || existingEmployer.business_name,
+                          phone: signupFormData.phone || existingEmployer.phone,
+                          location: signupFormData.location || existingEmployer.location,
+                          industry: signupFormData.industry || existingEmployer.industry,
+                          companySize: signupFormData.companySize || existingEmployer.company_size,
+                          bio: signupFormData.bio || existingEmployer.company_description,
+                          companyLogoUrl: signupFormData.companyLogoUrl || existingEmployer.company_logo_url,
                           businessVerified: existingEmployer.business_verified,
+                          website: signupFormData.website || existingEmployer.website,
                           employerId: existingEmployer.id,
                           id: existingEmployer.id
                         });
@@ -2531,8 +2540,8 @@ export default function App() {
                         setShowAuthModal(false);
                         setSignupFormData({});
                         setIsSignupLoading(false);
-                        handleNavigate("employer");
-                        toast.success("Welcome back! Logged in to your existing account.");
+                        handleNavigate("employer-onboarding");
+                        toast.success("Welcome back! Review your profile details.");
                         return;
                       }
 
@@ -2745,6 +2754,79 @@ export default function App() {
                    ) : (
                      /* Employer Signup Form */
                      <div className="space-y-5">
+                      {/* AI Import (optional) */}
+                      <div className="p-5 rounded-[2rem] border-2 border-[#A63F8E]/15 bg-[#A63F8E]/5 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-[10px] font-black text-[#A63F8E] uppercase tracking-[0.3em]">
+                            AI Import (optional)
+                          </p>
+                          <button
+                            type="button"
+                            disabled={isEmployerImporting || !employerImportWebsite.trim()}
+                            onClick={async () => {
+                              const raw = employerImportWebsite.trim();
+                              if (!raw) return;
+                              setIsEmployerImporting(true);
+                              try {
+                                const res = await fetch(`${API_BASE}/employer-ai-import`, {
+                                  method: "POST",
+                                  headers: {
+                                    "content-type": "application/json",
+                                    apikey: publicAnonKey,
+                                    Authorization: `Bearer ${publicAnonKey}`,
+                                  },
+                                  body: JSON.stringify({ websiteUrl: raw }),
+                                });
+                                const json = await res.json().catch(() => ({}));
+                                if (!res.ok) {
+                                  toast.error(json?.error || "Import failed. Try again.");
+                                  return;
+                                }
+
+                                setSignupFormData((prev) => ({
+                                  ...prev,
+                                  businessName: json.businessName || prev.businessName || "",
+                                  phone: json.phone || prev.phone || "",
+                                  industry: json.industry || prev.industry || "",
+                                  location: json.location || prev.location || "",
+                                  website: json.websiteUrl || prev.website || raw,
+                                  bio: json.bio || prev.bio || "",
+                                  companySize: json.companySize || prev.companySize || "",
+                                  companyLogoUrl: json.companyLogoUrl || prev.companyLogoUrl || "",
+                                }));
+                                toast.success("Imported! Review and edit anything you want.");
+                              } catch (e: any) {
+                                toast.error(e?.message || "Import failed. Try again.");
+                              } finally {
+                                setIsEmployerImporting(false);
+                              }
+                            }}
+                            className={`shrink-0 inline-flex items-center justify-center px-4 h-10 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                              isEmployerImporting || !employerImportWebsite.trim()
+                                ? "bg-white/60 text-gray-400 cursor-not-allowed"
+                                : "bg-[#A63F8E] text-white hover:scale-105 active:scale-95"
+                            }`}
+                          >
+                            {isEmployerImporting ? "Importing..." : "Import from Website"}
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                            Business Website
+                          </label>
+                          <input
+                            type="url"
+                            value={employerImportWebsite}
+                            onChange={(e) => setEmployerImportWebsite(e.target.value)}
+                            placeholder="https://yourwebsite.com"
+                            className="w-full p-4 rounded-2xl bg-white/80 border border-white/60 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base tracking-tight"
+                          />
+                          <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
+                            We'll use web search results to prefill your business profile (you can edit everything before saving).
+                          </p>
+                        </div>
+                      </div>
+
                        <div className="space-y-3">
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Business Name</label>
                          <input required type="text" value={signupFormData.businessName || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, businessName: e.target.value }))} placeholder="Your business name" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-lg tracking-tight" />
@@ -3513,132 +3595,17 @@ export default function App() {
         }}
       />
 
-      <Modal isOpen={showFilterModal} onClose={() => setShowFilterModal(false)} title="Refine Results">
-         <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
-            <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-              <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                {userRole === 'seeker' ? 'Job Filters' : 'Talent Filters'}
-              </span>
-              <button
-                onClick={clearFilters}
-                className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest hover:underline hover:scale-105 active:scale-95 transition-all duration-200"
-              >
-                Clear All
-              </button>
-            </div>
-
-            {/* Industry Filter: Always available now, matching interested industries for candidates */}
-            <CollapsibleFilter title="Industry" isOpen={true}>
-              {(userRole === 'seeker' ? JOB_CATEGORIES.industries : CANDIDATE_CATEGORIES.industries).map(t => (
-                <button
-                  key={t}
-                  onClick={() => toggleFilter('industries', t)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.industries.includes(t) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                >
-                  {t}
-                </button>
-              ))}
-            </CollapsibleFilter>
-
-            {/* Common Filter: Location */}
-            <CollapsibleFilter title="Location" isOpen={userRole === 'employer'}>
-              {(userRole === 'seeker' ? JOB_CATEGORIES.locations : CANDIDATE_CATEGORIES.locations).map(l => (
-                <button
-                  key={l}
-                  onClick={() => toggleFilter('locations', l)}
-                  className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.locations.includes(l) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                >
-                  {l}
-                </button>
-              ))}
-            </CollapsibleFilter>
-
-            {/* Role Specific Filters */}
-            {userRole === 'seeker' ? (
-              <>
-                <CollapsibleFilter title="Job Category">
-                  {JOB_CATEGORIES.jobCategories.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => toggleFilter('jobCategories', cat)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.jobCategories.includes(cat) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </CollapsibleFilter>
-
-                <CollapsibleFilter title="Pay Range">
-                  {JOB_CATEGORIES.payRanges.map(p => (
-                    <button
-                      key={p}
-                      onClick={() => toggleFilter('payRanges', p)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </CollapsibleFilter>
-              </>
-            ) : (
-              <>
-                <CollapsibleFilter title="Experience Level" isOpen={true}>
-                  {CANDIDATE_CATEGORIES.experience.map(e => (
-                    <button
-                      key={e}
-                      onClick={() => toggleFilter('experience', e)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.experience.includes(e) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                </CollapsibleFilter>
-
-                <CollapsibleFilter title="Skills">
-                  {CANDIDATE_CATEGORIES.skills.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => toggleFilter('skills', s)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.skills.includes(s) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </CollapsibleFilter>
-
-                <CollapsibleFilter title="Education">
-                  {CANDIDATE_CATEGORIES.education.map(edu => (
-                    <button
-                      key={edu}
-                      onClick={() => toggleFilter('education', edu)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.education.includes(edu) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                    >
-                      {edu}
-                    </button>
-                  ))}
-                </CollapsibleFilter>
-
-                <CollapsibleFilter title="Target Pay">
-                  {CANDIDATE_CATEGORIES.targetPayRanges.map(p => (
-                    <button
-                      key={p}
-                      onClick={() => toggleFilter('payRanges', p)}
-                      className={`px-4 py-2 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${filters.payRanges.includes(p) ? 'border-[#148F8B] text-[#148F8B] bg-[#148F8B]/5' : 'border-gray-200 text-gray-700 bg-gray-50/30'} hover:scale-105 active:scale-95 duration-200`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </CollapsibleFilter>
-              </>
-            )}
-
-            <div className="pt-6">
-              <Button className="w-full h-16 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => setShowFilterModal(false)}>
-                Show {userRole === 'seeker' ? filteredJobs.length : filteredCandidates.length} Results
-              </Button>
-            </div>
-         </div>
-      </Modal>
+      <MarketplaceFilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        userRole={userRole}
+        filters={filters}
+        setMultiSelectFilter={setMultiSelectFilter}
+        islandFilters={islandFilters}
+        setIslandFilters={setIslandFilters}
+        clearFilters={clearFilters}
+        resultCount={userRole === "seeker" ? filteredJobs.length : filteredCandidates.length}
+      />
 
      {/* Mobile Nav */}
 {currentView !== "landing" && !showPaymentModal && !showVideoUpdateModal && (

@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { formatDistanceToNow } from "date-fns";
-import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, Eye, X, Filter, MessageSquare, Video, ChevronDown, ChevronUp, Pencil } from "lucide-react";
+import { Plus, Play, Briefcase, MapPin, Lock, LogIn, LogOut, Star, Users, Phone, Mail, BarChart3, Shield, CheckCircle, Clock, Eye, X, Filter, MessageSquare, Video, ChevronDown, ChevronUp, Pencil, Building2 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { formatCandidateTitle } from "../../utils/formatters";
@@ -184,6 +184,47 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
               License: {userProfile.businessLicense}
             </span>
           )}
+        </div>
+      )}
+
+      {/* Business Profile Snapshot */}
+      {isLoggedIn && userProfile && (
+        <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 bg-white shadow-sm space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h4 className="text-sm font-black uppercase tracking-widest text-gray-500">Business Profile</h4>
+            <Button
+              variant="outline"
+              className="h-10 px-4 rounded-xl border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
+              onClick={() => onNavigate("employer-profile-edit")}
+            >
+              <Pencil size={14} /> Edit Profile
+            </Button>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-xl bg-gray-100 border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
+              {userProfile.companyLogoUrl ? (
+                <img src={userProfile.companyLogoUrl} alt="Business logo" className="w-full h-full object-cover" />
+              ) : (
+                <Building2 size={22} className="text-gray-400" />
+              )}
+            </div>
+            <div className="min-w-0 space-y-1">
+              <p className="text-lg sm:text-xl font-black tracking-tight text-gray-900 truncate">
+                {userProfile.businessName || "Your Business"}
+              </p>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-gray-500">
+                {userProfile.industry ? <span>{userProfile.industry}</span> : null}
+                {userProfile.location ? <span>• {userProfile.location}</span> : null}
+                {userProfile.phone ? <span>• {userProfile.phone}</span> : null}
+                {userProfile.website ? <span className="truncate max-w-[16rem]">• {userProfile.website}</span> : null}
+              </div>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-600 font-medium leading-relaxed">
+            {userProfile.bio || "Add your business description so candidates understand your team and culture."}
+          </p>
         </div>
       )}
 

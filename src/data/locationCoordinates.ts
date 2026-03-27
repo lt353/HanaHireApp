@@ -1,0 +1,37 @@
+/** Approximate coordinates for town matching / radius filters (Hawaiʻi). */
+export const LOCATION_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  honolulu: { lat: 21.3069, lng: -157.8583 },
+  kailua: { lat: 21.4022, lng: -157.7394 },
+  kapolei: { lat: 21.335, lng: -158.056 },
+  "pearl city": { lat: 21.3972, lng: -157.9731 },
+  aiea: { lat: 21.3866, lng: -157.9232 },
+  "ewa beach": { lat: 21.3156, lng: -158.0072 },
+  waipahu: { lat: 21.3864, lng: -158.009 },
+  waikiki: { lat: 21.2766, lng: -157.8267 },
+  haleiwa: { lat: 21.5947, lng: -158.1059 },
+  kaneohe: { lat: 21.4097, lng: -157.7982 },
+  hilo: { lat: 19.7073, lng: -155.0885 },
+  "kailua kona": { lat: 19.64, lng: -155.9969 },
+  kona: { lat: 19.64, lng: -155.9969 },
+  waimea: { lat: 20.02, lng: -155.666 },
+  kihei: { lat: 20.785, lng: -156.4656 },
+  wailea: { lat: 20.69, lng: -156.4419 },
+  lahaina: { lat: 20.8783, lng: -156.6825 },
+  wailuku: { lat: 20.8913, lng: -156.5047 },
+  kahului: { lat: 20.889, lng: -156.4729 },
+  makawao: { lat: 20.8569, lng: -156.3131 },
+  pukalani: { lat: 20.8378, lng: -156.336 },
+  lihue: { lat: 21.9811, lng: -159.3711 },
+  kapaa: { lat: 22.0752, lng: -159.3188 },
+  hanalei: { lat: 22.2057, lng: -159.498 },
+  poipu: { lat: 21.8721, lng: -159.4541 },
+};
+
+export const ISLAND_CENTER_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  oahu: { lat: 21.4389, lng: -158.0001 },
+  maui: { lat: 20.7984, lng: -156.3319 },
+  kauai: { lat: 22.0964, lng: -159.5261 },
+  "hawaii big island": { lat: 19.5429, lng: -155.6659 },
+  lanai: { lat: 20.8278, lng: -156.919 },
+  molokai: { lat: 21.144, lng: -157.0226 },
+};

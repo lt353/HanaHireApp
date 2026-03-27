@@ -43,6 +43,30 @@ export const JOB_CATEGORIES = {
   ]
 };
 
+// More complete onboarding-friendly location picker.
+// Used for Employer onboarding (Island -> Area) while keeping a single string stored in DB.
+export const LOCATIONS_BY_ISLAND: Record<string, string[]> = {
+  "Oʻahu": [
+    "Honolulu", "Waikīkī", "Kakaʻako", "Kapolei", "ʻEwa Beach", "Waipahu", "Pearl City", "ʻAiea",
+    "Mililani", "Wahiawā", "Kailua", "Kāneʻohe", "Haleʻiwa", "North Shore", "Ko Olina",
+    "Hawaiʻi Kai", "Kalihi", "Moanalua"
+  ],
+  "Maui": [
+    "Kahului", "Wailuku", "Kīhei", "Wailea", "Lahaina", "Kapalua", "Kā‘anapali",
+    "Makawao", "Pukalani", "Paʻia", "Hāna", "Upcountry"
+  ],
+  "Kauaʻi": [
+    "Līhuʻe", "Kapaʻa", "Poʻipū", "Kōloa", "Hanalei", "Princeville", "Waimea (Kauaʻi)",
+    "Kekaha", "Kīlauea"
+  ],
+  "Hawaiʻi (Big Island)": [
+    "Hilo", "Kailua-Kona", "Kona", "Waimea (Big Island)", "Kealakekua", "Captain Cook",
+    "Pāhoa", "Ocean View", "Volcano"
+  ],
+  "Lānaʻi": ["Lānaʻi City"],
+  "Molokaʻi": ["Kaunakakai", "Maunaloa"],
+};
+
 export const CANDIDATE_CATEGORIES = {
   industries: [
     'Food & Beverage', 'Retail', 'Tourism', 'Hospitality', 'Services', 'Office', 
