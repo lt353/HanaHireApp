@@ -18,12 +18,12 @@ import { motion, AnimatePresence } from "motion/react";
 import { Button } from "../ui/Button";
 import { toast } from "sonner@2.0.3";
 import { supabase } from '../../utils/supabase/client';
+import { projectId, publicAnonKey } from "../../utils/supabase/info";
 import { ViewType } from '../../App';
 import { JOB_CATEGORIES } from "../../data/mockData";
 import { formatPhoneInput } from "../../utils/formatters";
 
-// API disabled - jobs stored locally
-// const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
+const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 interface JobPostingFlowProps {
   onBack: () => void;
@@ -34,64 +34,6 @@ interface JobPostingFlowProps {
 }
 
 type FlowStep = 'selection' | 'ai-input' | 'loading' | 'review' | 'confirmation';
-
-const TEMPLATES: any = {
-  "Line Cook": {
-    industry: "Food & Beverage",
-    job_type: "Full-time",
-    description: "Fast-paced {location} restaurant seeking experienced line cook. Join our team preparing fresh, local ingredients in a high-volume kitchen environment.",
-    responsibilities: [
-      "Prepare menu items according to recipes and specifications",
-      "Maintain clean and organized station throughout service",
-      "Follow food safety protocols and sanitation standards",
-      "Work efficiently during busy shifts"
-    ],
-    requirements: ["Kitchen experience", "Valid food handlers card", "Team player"],
-    benefits: ["Employee meal discounts", "Flexible scheduling"],
-    company_size: "Small (1-10)"
-  },
-  "Bartender": {
-    industry: "Food & Beverage",
-    job_type: "Full-time",
-    description: "{location} establishment seeking skilled bartender. Create memorable drink experiences for guests in a vibrant atmosphere.",
-    responsibilities: [
-      "Prepare cocktails, beer, and wine service",
-      "Provide excellent customer service",
-      "Maintain organized and clean bar area",
-      "Follow alcohol service regulations"
-    ],
-    requirements: ["Bartending experience", "TIPS certified", "Available nights/weekends"],
-    benefits: ["Tips", "Flexible scheduling"],
-    company_size: "Small (1-10)"
-  },
-  "Electrician": {
-    industry: "Construction",
-    job_type: "Full-time",
-    description: "{location} electrical contractor seeking licensed electrician for residential and commercial projects.",
-    responsibilities: [
-      "Install and repair electrical systems",
-      "Read and interpret blueprints",
-      "Troubleshoot electrical problems",
-      "Ensure code compliance"
-    ],
-    requirements: ["Licensed electrician", "Clean driving record", "Own tools"],
-    benefits: ["Company vehicle", "Health insurance"],
-    company_size: "Medium (11-50)"
-  },
-  "Retail Associate": {
-    industry: "Retail",
-    job_type: "Part-time",
-    description: "{location} store seeking friendly associate to assist customers and manage inventory.",
-    responsibilities: [
-      "Greet and assist customers",
-      "Process transactions at register",
-      "Maintain store appearance"
-    ],
-    requirements: ["Customer service skills", "Reliable schedule"],
-    benefits: ["Store discount", "Flexible hours"],
-    company_size: "Small (1-10)"
-  }
-};
 
 const INDUSTRIES = [
   "Food & Beverage", "Retail", "Tourism", "Hospitality", "Services", "Office", 
@@ -107,6 +49,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [postedJob, setPostedJob] = useState<any>(null);
   const [previewMode, setPreviewMode] = useState<'public' | 'private'>('public');
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [showLongWaitMessage, setShowLongWaitMessage] = useState(false);
 
   // --- Speech to Text (Web Speech API) ---
   // One recognizer instance; we switch which form field we append into.
@@ -139,6 +83,15 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
     image_url: "",
     application_questions: []
   });
+
+  const loadingMessages = [
+    "Analyzing your business info...",
+    "Writing job description...",
+    "Adding responsibilities and requirements...",
+    "Suggesting employee benefits...",
+    "Creating application questions...",
+    "Finalizing your job posting...",
+  ];
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -303,72 +256,87 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       console.log("⚠️ Skipping auto-populate - userProfile:", userProfile);
     }
   }, [userProfile, existingJob]);
-  const parsePrompt = (input: string) => {
-    const text = input.toLowerCase();
-    let selectedTemplate: any = null;
-    let title = "General Staff";
 
-    if (text.includes("cook") || text.includes("chef") || text.includes("kitchen")) {
-      selectedTemplate = TEMPLATES["Line Cook"];
-      title = "Line Cook";
-    } else if (text.includes("bartender") || text.includes("bar") || text.includes("mixologist")) {
-      selectedTemplate = TEMPLATES["Bartender"];
-      title = "Bartender";
-    } else if (text.includes("electrician") || text.includes("electrical")) {
-      selectedTemplate = TEMPLATES["Electrician"];
-      title = "Electrician";
-    } else if (text.includes("retail") || text.includes("sales") || text.includes("store")) {
-      selectedTemplate = TEMPLATES["Retail Associate"];
-      title = "Retail Associate";
-    } else {
-      selectedTemplate = TEMPLATES["Line Cook"];
+  useEffect(() => {
+    if (step !== 'loading') {
+      setLoadingMessageIndex(0);
+      setShowLongWaitMessage(false);
+      return;
     }
+    const intervalId = window.setInterval(() => {
+      setLoadingMessageIndex((prev) => {
+        if (prev < loadingMessages.length - 1) return prev + 1;
+        setShowLongWaitMessage(true);
+        return prev;
+      });
+    }, 2000);
+    return () => window.clearInterval(intervalId);
+  }, [step]);
 
-    const locations = ["Honolulu", "Kona", "Hilo", "Kihei", "Lahaina", "Waikiki", "Kapolei", "Kailua", "Kahului", "Lihue"];
-    let location = "Honolulu, HI";
-    for (const loc of locations) {
-      if (text.includes(loc.toLowerCase())) {
-        location = `${loc}, HI`;
-        break;
-      }
-    }
-
-    const payMatch = text.match(/\$(\d+)(-(\d+))?(\/hr|\/hour|k)/);
-    let payMin = selectedTemplate.pay_min || "20";
-    let payMax = selectedTemplate.pay_max || "25";
-    let payType = "Hourly";
-
-    if (payMatch) {
-      payMin = payMatch[1];
-      payMax = payMatch[3] || payMin;
-      if (payMatch[4] === "k") payType = "Yearly";
-    }
-
-    return {
-      ...formData,
-      title,
-      industry: selectedTemplate.industry,
-      location,
-      pay_min: payMin,
-      pay_max: payMax,
-      pay_type: payType,
-      description: selectedTemplate.description.replace("{location}", location.split(',')[0]),
-      responsibilities: selectedTemplate.responsibilities,
-      requirements: selectedTemplate.requirements,
-      benefits: selectedTemplate.benefits,
-      company_size: selectedTemplate.company_size
-    };
-  };
-
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     console.log("🔵 handleGenerate called, current formData:", formData);
     setStep('loading');
-    setTimeout(() => {
-      const generatedData = parsePrompt(prompt);
+    try {
+      const response = await fetch(`${API_BASE}/job-ai-generate`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          apikey: publicAnonKey,
+          authorization: `Bearer ${publicAnonKey}`,
+        },
+        body: JSON.stringify({
+          prompt,
+          businessContext: {
+            company_name: formData.company_name || userProfile?.businessName || "",
+            industry: formData.industry || userProfile?.industry || "",
+            location: formData.location || userProfile?.location || "",
+            company_size: formData.company_size || userProfile?.companySize || "",
+            company_description: formData.company_description || userProfile?.bio || "",
+            contact_email: formData.contact_email || userProfile?.email || "",
+            contact_phone: formData.contact_phone || userProfile?.phone || "",
+          },
+        }),
+      });
+
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const detailParts = [
+          json?.error,
+          typeof json?.details === 'string' ? json.details.slice(0, 280) : undefined,
+          json?.hint,
+          json?.model ? `model: ${json.model}` : undefined,
+        ].filter(Boolean);
+        const msg = detailParts.length
+          ? detailParts.join(' — ')
+          : `Request failed (${response.status})`;
+        throw new Error(msg);
+      }
+
+      // Support both the current shape ({ draft: {...} }) and older top-level payloads.
+      const draft = (json?.draft && typeof json.draft === "object") ? json.draft : json;
+      if (!draft || typeof draft !== "object") {
+        throw new Error("AI response did not include a usable draft.");
+      }
+      const generatedData = {
+        ...formData,
+        ...draft,
+        responsibilities: Array.isArray(draft.responsibilities) && draft.responsibilities.length ? draft.responsibilities : formData.responsibilities,
+        requirements: Array.isArray(draft.requirements) && draft.requirements.length ? draft.requirements : formData.requirements,
+        benefits: Array.isArray(draft.benefits) ? draft.benefits : formData.benefits,
+        application_questions: Array.isArray(draft.application_questions) ? draft.application_questions : formData.application_questions,
+      };
       console.log("🟢 Generated data from AI:", generatedData);
-      setFormData(generatedData);
       setStep('review');
-    }, 2000);
+      setFormData(generatedData);
+    } catch (error: any) {
+      console.error("❌ AI generation failed:", error);
+      const message =
+        typeof error?.message === "string" && error.message.trim()
+          ? error.message
+          : "AI generation failed. Check that the Edge Function is deployed and ANTHROPIC_API_KEY is set in Supabase.";
+      toast.error(message, { duration: 12_000 });
+      setStep("ai-input");
+    }
   };
 
   const handleManualEntry = () => {
@@ -1604,7 +1572,14 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       {step === 'loading' && (
         <div className="h-[70vh] flex flex-col items-center justify-center space-y-6 sm:space-y-8 px-4">
           <motion.div animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }} className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full border-3 sm:border-4 border-dashed border-[#148F8B]/20" />
-          <h3 className="text-lg sm:text-xl md:text-2xl font-black text-center">Building your listing...</h3>
+          <div className="space-y-2 text-center">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-black">Building your listing...</h3>
+            <p className="text-sm sm:text-base text-gray-500 font-medium">
+              {showLongWaitMessage
+                ? "Taking slightly longer to get this just right..."
+                : loadingMessages[loadingMessageIndex]}
+            </p>
+          </div>
         </div>
       )}
       {step === 'review' && renderReview()}

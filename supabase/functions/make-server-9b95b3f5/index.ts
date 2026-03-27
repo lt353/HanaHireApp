@@ -24,6 +24,34 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
+const JOB_POST_ALLOWED_INDUSTRIES = [
+  'Food & Beverage', 'Retail', 'Tourism', 'Hospitality', 'Services', 'Office',
+  'Healthcare', 'Marketing', 'Accounting', 'Real Estate', 'Insurance', 'Creative',
+  'Tech', 'Construction', 'Manufacturing', 'Automotive', 'HVAC', 'Electrical',
+  'Plumbing', 'Solar', 'Logistics', 'Agriculture', 'Ranching', 'Fishing', 'Marine', 'Other',
+];
+
+const JOB_POST_ALLOWED_JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Seasonal', 'Freelance', 'Commission'];
+
+const JOB_POST_ALLOWED_CATEGORIES = [
+  'Food Service',
+  'Retail & Sales',
+  'Customer Service',
+  'Hospitality Services',
+  'Tourism & Recreation',
+  'Trades & Construction',
+  'Office & Admin',
+  'Accounting & Finance',
+  'Healthcare & Wellness',
+  'Marketing & Creative',
+  'Tech & IT',
+  'Management & Leadership',
+  'Maintenance & Facilities',
+  'Transportation & Logistics',
+  'Education',
+  'Fitness & Recreation',
+];
+
 // GET /data - Fetch all jobs, candidates, and employers from real database tables
 base.get('/data', async (c) => {
   try {
@@ -598,6 +626,197 @@ base.post('/employer-ai-import', async (c) => {
     companyLogoUrl: logoUrlFinal,
     websiteUrl: url.toString(),
   });
+});
+
+// POST /job-ai-generate
+// Generates a full job draft from employer context + freeform prompt.
+base.post('/job-ai-generate', async (c) => {
+  c.header('x-hanahire-function-version', FUNCTION_VERSION);
+
+  const body = (await c.req.json().catch(() => ({}))) as any;
+  const prompt = typeof body?.prompt === 'string' ? body.prompt.trim() : '';
+  const business = body?.businessContext && typeof body.businessContext === 'object' ? body.businessContext : {};
+
+  if (!prompt) return c.json({ version: FUNCTION_VERSION, error: 'prompt is required' }, 400);
+
+  const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!ANTHROPIC_API_KEY) return c.json({ version: FUNCTION_VERSION, error: 'Missing ANTHROPIC_API_KEY' }, 500);
+
+  const system = [
+    'You are an expert hiring copywriter and recruiter assistant for Hawaii employers.',
+    'Transform the employer context and freeform request into a complete job listing draft.',
+    'Return ONLY valid JSON. No markdown. No prose outside JSON.',
+    'Use concise, clear, candidate-friendly language.',
+    'Do not invent legal guarantees, compensation promises, or requirements not implied by input.',
+    'Prefer concrete and realistic wording for local Hawaii hiring.',
+    'If unsure, leave optional fields blank instead of hallucinating.',
+    '',
+    'Output rules:',
+    `- industry must be one of: ${JOB_POST_ALLOWED_INDUSTRIES.join(', ')}`,
+    `- job_type must be one of: ${JOB_POST_ALLOWED_JOB_TYPES.join(', ')}`,
+    `- job_category must be one of: ${JOB_POST_ALLOWED_CATEGORIES.join(', ')}`,
+    '- pay_type must be either "Hourly" or "Yearly"',
+    '- pay_min and pay_max must be numeric strings without $ signs',
+    '- pay_max must be >= pay_min',
+    '- responsibilities: 4-8 short bullet strings',
+    '- requirements: 3-8 short bullet strings',
+    '- benefits: 0-8 short bullet strings',
+    '- application_questions: 0-5 short strings',
+    '- description: 2-4 sentences, no markdown bullets',
+    '- company_description: 2-4 recruiting-focused sentences about culture/mission',
+    '',
+    'Return JSON with EXACT keys:',
+    'title, industry, custom_industry, location, pay_min, pay_max, pay_type, job_type, job_category, description, responsibilities, requirements, benefits, start_date, company_size, company_name, contact_email, contact_phone, company_description, application_questions',
+  ].join('\n');
+
+  const user = JSON.stringify(
+    {
+      employer_context: {
+        company_name: business.company_name ?? '',
+        industry: business.industry ?? '',
+        location: business.location ?? '',
+        company_size: business.company_size ?? '',
+        company_description: business.company_description ?? '',
+        contact_email: business.contact_email ?? '',
+        contact_phone: business.contact_phone ?? '',
+      },
+      employer_prompt: prompt,
+      allowed: {
+        industries: JOB_POST_ALLOWED_INDUSTRIES,
+        job_types: JOB_POST_ALLOWED_JOB_TYPES,
+        job_categories: JOB_POST_ALLOWED_CATEGORIES,
+      },
+    },
+    null,
+    2
+  );
+
+  const candidateModels = [
+    Deno.env.get('ANTHROPIC_MODEL'),
+    'claude-sonnet-4-6',
+    'claude-sonnet-4-20250514',
+    'claude-haiku-4-5-20251001',
+    'claude-3-5-sonnet-20241022',
+  ].filter(Boolean) as string[];
+
+  let anthropicRes: Response | null = null;
+  let lastAnthropicDetails = '';
+  let lastAnthropicStatus = 0;
+  let lastTriedModel = '';
+
+  for (const model of candidateModels) {
+    lastTriedModel = model;
+    try {
+      anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 1400,
+          temperature: 0.2,
+          system,
+          messages: [{ role: 'user', content: user }],
+        }),
+      });
+    } catch (err: any) {
+      return c.json({ version: FUNCTION_VERSION, error: 'Claude request failed', details: err?.message }, 502);
+    }
+
+    if (anthropicRes.ok) break;
+    lastAnthropicStatus = anthropicRes.status;
+    lastAnthropicDetails = await anthropicRes.text().catch(() => '');
+    if (lastAnthropicStatus === 404) {
+      anthropicRes = null;
+      continue;
+    }
+    return c.json(
+      { version: FUNCTION_VERSION, error: 'Claude request failed', status: lastAnthropicStatus, model: lastTriedModel, details: lastAnthropicDetails },
+      502
+    );
+  }
+
+  if (!anthropicRes || !anthropicRes.ok) {
+    return c.json(
+      {
+        version: FUNCTION_VERSION,
+        error: 'Claude request failed',
+        status: lastAnthropicStatus || 404,
+        model: lastTriedModel,
+        details: lastAnthropicDetails || 'No supported model found',
+      },
+      502
+    );
+  }
+
+  const anthropicJson = (await anthropicRes.json().catch(() => ({}))) as any;
+  const text = Array.isArray(anthropicJson?.content)
+    ? anthropicJson.content.filter((x: any) => x?.type === 'text').map((x: any) => x.text).join('\n')
+    : '';
+
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/m);
+    if (match) {
+      try {
+        parsed = JSON.parse(match[0]);
+      } catch {
+        parsed = null;
+      }
+    }
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    return c.json({ version: FUNCTION_VERSION, error: 'Claude returned invalid JSON', raw: text }, 502);
+  }
+
+  const safeStr = (v: any) => (typeof v === 'string' ? v.trim() : '');
+  const safeNumStr = (v: any) => {
+    const n = Number(String(v ?? '').replace(/[^\d.]/g, ''));
+    if (!Number.isFinite(n) || n <= 0) return '';
+    return String(Math.round(n));
+  };
+  const safeList = (v: any, max = 8) =>
+    Array.isArray(v) ? v.map((x) => safeStr(x)).filter(Boolean).slice(0, max) : [];
+
+  const payMin = safeNumStr(parsed.pay_min) || '20';
+  const payMaxRaw = safeNumStr(parsed.pay_max) || payMin;
+  const payMax = Number(payMaxRaw) < Number(payMin) ? payMin : payMaxRaw;
+
+  const industry = safeStr(parsed.industry);
+  const jobType = safeStr(parsed.job_type);
+  const category = safeStr(parsed.job_category);
+  const payType = safeStr(parsed.pay_type) === 'Yearly' ? 'Yearly' : 'Hourly';
+
+  const normalized = {
+    title: safeStr(parsed.title) || safeStr(prompt).slice(0, 80) || 'General Staff',
+    industry: JOB_POST_ALLOWED_INDUSTRIES.includes(industry) ? industry : (safeStr(business.industry) || 'Other'),
+    custom_industry: safeStr(parsed.custom_industry),
+    location: safeStr(parsed.location) || safeStr(business.location) || 'Honolulu, HI',
+    pay_min: payMin,
+    pay_max: payMax,
+    pay_type: payType,
+    job_type: JOB_POST_ALLOWED_JOB_TYPES.includes(jobType) ? jobType : 'Full-time',
+    job_category: JOB_POST_ALLOWED_CATEGORIES.includes(category) ? category : '',
+    description: safeStr(parsed.description),
+    responsibilities: safeList(parsed.responsibilities, 8),
+    requirements: safeList(parsed.requirements, 8),
+    benefits: safeList(parsed.benefits, 8),
+    start_date: safeStr(parsed.start_date),
+    company_size: safeStr(parsed.company_size) || safeStr(business.company_size),
+    company_name: safeStr(parsed.company_name) || safeStr(business.company_name),
+    contact_email: safeStr(parsed.contact_email) || safeStr(business.contact_email),
+    contact_phone: safeStr(parsed.contact_phone) || safeStr(business.contact_phone),
+    company_description: safeStr(parsed.company_description) || safeStr(business.company_description),
+    application_questions: safeList(parsed.application_questions, 5),
+  };
+
+  return c.json({ version: FUNCTION_VERSION, draft: normalized });
 });
 
 Deno.serve(app.fetch);
