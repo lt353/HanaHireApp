@@ -161,13 +161,13 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
               : "Browse jobs and get started when ready."}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 w-full md:w-auto">
           <Button
-  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#780262]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#780262] hover:bg-[#780262]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
-  onClick={() => onNavigate("jobs")}
->
-  <Briefcase size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Jobs
-</Button>
+            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#780262]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#780262] hover:bg-[#780262]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+            onClick={() => onNavigate("jobs")}
+          >
+            <Briefcase size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Jobs
+          </Button>
           {isLoggedIn && (
             <Button
               variant="outline"
@@ -358,46 +358,24 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
               <h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
                 <BarChart3 size={24} className="text-[#148F8B]" /> Activity
               </h3>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "nowrap",
-                  width: "100%",
-                  gap: "12px",
-                }}
-              >
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
+              <div className="flex flex-col md:flex-row gap-3 w-full">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Profile Views</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{profileViewsCount}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Applied</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{applicationCount}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Unlocked</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">App Views</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{applicationViewsCount}</span>
                 </div>
-                <div
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-                  style={{ flex: "1 1 0", minWidth: 0 }}
-                >
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Shortlisted</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
                 </div>

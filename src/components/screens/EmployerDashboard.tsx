@@ -237,7 +237,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
               : "Browse candidates and get started when ready."}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 w-full md:w-auto">
           <Button
             className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#148F8B]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#148F8B] hover:bg-[#148F8B]/90 hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={onShowPostJob}
@@ -245,11 +245,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             <Plus size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Post a Job
           </Button>
           <Button
-  className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#A63F8E]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
-  onClick={() => onNavigate("candidates")}
->
-  <Users size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Candidates
-</Button>
+            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#A63F8E]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+            onClick={() => onNavigate("candidates")}
+          >
+            <Users size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Candidates
+          </Button>
           {isLoggedIn && (
             <Button
               variant="outline"
@@ -268,54 +268,31 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
           <h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
             <BarChart3 size={24} className="text-[#148F8B]" /> Activity
           </h3>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "nowrap",
-              width: "100%",
-              gap: "12px",
-            }}
-          >
-            <div
-              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-              style={{ flex: "1 1 0", minWidth: 0 }}
-            >
+          <div className="flex flex-col md:flex-row gap-3 w-full">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
               <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Open Jobs</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{openJobsCount}</span>
             </div>
-            <div
-              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-              style={{ flex: "1 1 0", minWidth: 0 }}
-            >
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
               <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Filled Jobs</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-emerald-400">{filledJobsCount}</span>
             </div>
             <button
               onClick={() => { setFilterByJobId(null); setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}
-              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200"
-              style={{ flex: "1 1 0", minWidth: 0 }}
+              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200 w-full md:flex-1"
             >
               <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Applicants</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{actualApplicants.length}</span>
             </button>
-            <div
-              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-              style={{ flex: "1 1 0", minWidth: 0 }}
-            >
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
               <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Reviewed</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{reviewedCount}</span>
             </div>
-            <div
-              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-              style={{ flex: "1 1 0", minWidth: 0 }}
-            >
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
               <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Shortlisted</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
             </div>
-            <div
-              className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-              style={{ flex: "1 1 0", minWidth: 0 }}
-            >
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
               <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Contacted</span>
               <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{contactedCount}</span>
             </div>
@@ -342,7 +319,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
               const jobApplicantCount = actualApplicants.filter(a => a.appliedToJob?.id === j.id).length;
               return (
               <div key={j.id} className="p-6 sm:p-8 md:p-10 bg-white border border-gray-100 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] shadow-sm space-y-6 sm:space-y-8">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-0">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0">
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-words">{j.title}</h4>
                     <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] pt-1">{j.location} • {j.status === 'filled' ? 'FILLED' : 'LIVE'} • {jobApplicantCount} applicant{jobApplicantCount !== 1 ? 's' : ''}</p>
@@ -357,14 +334,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                     Manage
                   </Button>
                 </div>
-                <div className="flex gap-3 sm:gap-4">
-                  <Button variant="outline" className="flex-1 h-12 sm:h-14 md:h-16 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
+                <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+                  <Button variant="outline" className="w-full md:flex-1 h-12 sm:h-14 md:h-16 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => {
                     setFilterByJobId(j.id);
                     setTimeout(() => applicantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                   }}>
                     View Candidates
                   </Button>
-                  <Button variant="outline" className="h-12 sm:h-14 md:h-16 px-5 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("candidates")}>
+                  <Button variant="outline" className="w-full md:w-auto h-12 sm:h-14 md:h-16 px-5 rounded-[1.2rem] border-gray-100 bg-white text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate("candidates")}>
                     Talent Pool
                   </Button>
                 </div>

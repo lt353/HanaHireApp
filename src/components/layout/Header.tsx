@@ -95,7 +95,7 @@ export const Header = ({
           </button>
 
           {isRoleSelected ? (
-            <div className="hidden md:flex items-center gap-2 lg:gap-3 xl:gap-6 flex-nowrap shrink min-w-0">
+            <div className="hidden md:flex items-center gap-6 lg:gap-8 xl:gap-12 flex-nowrap shrink min-w-0">
               {isLoggedIn && (
                 <>
                   <button
@@ -198,7 +198,7 @@ export const Header = ({
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-2 md:gap-3 lg:gap-4 shrink-0">
+        <div className="flex items-center gap-4 md:gap-5 lg:gap-6 shrink-0">
           {isRoleSelected && (
             <>
               {isDemoAccount ? (
@@ -230,7 +230,7 @@ export const Header = ({
               Sign Out
             </button>
           ) : (
-            <div className="flex gap-1 sm:gap-2">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => onShowAuth("login")}
                 className="h-9 sm:h-10 md:h-12 px-2 sm:px-3 md:px-4 text-sm sm:text-base md:text-lg hover:scale-105 active:scale-95 transition-all duration-200 rounded-2xl font-black text-white hover:opacity-90"
