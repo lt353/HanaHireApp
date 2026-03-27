@@ -152,7 +152,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 sm:gap-10">
+      <div className="flex flex-col justify-between items-start gap-3 sm:gap-4">
         <div className="space-y-3 sm:space-y-4">
           <h2 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none">Seeker Hub</h2>
           <p className="text-lg sm:text-xl md:text-2xl text-gray-500 font-medium">
@@ -161,20 +161,20 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
               : "Browse jobs and get started when ready."}
           </p>
         </div>
-        <div className="flex flex-col md:flex-row gap-3 md:gap-4 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row md:flex-wrap gap-3 md:gap-3 w-full">
           <Button
-            className="h-16 sm:h-20 md:h-24 px-8 sm:px-10 md:px-12 rounded-[2rem] shadow-xl shadow-[#780262]/20 text-base sm:text-lg md:text-xl whitespace-nowrap bg-[#780262] hover:bg-[#780262]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+            className="h-10 sm:h-12 md:h-11 px-4 sm:px-6 md:px-5 rounded-[1.25rem] sm:rounded-[1.5rem] shadow-xl shadow-[#780262]/20 text-sm sm:text-base md:text-sm whitespace-nowrap bg-[#780262] hover:bg-[#780262]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
             onClick={() => onNavigate("jobs")}
           >
-            <Briefcase size={24} className="sm:w-7 sm:h-7 md:w-8 md:h-8" /> Browse Jobs
+            <Briefcase size={18} className="sm:w-5 sm:h-5 md:w-4 md:h-4" /> Browse Jobs
           </Button>
           {isLoggedIn && (
             <Button
               variant="outline"
-              className="h-16 sm:h-20 md:h-24 px-6 sm:px-8 rounded-[2rem] border-gray-200 bg-white text-sm sm:text-base whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
+              className="h-10 sm:h-12 md:h-11 px-4 sm:px-5 md:px-4 rounded-[1.25rem] sm:rounded-[1.5rem] border-gray-200 bg-white text-xs sm:text-sm md:text-xs whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
               onClick={onLogout}
             >
-              <LogOut size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" /> Log Out
+              <LogOut size={16} className="sm:w-4 sm:h-4 md:w-3.5 md:h-3.5" /> Log Out
             </Button>
           )}
         </div>
@@ -354,28 +354,28 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 
           {/* Activity Row */}
           <aside className="space-y-6 sm:space-y-8">
-            <div className="p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden group">
+            <div className="-mt-6 sm:-mt-8 md:-mt-10 p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden group">
               <h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
                 <BarChart3 size={24} className="text-[#148F8B]" /> Activity
               </h3>
-              <div className="flex flex-col md:flex-row gap-3 w-full">
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
+              <div className="seeker-activity-stats-grid gap-3 w-full">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Profile Views</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">{profileViewsCount}</span>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Applied</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{applicationCount}</span>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Jobs Unlocked</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#780262]">{unlockedJobs?.length || 0}</span>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">App Views</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">{applicationViewsCount}</span>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full md:flex-1">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
                   <span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">Shortlisted</span>
                   <span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">{shortlistedCount}</span>
                 </div>

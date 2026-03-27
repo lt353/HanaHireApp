@@ -4195,3 +4195,25 @@ html, body {
 .animate-indeterminate {
   animation: indeterminate-slide 1.4s ease-in-out infinite;
 }
+
+.activity-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (width >= 64rem) {
+  .activity-stats-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.seeker-activity-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (width >= 64rem) {
+  .seeker-activity-stats-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
