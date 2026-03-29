@@ -62,7 +62,10 @@ export interface JobWithEmployer extends Job {
  * Merges a job with its employer data
  */
 export function mergeJobWithEmployer(job: Job, employers: Employer[]): JobWithEmployer {
-  const employer = employers.find(e => e.id === job.employer_id);
+  const jobEmpId = Number(job.employer_id);
+  const employer = employers.find(
+    (e) => Number(e.id) === jobEmpId && !Number.isNaN(jobEmpId),
+  );
 
   if (!employer) {
     console.warn(`No employer found for job ${job.id} (employer_id: ${job.employer_id})`);

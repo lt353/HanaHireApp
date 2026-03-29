@@ -379,18 +379,18 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
         : `$${formData.pay_min}-${formData.pay_max}/yr`;
 
       // Update employer information first (company info)
+      // Column names must match public.employers (business_name, email, phone, company_logo_url, …)
       if (userProfile?.employerId) {
         const employerData: any = {
-          company_name: formData.company_name,
-          contact_email: formData.contact_email,
-          contact_phone: formData.contact_phone,
+          business_name: formData.company_name,
+          email: formData.contact_email,
+          phone: formData.contact_phone,
           company_description: formData.company_description,
-          industry: formData.industry === "Other" ? formData.custom_industry : formData.industry
+          industry: formData.industry === "Other" ? formData.custom_industry : formData.industry,
         };
 
-        // Only add image_url if it's provided
         if (formData.image_url) {
-          employerData.image_url = formData.image_url;
+          employerData.company_logo_url = formData.image_url;
         }
 
         const { error: employerError } = await supabase

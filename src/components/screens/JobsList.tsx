@@ -61,6 +61,49 @@ function useIsMobile(breakpointPx = 768) {
   return isMobile;
 }
 
+function trimmedCompanyLogoUrl(job: any): string | null {
+  const u = job?.company_logo_url;
+  if (typeof u !== "string") return null;
+  const t = u.trim();
+  return t.length > 0 ? t : null;
+}
+
+function JobListingThumbnail({
+  job,
+  showEmployerLogo,
+  sizePx,
+}: {
+  job: any;
+  showEmployerLogo: boolean;
+  sizePx: number;
+}) {
+  const logo = showEmployerLogo ? trimmedCompanyLogoUrl(job) : null;
+  if (logo) {
+    return (
+      <div
+        className="rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white border border-gray-100 p-1"
+        style={{ width: sizePx, height: sizePx }}
+      >
+        <img src={logo} alt="" className="w-full h-full object-contain" />
+      </div>
+    );
+  }
+  const categoryStyle = getJobCategoryStyle(job.job_category);
+  if (!categoryStyle.svgPath) return null;
+  return (
+    <div
+      className="rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white/60 border border-white/80 p-1 opacity-90"
+      style={{ width: sizePx, height: sizePx }}
+    >
+      <img
+        src={`${import.meta.env.BASE_URL}${categoryStyle.svgPath}`}
+        alt=""
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+}
+
 export const JobsList: React.FC<JobsListProps> = ({
   searchQuery,
   setSearchQuery,
@@ -189,7 +232,8 @@ export const JobsList: React.FC<JobsListProps> = ({
   };
 
   const isInQueue = (id: any) => queue.some((q) => q?.id === id);
-  const isUnlocked = (id: any) => unlockedIds.includes(id);
+  const isUnlocked = (id: any) =>
+    unlockedIds.some((u) => Number(u) === Number(id));
   const isApplied = (id: any) => appliedIds.includes(id);
 
   // Toggle bookmark - add or remove from queue
@@ -416,11 +460,11 @@ export const JobsList: React.FC<JobsListProps> = ({
 
               {/* Top row: image + title + save button */}
               <div className="flex items-start gap-3">
-                {getJobCategoryStyle(currentJob.job_category).svgPath ? (
-                  <div className="rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-white/60 border border-white/80 p-1" style={{ width: 56, height: 56 }}>
-                    <img src={`${import.meta.env.BASE_URL}${getJobCategoryStyle(currentJob.job_category).svgPath}`} alt="" className="w-full h-full object-contain" />
-                  </div>
-                ) : null}
+                <JobListingThumbnail
+                  job={currentJob}
+                  showEmployerLogo={isUnlocked(currentJob.id)}
+                  sizePx={56}
+                />
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onSelectJob(currentJob)}>
                   <h3 className="text-lg font-black tracking-tight leading-snug break-words">{currentJob.title}</h3>
                   <div className="flex flex-wrap gap-2 mt-2">
@@ -523,11 +567,11 @@ export const JobsList: React.FC<JobsListProps> = ({
                 <div className="flex gap-4 items-stretch flex-1 min-w-0">
                   {/* Left: illustration + info centered under it, no outline */}
                   <div className="shrink-0 flex flex-col gap-2.5 items-center" style={{ width: 148 }}>
-                    {categoryStyle.svgPath ? (
-                      <div className="rounded-lg overflow-hidden opacity-90 flex items-center justify-center bg-white/60 border border-white/80 p-1" style={{ width: 132, height: 132 }}>
-                        <img src={`${import.meta.env.BASE_URL}${categoryStyle.svgPath}`} alt="" className="w-full h-full object-contain" />
-                      </div>
-                    ) : null}
+                    <JobListingThumbnail
+                      job={job}
+                      showEmployerLogo={isUnlocked(job.id)}
+                      sizePx={132}
+                    />
                     <div className="flex flex-wrap gap-2 justify-center">
                       {job.company_industry && <span className="inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded" style={{ backgroundColor: "rgba(20, 143, 139, 0.15)", color: "#0D7377" }}>{job.company_industry}</span>}
                       {job.job_category && <span className="inline-flex px-1.5 py-0.5 text-[9px] font-bold uppercase rounded w-fit" style={{ background: categoryStyle.badgeBackground ?? "rgba(249, 115, 22, 0.1)", color: categoryStyle.textColor ?? "#C05621" }}>{job.job_category}</span>}
@@ -634,15 +678,27 @@ export const JobsList: React.FC<JobsListProps> = ({
                   </p>
                 </div>
               ) : (
-                [...passedJobs].reverse().map((job) => (
+                [...passedJobs].reverse().map((job) => {
+                  const binLogo =
+                    isUnlocked(job.id) ? trimmedCompanyLogoUrl(job) : null;
+                  return (
                   <div
                     key={job.id}
                     className="flex items-center gap-3 p-3 bg-[#F3EAF5]/30 rounded-2xl"
                   >
-                    {/* Job icon placeholder */}
-                    <div className="w-12 h-12 rounded-xl bg-gray-200 shrink-0 flex items-center justify-center">
-                      <Briefcase size={20} className="text-gray-400" />
-                    </div>
+                    {binLogo ? (
+                      <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 shrink-0 flex items-center justify-center p-0.5 overflow-hidden">
+                        <img
+                          src={binLogo}
+                          alt=""
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-gray-200 shrink-0 flex items-center justify-center">
+                        <Briefcase size={20} className="text-gray-400" />
+                      </div>
+                    )}
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
@@ -665,7 +721,8 @@ export const JobsList: React.FC<JobsListProps> = ({
                       Recover
                     </button>
                   </div>
-                ))
+                );
+                })
               )}
             </div>
           </div>

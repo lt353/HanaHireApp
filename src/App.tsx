@@ -3761,16 +3761,48 @@ export default function App() {
       <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Job Details">
         {selectedJob && (
           <div className="space-y-8 pb-4">
-            {/* Title + core tags */}
-            <div className="space-y-3">
-              <h3 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none">{selectedJob.title}</h3>
-              <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-widest">
-                <span className="flex items-center gap-1.5 text-[#148F8B]"><MapPin size={13} />{selectedJob.location}</span>
-                <span className="flex items-center gap-1.5 text-[#A63F8E]"><DollarSign size={13} />{selectedJob.pay_range}</span>
-                <span className="px-3 py-1 bg-gray-100 rounded-lg text-gray-600">{selectedJob.job_type}</span>
-                {selectedJob.company_industry && <span className="px-3 py-1 bg-[#148F8B]/5 text-[#148F8B] rounded-lg">{selectedJob.company_industry}</span>}
-                {selectedJob.company_size && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">{selectedJob.company_size}</span>}
-                {selectedJob.start_date && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">Start: {selectedJob.start_date}</span>}
+            {/* Logo (above title) + title + core tags */}
+            <div className="space-y-5">
+              {(() => {
+                const logoRaw = selectedJob.company_logo_url;
+                const logoUrl =
+                  typeof logoRaw === "string" && logoRaw.trim()
+                    ? logoRaw.trim()
+                    : "";
+                if (!logoUrl) return null;
+                const seekerUnlocked =
+                  userRole === "seeker" &&
+                  unlockedJobIds.some(
+                    (id: any) => Number(id) === Number(selectedJob.id),
+                  );
+                const showLogo = userRole === "employer" || seekerUnlocked;
+                if (!showLogo) return null;
+                return (
+                  <div className="flex justify-center sm:justify-start">
+                    <div
+                      className="rounded-[2rem] border-2 border-gray-100 bg-white shadow-sm flex items-center justify-center p-4 sm:p-5 w-[11rem] h-[11rem] sm:w-[13.5rem] sm:h-[13.5rem] md:w-[15rem] md:h-[15rem]"
+                    >
+                      <img
+                        src={logoUrl}
+                        alt=""
+                        className="max-w-full max-h-full w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+              <div className="space-y-3">
+                <h3 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none">
+                  {selectedJob.title}
+                </h3>
+                <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-widest">
+                  <span className="flex items-center gap-1.5 text-[#148F8B]"><MapPin size={13} />{selectedJob.location}</span>
+                  <span className="flex items-center gap-1.5 text-[#A63F8E]"><DollarSign size={13} />{selectedJob.pay_range}</span>
+                  <span className="px-3 py-1 bg-gray-100 rounded-lg text-gray-600">{selectedJob.job_type}</span>
+                  {selectedJob.company_industry && <span className="px-3 py-1 bg-[#148F8B]/5 text-[#148F8B] rounded-lg">{selectedJob.company_industry}</span>}
+                  {selectedJob.company_size && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">{selectedJob.company_size}</span>}
+                  {selectedJob.start_date && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg">Start: {selectedJob.start_date}</span>}
+                </div>
               </div>
             </div>
 

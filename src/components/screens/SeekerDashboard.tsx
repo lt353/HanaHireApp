@@ -238,7 +238,20 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                       className={`p-5 sm:p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all ${borderClass}`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                        <div className="min-w-0 space-y-1.5 flex-1">
+                        <div className="min-w-0 space-y-1.5 flex-1 flex gap-3 sm:gap-4">
+                          {hasJobId &&
+                          (isUnlocked || hasApplied) &&
+                          typeof job.company_logo_url === "string" &&
+                          job.company_logo_url.trim() ? (
+                            <div className="w-12 h-12 rounded-xl border border-gray-100 bg-white shrink-0 flex items-center justify-center p-1 overflow-hidden">
+                              <img
+                                src={job.company_logo_url.trim()}
+                                alt=""
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            </div>
+                          ) : null}
+                          <div className="min-w-0 space-y-1.5 flex-1">
                           {/* Status badge row */}
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusBadge.bg} ${statusBadge.text}`}>
@@ -263,6 +276,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                               : `Direct outreach${job.location ? ` · ${job.location}` : ''}`}
                           </p>
                           {job.pay_range && <p className="text-xs text-[#148F8B] font-bold">{job.pay_range}</p>}
+                          </div>
                         </div>
                         {/* Actions */}
                         <div className="flex flex-wrap gap-2 shrink-0 sm:pt-0.5">
@@ -452,7 +466,18 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                 <div className="space-y-6">
                   {/* Header with company name - ONLY VISIBLE WHEN UNLOCKED */}
                   <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-3 flex-1">
+                    <div className="flex gap-4 flex-1 min-w-0">
+                    {typeof job.company_logo_url === "string" &&
+                    job.company_logo_url.trim() ? (
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border border-gray-100 bg-white shrink-0 flex items-center justify-center p-1.5 overflow-hidden">
+                        <img
+                          src={job.company_logo_url.trim()}
+                          alt=""
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="space-y-3 flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#780262]/10 rounded-full">
                           <div className="w-2 h-2 rounded-full bg-[#780262] animate-pulse" />
@@ -505,9 +530,10 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
                       </h4>
                       {/* Company Name - REVEALED ONLY WHEN UNLOCKED */}
                       <div className="flex items-center gap-2 text-lg sm:text-xl font-bold text-gray-900">
-                        <Building2 size={20} className="text-[#148F8B]" />
+                        <Building2 size={20} className="text-[#148F8B] shrink-0" />
                         <span>{job.company_name || 'Company Name Hidden'}</span>
                       </div>
+                    </div>
                     </div>
                     <ExternalLink size={24} className="text-gray-600 group-hover:text-[#148F8B] transition-colors shrink-0" />
                   </div>
