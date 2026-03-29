@@ -52,6 +52,8 @@ import { JobPostingFlow } from './components/screens/JobPostingFlow';
 import { ProfileTitleCustomization } from './components/screens/ProfileTitleCustomization';
 import { ProfileEditor } from './components/screens/ProfileEditor';
 import { VideoIntroModal } from "./components/screens/VideoIntroModal";
+import { VideoUploadProgressProvider } from "./contexts/VideoUploadProgressContext";
+import { VideoUploadTopBar } from "./components/layout/VideoUploadTopBar";
 import { ApplicationQuestionsModal } from "./components/screens/ApplicationQuestionsModal";
 import type { ApplicationSubmissionPayload } from "./components/screens/ApplicationQuestionsModal";
 import { Messages } from "./components/screens/Messages";
@@ -59,13 +61,17 @@ import type { ConversationRow, MessageRow } from "./components/screens/Messages"
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
-import { JOB_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES } from './data/mockData';
+import { JOB_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES, LOCATIONS_BY_ISLAND } from './data/mockData';
 import { createLocationMatcher } from "./utils/marketplaceLocationFilter";
 import {
   matchesEducation,
   matchesExperience,
 } from "./utils/candidateEducationExperience";
-
+import {
+  HAWAII_LOCATION_MANUAL_TOKEN,
+  isIncompleteManualHawaiiLocation,
+  parseHawaiiLocationString,
+} from "./utils/hawaiiLocation";
 
 export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding" | "employer-profile-edit" | "messages";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
@@ -451,8 +457,9 @@ export default function App() {
         ] = await Promise.all([
           supabase
             .from('candidates')
-            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views')
-            .eq('visibility_preference', 'broad'),
+            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views, is_profile_complete')
+            .eq('visibility_preference', 'broad')
+            .eq('is_profile_complete', true),
           supabase.from('employers').select('*'),
           supabase.from('jobs').select('*').eq('status', 'active'),
         ]);
@@ -461,9 +468,12 @@ export default function App() {
           console.error("Failed to fetch candidates from Supabase:", supabaseCandidatesError);
         }
 
+        const fallbackPool = (newData.candidates || []).filter(
+          (c: { is_profile_complete?: boolean }) => c.is_profile_complete === true,
+        );
         const candidatesSource = (supabaseCandidates && supabaseCandidates.length > 0)
           ? supabaseCandidates
-          : (newData.candidates || []);
+          : fallbackPool;
 
         setCandidates(candidatesSource);
 
@@ -483,8 +493,9 @@ export default function App() {
         ] = await Promise.all([
           supabase
             .from('candidates')
-            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views')
-            .eq('visibility_preference', 'broad'),
+            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views, is_profile_complete')
+            .eq('visibility_preference', 'broad')
+            .eq('is_profile_complete', true),
           supabase.from('employers').select('*'),
           supabase.from('jobs').select('*').eq('status', 'active'),
         ]);
@@ -493,9 +504,12 @@ export default function App() {
           console.error("Failed to fetch candidates from Supabase:", supabaseCandidatesError);
         }
 
+        const fallbackPool = (data.candidates || []).filter(
+          (c: { is_profile_complete?: boolean }) => c.is_profile_complete === true,
+        );
         const candidatesSource = (supabaseCandidates && supabaseCandidates.length > 0)
           ? supabaseCandidates
-          : (data.candidates || []);
+          : fallbackPool;
 
         setCandidates(candidatesSource);
 
@@ -1404,6 +1418,7 @@ export default function App() {
   );
 
   const filteredCandidates = candidates.filter(c =>
+    c.is_profile_complete === true &&
     locationMatchesFilters(c.location) &&
     (filters.payRanges.length === 0 || filters.payRanges.includes(c.preferred_pay_range) || filters.payRanges.includes(c.target_pay)) &&
     (filters.skills.length === 0 || filters.skills.some(s => c.skills?.includes(s))) &&
@@ -1918,6 +1933,7 @@ export default function App() {
                   const workStyleStr = Array.isArray(profileData.workStyles) ? profileData.workStyles?.join(', ') : (profileData.workStyles ?? null);
                   const payload: Record<string, unknown> = {
                     bio: truncStr(profileData.bio, 10000),
+                    location: truncStr(profileData.location, 255),
                     skills: Array.isArray(profileData.skills) ? profileData.skills : [],
                     years_experience: profileData.experience ? parseInt(profileData.experience, 10) : null,
                     education: truncStr(profileData.education, 500),
@@ -1931,7 +1947,7 @@ export default function App() {
                     video_url: truncStr(profileData.video_url, 500),
                     video_thumbnail_url: truncStr(profileData.video_thumbnail_url, 500),
                     visibility_preference: truncStr(profileData.visibility_preference ?? 'broad', 50),
-                    is_profile_complete: !!(profileData.video_url ?? profileData.videoUrl),
+                    is_profile_complete: true,
                     updated_at: new Date().toISOString(),
                   };
                   const { error: updateError } = await supabase
@@ -2170,8 +2186,11 @@ export default function App() {
   };
 
   return (
+    <VideoUploadProgressProvider>
     <div className="min-h-screen bg-[#FAF9F7] font-sans text-gray-900 selection:bg-[#148F8B]/10">
-      
+
+      <VideoUploadTopBar />
+
       <Header
         isRoleSelected={currentView !== "landing"}
         role={userRole}
@@ -2683,6 +2702,12 @@ export default function App() {
                         return;
                       }
 
+                      if (isIncompleteManualHawaiiLocation(signupFormData.location || "")) {
+                        toast.error("Please enter your town or city (manual entry).");
+                        setIsSignupLoading(false);
+                        return;
+                      }
+
                       const { data: candidateData, error: candidateError } = await supabase
                         .from('candidates')
                         .insert([{
@@ -2690,6 +2715,7 @@ export default function App() {
                           email: signupFormData.email,
                           phone: signupFormData.phone || null,
                           location: signupFormData.location || null,
+                          is_profile_complete: false,
                         }])
                         .select('id')
                         .single();
@@ -2737,19 +2763,101 @@ export default function App() {
                          <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Password</label>
                          <input required type="password" value={signupFormData.password || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, password: e.target.value }))} placeholder="Create a password" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-lg tracking-tighter" />
                        </div>
-                       <div className="grid grid-cols-2 gap-4">
-                         <div className="space-y-3">
-                           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
-                           <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: formatPhoneInput(e.target.value) }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base" />
-                         </div>
-                         <div className="space-y-3">
-                           <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Location</label>
-                           <select value={signupFormData.location || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, location: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base">
-                             <option value="">Select...</option>
-                             {JOB_CATEGORIES.locations.map(l => <option key={l} value={l}>{l}</option>)}
-                           </select>
-                         </div>
+                       <div className="space-y-3">
+                         <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Phone</label>
+                         <input type="tel" value={signupFormData.phone || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, phone: formatPhoneInput(e.target.value) }))} placeholder="(808) 555-1234" className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base" />
                        </div>
+                       {(() => {
+                         const { island: suIsland, area: suArea, otherTown: suOther } = parseHawaiiLocationString(
+                           signupFormData.location || "",
+                         );
+                         const suAreas = suIsland ? LOCATIONS_BY_ISLAND[suIsland] || [] : [];
+                         return (
+                           <div className="space-y-3">
+                             <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
+                               Location
+                             </label>
+                             <p className="text-xs text-gray-500 font-medium ml-2">
+                               Select your island, then your town or city — or use manual entry if needed.
+                             </p>
+                             <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <select
+                                 required
+                                 value={suIsland}
+                                 onChange={(e) => {
+                                   const nextIsland = e.target.value;
+                                   setSignupFormData((prev) => ({
+                                     ...prev,
+                                     location: nextIsland ? nextIsland : "",
+                                   }));
+                                 }}
+                                 className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
+                               >
+                                 <option value="">Island...</option>
+                                 {Object.keys(LOCATIONS_BY_ISLAND).map((isl) => (
+                                   <option key={isl} value={isl}>
+                                     {isl}
+                                   </option>
+                                 ))}
+                               </select>
+                               <select
+                                 value={suArea}
+                                 onChange={(e) => {
+                                   const nextArea = e.target.value;
+                                   setSignupFormData((prev) => {
+                                     const { island: isl, otherTown: ot } = parseHawaiiLocationString(
+                                       prev.location || "",
+                                     );
+                                     if (!isl) return prev;
+                                     let nextLoc: string;
+                                     if (nextArea === HAWAII_LOCATION_MANUAL_TOKEN) {
+                                       nextLoc = ot.trim()
+                                         ? `${ot.trim()}, ${isl}`
+                                         : `${HAWAII_LOCATION_MANUAL_TOKEN}, ${isl}`;
+                                     } else if (!nextArea) {
+                                       nextLoc = isl;
+                                     } else {
+                                       nextLoc = `${nextArea}, ${isl}`;
+                                     }
+                                     return { ...prev, location: nextLoc };
+                                   });
+                                 }}
+                                 disabled={!suIsland}
+                                 className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                               >
+                                 <option value="">Town or city...</option>
+                                 <option value={HAWAII_LOCATION_MANUAL_TOKEN}>Manual entry (type your town)</option>
+                                 {suAreas.map((a) => (
+                                   <option key={a} value={a}>
+                                     {a}
+                                   </option>
+                                 ))}
+                               </select>
+                             </div>
+                             {suArea === HAWAII_LOCATION_MANUAL_TOKEN ? (
+                               <input
+                                 type="text"
+                                 value={suOther}
+                                 onChange={(e) => {
+                                   const v = e.target.value;
+                                   setSignupFormData((prev) => {
+                                     const { island: isl } = parseHawaiiLocationString(prev.location || "");
+                                     if (!isl) return prev;
+                                     return {
+                                       ...prev,
+                                       location: v.trim()
+                                         ? `${v.trim()}, ${isl}`
+                                         : `${HAWAII_LOCATION_MANUAL_TOKEN}, ${isl}`,
+                                     };
+                                   });
+                                 }}
+                                 placeholder="Town or city"
+                                 className="w-full p-5 rounded-2xl bg-white border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base"
+                               />
+                             ) : null}
+                           </div>
+                         );
+                       })()}
                      </div>
                    ) : (
                      /* Employer Signup Form */
@@ -3918,11 +4026,12 @@ export default function App() {
         <p className="text-white/90 text-xs sm:text-sm font-black uppercase tracking-widest drop-shadow-md">Video Intro + Direct Contact</p>
       </div>
    </div>
-   {/* Demo tag - remove once real videos are uploaded */}
+   {!(typeof selectedCandidate.video_url === "string" && selectedCandidate.video_url.trim()) && (
    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
      <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Visual Demo Only</p>
      <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">No Real Video</p>
    </div>
+   )}
 </div>
 
                 {/* Candidate Header Info */}
@@ -4253,5 +4362,6 @@ export default function App() {
       )}
 
     </div>
+    </VideoUploadProgressProvider>
   );
 }

@@ -70,6 +70,11 @@ const ImageWithFallback: React.FC<{ src: string; className?: string }> = ({ src,
   return <img src={src} className={className} alt="" />;
 };
 
+function candidateHasVideoUrl(c: any): boolean {
+  const v = c?.video_url ?? c?.videoUrl;
+  return typeof v === "string" && v.trim().length > 0;
+}
+
 export const CandidatesList: React.FC<CandidatesListProps> = ({
   searchQuery,
   setSearchQuery,
@@ -482,13 +487,15 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   </div>
                 </div>
 
-                {/* Demo tag - mobile swipe card */}
+                {/* Locked footer — demo line only when profile has no real intro video */}
                 {!isUnlocked(currentCandidate.id) && (
                   <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
                     <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Pay to Reveal</p>
-                    <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">
-                      Visual Demo · No Real Video
-                    </p>
+                    {!candidateHasVideoUrl(currentCandidate) && (
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">
+                        Visual Demo · No Real Video
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -639,13 +646,15 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     </div>
                   </div>
 
-                  {/* Locked demo tag - desktop card */}
+                  {/* Locked footer — demo line only when profile has no real intro video */}
                   {!isUnlocked(c.id) && (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
                       <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Locked Preview</p>
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">
-                        Visual Demo · No Real Video
-                      </p>
+                      {!candidateHasVideoUrl(c) && (
+                        <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">
+                          Visual Demo · No Real Video
+                        </p>
+                      )}
                     </div>
                   )}
 

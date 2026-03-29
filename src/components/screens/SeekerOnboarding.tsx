@@ -1,10 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic, ChevronDown, Check, X, Play, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
-import { CANDIDATE_CATEGORIES, DEMO_PROFILES, JOB_CATEGORIES } from "../../data/mockData";
+import { CANDIDATE_CATEGORIES, DEMO_PROFILES, JOB_CATEGORIES, LOCATIONS_BY_ISLAND } from "../../data/mockData";
 import { ViewType } from '../../App';
 import { VideoIntroModal } from "./VideoIntroModal";
 import { removeStorageFilesFromUrls } from "../../utils/deleteCandidate";
+import {
+  HAWAII_LOCATION_MANUAL_TOKEN,
+  isIncompleteManualHawaiiLocation,
+  parseHawaiiLocationString,
+} from "../../utils/hawaiiLocation";
 
 /** Multi-select dropdown: trigger opens menu with checkboxes; selected items appear as removable pills outside; custom input below. */
 function MultiSelectDropdown({
@@ -139,6 +144,11 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [useCustomTitle, setUseCustomTitle] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
 
+  const [location, setLocation] = useState(userProfile?.location || "");
+  const [island, setIsland] = useState<string>("");
+  const [area, setArea] = useState<string>("");
+  const [otherLocation, setOtherLocation] = useState<string>("");
+
   // Custom text entry for multi-select sections
   const [customSkill, setCustomSkill] = useState("");
   const [customIndustry, setCustomIndustry] = useState("");
@@ -191,6 +201,31 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       setHasSpeechSupport(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!location.trim()) {
+      setIsland("");
+      setArea("");
+      setOtherLocation("");
+      return;
+    }
+    const p = parseHawaiiLocationString(location);
+    setIsland(p.island);
+    setArea(p.area);
+    setOtherLocation(p.otherTown);
+  }, [location]);
+
+  const islandOptions = Object.keys(LOCATIONS_BY_ISLAND);
+  const areasForSelectedIsland = island ? LOCATIONS_BY_ISLAND[island] || [] : [];
+
+  const setLocationFromPicker = (nextIsland: string, nextArea: string) => {
+    if (!nextIsland) return;
+    if (!nextArea) {
+      setLocation(nextIsland);
+      return;
+    }
+    setLocation(`${nextArea}, ${nextIsland}`);
+  };
 
   const toggleBioSpeechToText = () => {
     if (!bioRecognitionRef.current || !hasSpeechSupport) return;
@@ -278,6 +313,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       };
 
       setBio(userProfile.bio || "");
+      setLocation(userProfile.location || "");
       setSelectedSkills(userProfile.skills || []);
       setExperience(mapExperience(userProfile.experience));
       setAvailability(userProfile.availability || "");
@@ -297,6 +333,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
     // Fallback: local demo constants if we don't have a rich profile yet
     const d = DEMO_PROFILES.seeker;
     setBio(d.bio);
+    setLocation(d.location || "");
     setSelectedSkills(d.skills);
     setExperience(d.experience);
     setAvailability(d.availability);
@@ -313,7 +350,14 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const handleSubmit = () => {
     setValidationError(null);
 
+    if (location.trim() && isIncompleteManualHawaiiLocation(location)) {
+      setValidationError("Please enter your town or city (manual entry).");
+      sectionRefs.current["location"]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     const required = [
+      { key: "location", ok: location.trim().length > 0, ref: "location" },
       { key: "video", ok: !!videoUrl, ref: "video" },
       { key: "bio", ok: bio.length > 0, ref: "bio" },
       { key: "skills", ok: selectedSkills.length > 0, ref: "skills" },
@@ -327,6 +371,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
     const firstMissing = required.find((r) => !r.ok);
     if (firstMissing) {
       const labels: Record<string, string> = {
+        location: "Location",
         video: "Video Intro",
         bio: "About You",
         skills: "Skills",
@@ -344,6 +389,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
 
     const profileData = {
       ...userProfile,
+      location: location.trim(),
       bio,
       skills: selectedSkills,
       experience,
@@ -363,6 +409,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   };
 
   const filledSections = [
+    location.trim().length > 0 && !isIncompleteManualHawaiiLocation(location),
     !!videoUrl,
     bio.length > 0,
     selectedSkills.length > 0,
@@ -392,16 +439,16 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Profile Progress</span>
-            <span className="text-sm font-black text-[#148F8B]">{filledSections} of 9 sections complete</span>
+            <span className="text-sm font-black text-[#148F8B]">{filledSections} of 10 sections complete</span>
           </div>
           <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-[#148F8B] rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${(filledSections / 9) * 100}%` }}
+              style={{ width: `${(filledSections / 10) * 100}%` }}
               role="progressbar"
               aria-valuenow={filledSections}
               aria-valuemin={0}
-              aria-valuemax={9}
+              aria-valuemax={10}
               aria-label="Profile sections complete"
             />
           </div>
@@ -419,6 +466,95 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         </button>
 
         <div className="space-y-8">
+          {/* Location — island → town/city (same data model as employer onboarding) */}
+          <div
+            ref={(el) => {
+              sectionRefs.current["location"] = el;
+            }}
+            className={`bg-white rounded-[2rem] border-2 p-6 space-y-4 shadow-sm transition-colors ${validationError && !location.trim() ? "border-red-400" : "border-gray-100"}`}
+          >
+            <div className="flex items-center gap-3">
+              {location.trim().length > 0 && <CheckCircle size={18} className="text-[#148F8B]" />}
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">Location</h2>
+            </div>
+            <p className="text-sm text-gray-600 font-medium">
+              Choose your island and town or city. If yours isn&apos;t listed, use manual entry.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select
+                value={island}
+                onChange={(e) => {
+                  const nextIsland = e.target.value;
+                  setIsland(nextIsland);
+                  setArea("");
+                  if (!nextIsland) {
+                    setOtherLocation("");
+                    setLocation("");
+                    return;
+                  }
+                  if (otherLocation.trim()) {
+                    setLocation(`${otherLocation.trim()}, ${nextIsland}`);
+                  } else {
+                    setLocation(nextIsland);
+                  }
+                }}
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
+              >
+                <option value="">Island...</option>
+                {islandOptions.map((isl) => (
+                  <option key={isl} value={isl}>
+                    {isl}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={area}
+                onChange={(e) => {
+                  const nextArea = e.target.value;
+                  setArea(nextArea);
+                  if (nextArea !== HAWAII_LOCATION_MANUAL_TOKEN) setOtherLocation("");
+                  if (nextArea === HAWAII_LOCATION_MANUAL_TOKEN) {
+                    setLocation(
+                      otherLocation.trim()
+                        ? `${otherLocation.trim()}, ${island}`
+                        : `${HAWAII_LOCATION_MANUAL_TOKEN}, ${island}`,
+                    );
+                    return;
+                  }
+                  setLocationFromPicker(island, nextArea);
+                }}
+                disabled={!island}
+                className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <option value="">Town or city...</option>
+                <option value={HAWAII_LOCATION_MANUAL_TOKEN}>Manual entry (type your town)</option>
+                {areasForSelectedIsland.map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {area === HAWAII_LOCATION_MANUAL_TOKEN ? (
+              <input
+                value={otherLocation}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setOtherLocation(v);
+                  if (island) {
+                    setLocation(
+                      v.trim()
+                        ? `${v.trim()}, ${island}`
+                        : `${HAWAII_LOCATION_MANUAL_TOKEN}, ${island}`,
+                    );
+                  } else setLocation("");
+                }}
+                placeholder="Town or city"
+                className="w-full p-4 rounded-xl bg-white border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base"
+              />
+            ) : null}
+          </div>
+
           {/* Video Intro (Required) - one state at a time */}
           <div
             ref={(el) => { sectionRefs.current["video"] = el; }}

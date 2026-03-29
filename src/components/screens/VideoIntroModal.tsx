@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Camera, Upload, AlertCircle, Save } from "lucide-react";
 import { supabase } from "../../utils/supabase/client";
 import { projectId, publicAnonKey } from "../../utils/supabase/info";
 import { Check } from "lucide-react"; // Add this to your imports at the top
+import { useVideoUploadProgress } from "../../contexts/VideoUploadProgressContext";
 
 
 const MAX_DURATION = 60;
@@ -41,6 +42,11 @@ interface VideoIntroModalProps {
 	candidateId?: number;
 	/** Prefix for the storage file path, e.g. "intro" → "{id}_intro_{ts}.mp4". Defaults to "intro". */
 	uploadPrefix?: string;
+	/**
+	 * When true (default) and the app provides VideoUploadProgressProvider, the modal closes
+	 * after Save while upload continues; progress shows in the global top bar.
+	 */
+	backgroundUpload?: boolean;
 }
 
 export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
@@ -53,7 +59,9 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 	onUploadError,
 	candidateId,
 	uploadPrefix = "intro",
+	backgroundUpload = true,
 }) => {
+	const videoUploadBar = useVideoUploadProgress();
 	const [step, setStep] = useState<Step>("choose");
 	const [error, setError] = useState<string | null>(null);
 
@@ -81,23 +89,39 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 	const [uploadStatus, setUploadStatus] = useState<UploadStatus | null>(null);
 	const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
 
+	/** When true, closing the modal must not wipe state — upload async still needs it. */
+	const suppressResetOnCloseRef = useRef(false);
+	/** Incremented whenever the modal opens; stale uploads must not call onComplete. */
+	const modalEpochRef = useRef(0);
+
+	const resetModalFields = useCallback(() => {
+		setStep("choose");
+		setError(null);
+		setRecordedBlob(null);
+		setRecordedDuration(0);
+		setElapsed(0);
+		setUploadFile(null);
+		setUploadDuration(0);
+		setThumbnailTimeSeconds(2);
+		setThumbnailPreviewUrl(null);
+		setUploadProgress(0);
+		setUploadStatus(null);
+		setUploadErrorMessage(null);
+		stopStream();
+	}, []);
+
 	useEffect(() => {
-		if (!isOpen) {
-			setStep("choose");
-			setError(null);
-			setRecordedBlob(null);
-			setRecordedDuration(0);
-			setElapsed(0);
-			setUploadFile(null);
-			setUploadDuration(0);
-			setThumbnailTimeSeconds(2);
-			setThumbnailPreviewUrl(null);
-			setUploadProgress(0);
-			setUploadStatus(null);
-			setUploadErrorMessage(null);
-			stopStream();
+		if (isOpen) {
+			modalEpochRef.current += 1;
+			suppressResetOnCloseRef.current = false;
+			resetModalFields();
+			return;
 		}
-	}, [isOpen]);
+		if (suppressResetOnCloseRef.current) {
+			return;
+		}
+		resetModalFields();
+	}, [isOpen, resetModalFields]);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -303,16 +327,30 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 		const preview = getPreviewBlob();
 		if (!preview) return;
 
+		const bar = videoUploadBar;
+		const useBackground = Boolean(backgroundUpload && bar);
+		let barJobId = 0;
+
+		const uploadedEpoch = modalEpochRef.current;
+
 		onUploadStart?.({
 			estimatedSizeBytes: preview.blob.size ?? 0,
 			durationSeconds: preview.duration,
 		});
 
+		if (useBackground && bar) {
+			suppressResetOnCloseRef.current = true;
+			barJobId = bar.beginUpload("Uploading video…");
+			onClose();
+		}
+
 		setError(null);
 		setUploadProgress(0);
 		setUploadStatus("uploading");
 		setUploadErrorMessage(null);
-		setStep("upload");
+		if (!useBackground) {
+			setStep("upload");
+		}
 
 		(async () => {
 			try {
@@ -386,10 +424,17 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 					(percent) => {
 						setUploadProgress(percent);
 						onUploadProgress?.(percent);
+						if (useBackground) bar?.setProgress(percent, barJobId);
 					}
 				);
 
+				if (uploadedEpoch !== modalEpochRef.current) {
+					if (useBackground && bar) bar.dismissIfGeneration(barJobId);
+					return;
+				}
+
 				setUploadStatus("saving");
+				if (useBackground) bar?.setSaving("Saving thumbnail…", barJobId);
 				onComplete(videoUrl, videoUrl, preview.duration);
 
 				const thumbBlob = await generateThumbnail(
@@ -402,6 +447,11 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 						contentType: "image/jpeg",
 						upsert: true,
 					});
+				if (uploadedEpoch !== modalEpochRef.current) {
+					if (useBackground && bar) bar.dismissIfGeneration(barJobId);
+					return;
+				}
+
 				if (uploadThumbError) {
 					console.error("Thumbnail upload error:", uploadThumbError);
 				} else if (onThumbnailReady) {
@@ -412,15 +462,32 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 				}
 
 				setUploadStatus("done");
-				await new Promise((r) => setTimeout(r, 1500));
-				onClose();
+				suppressResetOnCloseRef.current = false;
+				resetModalFields();
+
+				if (useBackground && bar) {
+					bar.setDone("Video saved", barJobId);
+				} else {
+					await new Promise((r) => setTimeout(r, 1500));
+					onClose();
+				}
 			} catch (err: any) {
+				if (uploadedEpoch !== modalEpochRef.current) {
+					if (useBackground && bar) bar.dismissIfGeneration(barJobId);
+					return;
+				}
 				const message =
 					err?.message ||
 					(typeof err === "string" ? err : "Upload failed. Try again.");
 				console.error("Video save error:", err);
-				setUploadStatus("error");
-				setUploadErrorMessage(message);
+				suppressResetOnCloseRef.current = false;
+				resetModalFields();
+				if (useBackground && bar) {
+					bar.setError(message, barJobId);
+				} else {
+					setUploadStatus("error");
+					setUploadErrorMessage(message);
+				}
 				onUploadError?.(message);
 			}
 		})();

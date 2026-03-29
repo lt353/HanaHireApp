@@ -36,9 +36,12 @@ base.get('/data', async (c) => {
     if (candRes.error) console.error('Candidates fetch error:', candRes.error);
     if (empRes.error) console.error('Employers fetch error:', empRes.error);
 
+    const poolCandidates = (candRes.data || []).filter(
+      (row: { is_profile_complete?: boolean }) => row.is_profile_complete === true,
+    );
     return c.json({ 
       jobs: jobsRes.data || [], 
-      candidates: candRes.data || [],
+      candidates: poolCandidates,
       employers: empRes.data || []
     });
   } catch (error) {
