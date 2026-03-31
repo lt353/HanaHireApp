@@ -1,7 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { User, Zap, CheckCircle, Camera, ChevronRight, Sparkles, Edit3, Lock, Mic, ChevronDown, Check, X, Play, RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
-import { CANDIDATE_CATEGORIES, DEMO_PROFILES, JOB_CATEGORIES, LOCATIONS_BY_ISLAND } from "../../data/mockData";
+import {
+  CANDIDATE_CATEGORIES,
+  DEMO_PROFILES,
+  JOB_CATEGORIES,
+  LOCATIONS_BY_ISLAND,
+  INDUSTRIES_BY_GROUP,
+  SKILLS_BY_GROUP,
+  TARGET_PAY_RANGES_BY_GROUP,
+} from "../../data/mockData";
 import { ViewType } from '../../App';
 import { VideoIntroModal } from "./VideoIntroModal";
 import { removeStorageFilesFromUrls } from "../../utils/deleteCandidate";
@@ -11,11 +19,14 @@ import {
   parseHawaiiLocationString,
 } from "../../utils/hawaiiLocation";
 
+type OptionGroup = { label: string; items: readonly string[] };
+
 /** Multi-select dropdown: trigger opens menu with checkboxes; selected items appear as removable pills outside; custom input below. */
 function MultiSelectDropdown({
   label,
   selectedCount,
   options,
+  optionGroups,
   selected,
   onToggle,
   onRemove,
@@ -28,6 +39,8 @@ function MultiSelectDropdown({
   label: string;
   selectedCount: number;
   options: string[];
+  /** When set, options are shown under section headers (must match the same values as `options`). */
+  optionGroups?: readonly OptionGroup[];
   selected: string[];
   onToggle: (item: string) => void;
   onRemove: (item: string) => void;
@@ -86,26 +99,57 @@ function MultiSelectDropdown({
       </button>
       {/* Dropdown panel - multi-column grid */}
       {open && (
-        <div className="border border-[#148F8B]/20 rounded-xl bg-white shadow-xl shadow-[#148F8B]/5 max-h-64 overflow-y-auto p-2">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-            {options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => onToggle(opt)}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all ${
-                  selected.includes(opt)
-                    ? "bg-[#148F8B]/15 text-[#148F8B] font-semibold"
-                    : "hover:bg-[#148F8B]/5 text-gray-700 font-medium"
-                }`}
-              >
-                <span className="w-5 h-5 rounded-md border-2 border-current flex items-center justify-center shrink-0">
-                  {selected.includes(opt) ? <Check size={12} strokeWidth={3} /> : null}
-                </span>
-                <span className="text-xs truncate">{opt}</span>
-              </button>
-            ))}
-          </div>
+        <div className="border border-[#148F8B]/20 rounded-xl bg-white shadow-xl shadow-[#148F8B]/5 max-h-72 overflow-y-auto p-2">
+          {optionGroups && optionGroups.length > 0 ? (
+            <div className="space-y-3">
+              {optionGroups.map((group) => (
+                <div key={group.label}>
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1 py-1.5 border-b border-gray-100">
+                    {group.label}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 pt-1">
+                    {group.items.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => onToggle(opt)}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all ${
+                          selected.includes(opt)
+                            ? "bg-[#148F8B]/15 text-[#148F8B] font-semibold"
+                            : "hover:bg-[#148F8B]/5 text-gray-700 font-medium"
+                        }`}
+                      >
+                        <span className="w-5 h-5 rounded-md border-2 border-current flex items-center justify-center shrink-0">
+                          {selected.includes(opt) ? <Check size={12} strokeWidth={3} /> : null}
+                        </span>
+                        <span className="text-xs truncate">{opt}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => onToggle(opt)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-all ${
+                    selected.includes(opt)
+                      ? "bg-[#148F8B]/15 text-[#148F8B] font-semibold"
+                      : "hover:bg-[#148F8B]/5 text-gray-700 font-medium"
+                  }`}
+                >
+                  <span className="w-5 h-5 rounded-md border-2 border-current flex items-center justify-center shrink-0">
+                    {selected.includes(opt) ? <Check size={12} strokeWidth={3} /> : null}
+                  </span>
+                  <span className="text-xs truncate">{opt}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {/* Custom input below */}
@@ -306,8 +350,9 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
         if (raw === null || raw === undefined) return "";
         const n = typeof raw === "number" ? raw : parseInt(String(raw), 10);
         if (isNaN(n)) return String(raw);
-        if (n <= 2) return "0-2 years";
-        if (n <= 5) return "2-5 years";
+        if (n <= 1) return "0-1 year";
+        if (n <= 3) return "1-3 years";
+        if (n <= 5) return "3-5 years";
         if (n <= 10) return "5-10 years";
         return "10+ years";
       };
@@ -340,7 +385,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
     setSelectedTargetPays(d.targetPay ? [d.targetPay] : []);
     setSelectedEducation(d.education ? [d.education] : []);
     setSelectedIndustries(d.industries);
-    setSelectedWorkStyles(["Collaborative", "Outgoing", "Energetic"]);
+    setSelectedWorkStyles(["Team Player", "Outgoing", "Energetic"]);
     setJobTypesSeeking(["Full-time", "Part-time"]);
     setPreferredJobCategories(['Food Service', 'Hospitality Services']);
     setUseCustomTitle(true);
@@ -806,6 +851,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
               label="Select or add skills"
               selectedCount={selectedSkills.length}
               options={CANDIDATE_CATEGORIES.skills}
+              optionGroups={SKILLS_BY_GROUP}
               selected={selectedSkills}
               onToggle={(item) => toggleItem(selectedSkills, setSelectedSkills, item)}
               onRemove={(item) => setSelectedSkills(selectedSkills.filter((s) => s !== item))}
@@ -924,6 +970,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
               label="Select or add pay ranges"
               selectedCount={selectedTargetPays.length}
               options={CANDIDATE_CATEGORIES.targetPayRanges}
+              optionGroups={TARGET_PAY_RANGES_BY_GROUP}
               selected={selectedTargetPays}
               onToggle={(item) => toggleItem(selectedTargetPays, setSelectedTargetPays, item)}
               onRemove={(item) => setSelectedTargetPays(selectedTargetPays.filter((p) => p !== item))}
@@ -957,6 +1004,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
               label="Select or add industries"
               selectedCount={selectedIndustries.length}
               options={CANDIDATE_CATEGORIES.industries}
+              optionGroups={INDUSTRIES_BY_GROUP}
               selected={selectedIndustries}
               onToggle={(item) => toggleItem(selectedIndustries, setSelectedIndustries, item)}
               onRemove={(item) => setSelectedIndustries(selectedIndustries.filter((i) => i !== item))}

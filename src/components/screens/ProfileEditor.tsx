@@ -7,7 +7,12 @@ import {
   Target,
 } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
-import { JOB_CATEGORIES, CANDIDATE_CATEGORIES } from '../../data/mockData';
+import {
+  JOB_CATEGORIES,
+  CANDIDATE_CATEGORIES,
+  INDUSTRIES_BY_GROUP,
+  SKILLS_BY_GROUP,
+} from "../../data/mockData";
 import { formatPhoneInput } from '../../utils/formatters';
 
 interface ProfileEditorProps {
@@ -232,20 +237,29 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
                   Suggested Skills
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {CANDIDATE_CATEGORIES.skills.map((skill) => (
-                    <button
-                      key={skill}
-                      type="button"
-                      onClick={() => toggleArrayItem(selectedSkills, setSelectedSkills, skill)}
-                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
-                        selectedSkills.includes(skill)
-                          ? "bg-[#148F8B] text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {skill}
-                    </button>
+                <div className="space-y-4">
+                  {SKILLS_BY_GROUP.map((group) => (
+                    <div key={group.label}>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                        {group.label}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.items.map((skill) => (
+                          <button
+                            key={skill}
+                            type="button"
+                            onClick={() => toggleArrayItem(selectedSkills, setSelectedSkills, skill)}
+                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
+                              selectedSkills.includes(skill)
+                                ? "bg-[#148F8B] text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {skill}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
 
@@ -358,20 +372,29 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
                   Suggested Industries
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {JOB_CATEGORIES.industries.map((industry) => (
-                    <button
-                      key={industry}
-                      type="button"
-                      onClick={() => toggleArrayItem(selectedIndustries, setSelectedIndustries, industry)}
-                      className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
-                        selectedIndustries.includes(industry)
-                          ? "bg-[#148F8B] text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {industry}
-                    </button>
+                <div className="space-y-4">
+                  {INDUSTRIES_BY_GROUP.map((group) => (
+                    <div key={group.label}>
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                        {group.label}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.items.map((industry) => (
+                          <button
+                            key={industry}
+                            type="button"
+                            onClick={() => toggleArrayItem(selectedIndustries, setSelectedIndustries, industry)}
+                            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
+                              selectedIndustries.includes(industry)
+                                ? "bg-[#148F8B] text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {industry}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
 

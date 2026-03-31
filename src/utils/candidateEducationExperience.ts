@@ -36,10 +36,15 @@ export function matchesExperience(
   }
 
   return levels.some((level) => {
-    if (level === "0-2 years") return y <= 2;
-    if (level === "2-5 years") return y > 2 && y <= 5;
+    // Current CANDIDATE_CATEGORIES.experience buckets
+    if (level === "0-1 year") return y <= 1;
+    if (level === "1-3 years") return y > 1 && y <= 3;
+    if (level === "3-5 years") return y > 3 && y <= 5;
     if (level === "5-10 years") return y > 5 && y <= 10;
     if (level === "10+ years") return y > 10;
+    // Legacy labels (older saved filters / data)
+    if (level === "0-2 years") return y <= 2;
+    if (level === "2-5 years") return y > 2 && y <= 5;
     return false;
   });
 }

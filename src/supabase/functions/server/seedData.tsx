@@ -1,10 +1,7 @@
+import { INDUSTRIES } from '../../../data/industries';
+
 const JOB_CATEGORIES = {
-  industries: [
-    'Food & Beverage', 'Retail', 'Tourism', 'Hospitality', 'Services', 'Office', 
-    'Healthcare', 'Marketing', 'Accounting', 'Real Estate', 'Insurance', 'Creative', 
-    'Tech', 'Construction', 'Manufacturing', 'Automotive', 'HVAC', 'Electrical', 
-    'Plumbing', 'Solar', 'Logistics', 'Agriculture', 'Ranching', 'Fishing', 'Marine'
-  ],
+  industries: [...INDUSTRIES],
   jobTypes: [
     'Full-time', 'Part-time', 'Contract', 'Seasonal', 'Freelance', 'Commission'
   ],
@@ -54,11 +51,11 @@ const CANDIDATE_IMAGES = [
 // Generate mock employers (normalized schema)
 export const generateMockEmployers = () => {
   const companies = [
-    { name: "Island Tech", industry: "Tech", size: "Medium (26-100)" },
-    { name: "Mauka Logistics", industry: "Logistics", size: "Large (100+)" },
-    { name: "Hana Services", industry: "Services", size: "Small Business (10-25)" },
-    { name: "Aloha Retail", industry: "Retail", size: "Medium (26-100)" },
-    { name: "Pacific Hospitality", industry: "Hospitality", size: "Large (100+)" }
+    { name: "Island Tech", industry: "IT Services", size: "Medium (26-100)" },
+    { name: "Mauka Movers", industry: "Construction", size: "Large (100+)" },
+    { name: "Hana Cleaning Co", industry: "Cleaning Service", size: "Small Business (10-25)" },
+    { name: "Aloha Surf Shop", industry: "Surf Shop", size: "Medium (26-100)" },
+    { name: "Pacific Shores Hotel", industry: "Hotel/Resort", size: "Large (100+)" },
   ];
 
   return companies.map((company, idx) => ({

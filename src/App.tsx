@@ -61,7 +61,13 @@ import type { ConversationRow, MessageRow } from "./components/screens/Messages"
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 
 // Data
-import { JOB_CATEGORIES, INTERACTION_FEE, DEMO_PROFILES, LOCATIONS_BY_ISLAND } from './data/mockData';
+import {
+  JOB_CATEGORIES,
+  INTERACTION_FEE,
+  DEMO_PROFILES,
+  LOCATIONS_BY_ISLAND,
+  INDUSTRIES_BY_GROUP,
+} from "./data/mockData";
 import { createLocationMatcher } from "./utils/marketplaceLocationFilter";
 import {
   matchesEducation,
@@ -2956,7 +2962,15 @@ export default function App() {
                            <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">Industry</label>
                            <select value={signupFormData.industry || ''} onChange={(e) => setSignupFormData(prev => ({ ...prev, industry: e.target.value }))} className="w-full p-5 rounded-2xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base">
                              <option value="">Select...</option>
-                             {JOB_CATEGORIES.industries.map(i => <option key={i} value={i}>{i}</option>)}
+                             {INDUSTRIES_BY_GROUP.map((group) => (
+                               <optgroup key={group.label} label={group.label}>
+                                 {group.items.map((i) => (
+                                   <option key={i} value={i}>
+                                     {i}
+                                   </option>
+                                 ))}
+                               </optgroup>
+                             ))}
                            </select>
                          </div>
                        </div>
@@ -3268,7 +3282,13 @@ export default function App() {
             <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Job Title</label><input required name="title" type="text" placeholder="e.g. Server" className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 font-black text-xl" /></div>
             <div className="grid grid-cols-2 gap-8">
                <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Type</label><select name="type" className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 font-bold">
-                  {JOB_CATEGORIES.industries.map(ind => <option key={ind}>{ind}</option>)}
+                  {INDUSTRIES_BY_GROUP.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.items.map((ind) => (
+                        <option key={ind}>{ind}</option>
+                      ))}
+                    </optgroup>
+                  ))}
                </select></div>
                <div className="space-y-3"><label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-2">Pay Range</label><select name="pay" className="w-full p-6 rounded-3xl bg-[#F3EAF5]/30 border border-gray-100 font-bold">
                   {JOB_CATEGORIES.payRanges.map(pay => <option key={pay}>{pay}</option>)}

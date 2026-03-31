@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Building2, Zap, CheckCircle, Upload, ChevronRight, Shield, Sparkles, BadgeCheck, Mic } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
-import { JOB_CATEGORIES, DEMO_PROFILES, LOCATIONS_BY_ISLAND } from "../../data/mockData";
+import {
+  JOB_CATEGORIES,
+  DEMO_PROFILES,
+  LOCATIONS_BY_ISLAND,
+  INDUSTRIES_BY_GROUP,
+} from "../../data/mockData";
 import { ViewType } from '../../App';
 import { supabase } from "../../utils/supabase/client";
 import { formatPhoneInput } from "../../utils/formatters";
@@ -395,8 +400,14 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
                 className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 font-bold text-base"
               >
                 <option value="">Select...</option>
-                {JOB_CATEGORIES.industries.map(ind => (
-                  <option key={ind} value={ind}>{ind}</option>
+                {INDUSTRIES_BY_GROUP.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.items.map((ind) => (
+                      <option key={ind} value={ind}>
+                        {ind}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

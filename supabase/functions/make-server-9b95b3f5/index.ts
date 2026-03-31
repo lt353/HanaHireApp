@@ -24,12 +24,52 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-const JOB_POST_ALLOWED_INDUSTRIES = [
-  'Food & Beverage', 'Retail', 'Tourism', 'Hospitality', 'Services', 'Office',
-  'Healthcare', 'Marketing', 'Accounting', 'Real Estate', 'Insurance', 'Creative',
-  'Tech', 'Construction', 'Manufacturing', 'Automotive', 'HVAC', 'Electrical',
-  'Plumbing', 'Solar', 'Logistics', 'Agriculture', 'Ranching', 'Fishing', 'Marine', 'Other',
-];
+// Keep in sync with src/data/industries.ts (HAWAII_SMALL_BUSINESS_INDUSTRIES).
+const HAWAII_SMALL_BUSINESS_INDUSTRIES = [
+  'Restaurant',
+  'Cafe/Coffee Shop',
+  'Food Truck',
+  'Bakery',
+  'Bar/Brewery',
+  'Retail Store',
+  'Surf Shop',
+  'Boutique',
+  'Gift Shop',
+  'Farmers Market',
+  'Hotel/Resort',
+  'Vacation Rental',
+  'Bed & Breakfast',
+  'Spa/Wellness',
+  'Tour Company',
+  'Activity Desk',
+  'Rental Shop',
+  'Luau/Entertainment',
+  'Landscaping',
+  'Pool Service',
+  'Cleaning Service',
+  'Pest Control',
+  'Property Management',
+  'Farm/Agriculture',
+  'Construction',
+  'Home Repair',
+  'HVAC',
+  'Plumbing',
+  'Electrical',
+  'Auto Repair',
+  'Marine Services',
+  'Real Estate',
+  'Law Firm',
+  'Accounting Firm',
+  'Insurance Agency',
+  'Marketing Agency',
+  'IT Services',
+  'Dental/Medical Office',
+  'Childcare',
+  'Fitness Studio',
+  'Non-Profit',
+] as const;
+
+const JOB_POST_ALLOWED_INDUSTRIES = [...HAWAII_SMALL_BUSINESS_INDUSTRIES, 'Other'];
 
 const JOB_POST_ALLOWED_JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Seasonal', 'Freelance', 'Commission'];
 
@@ -341,34 +381,7 @@ base.post('/employer-ai-import', async (c) => {
     tavilyLogoImages = Array.isArray(logoJson?.images) ? logoJson.images : [];
   }
 
-  // Keep these aligned with the frontend dropdowns (JOB_CATEGORIES.industries).
-  const allowedIndustries = [
-    'Food & Beverage',
-    'Retail',
-    'Tourism',
-    'Hospitality',
-    'Services',
-    'Office',
-    'Healthcare',
-    'Marketing',
-    'Accounting',
-    'Real Estate',
-    'Insurance',
-    'Creative',
-    'Tech',
-    'Construction',
-    'Manufacturing',
-    'Automotive',
-    'HVAC',
-    'Electrical',
-    'Plumbing',
-    'Solar',
-    'Logistics',
-    'Agriculture',
-    'Ranching',
-    'Fishing',
-    'Marine',
-  ];
+  const allowedIndustries = [...HAWAII_SMALL_BUSINESS_INDUSTRIES];
 
   const faviconUrl = `${url.origin.replace(/\/$/, '')}/favicon.ico`;
   const tavilyImages: string[] = Array.isArray(tavilyJson?.images) ? tavilyJson.images : [];

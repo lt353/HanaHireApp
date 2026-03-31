@@ -6,6 +6,10 @@ import {
   JOB_CATEGORIES,
   CANDIDATE_CATEGORIES,
   LOCATIONS_BY_ISLAND,
+  INDUSTRIES_BY_GROUP,
+  SKILLS_BY_GROUP,
+  JOB_PAY_RANGES_BY_GROUP,
+  TARGET_PAY_RANGES_BY_GROUP,
 } from "../../data/mockData";
 
 export type MarketplaceFilterFields = {
@@ -188,13 +192,14 @@ export function MarketplaceFilterModal({
             }
             className="w-full h-44 p-3 rounded-2xl border-2 border-gray-200 bg-white text-xs font-bold"
           >
-            {(userRole === "seeker"
-              ? JOB_CATEGORIES.industries
-              : CANDIDATE_CATEGORIES.industries
-            ).map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
+            {INDUSTRIES_BY_GROUP.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.items.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </CollapsibleFilter>
@@ -233,10 +238,14 @@ export function MarketplaceFilterModal({
                 }
                 className="w-full h-40 p-3 rounded-2xl border-2 border-gray-200 bg-white text-xs font-bold"
               >
-                {JOB_CATEGORIES.payRanges.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
+                {JOB_PAY_RANGES_BY_GROUP.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.items.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </CollapsibleFilter>
@@ -275,10 +284,14 @@ export function MarketplaceFilterModal({
                 }
                 className="w-full h-56 p-3 rounded-2xl border-2 border-gray-200 bg-white text-xs font-bold"
               >
-                {CANDIDATE_CATEGORIES.skills.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                {SKILLS_BY_GROUP.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.items.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </CollapsibleFilter>
@@ -315,10 +328,14 @@ export function MarketplaceFilterModal({
                 }
                 className="w-full h-44 p-3 rounded-2xl border-2 border-gray-200 bg-white text-xs font-bold"
               >
-                {CANDIDATE_CATEGORIES.targetPayRanges.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
+                {TARGET_PAY_RANGES_BY_GROUP.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.items.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </CollapsibleFilter>

@@ -20,7 +20,7 @@ import { toast } from "sonner@2.0.3";
 import { supabase } from '../../utils/supabase/client';
 import { projectId, publicAnonKey } from "../../utils/supabase/info";
 import { ViewType } from '../../App';
-import { JOB_CATEGORIES } from "../../data/mockData";
+import { JOB_CATEGORIES, INDUSTRIES_BY_GROUP } from "../../data/mockData";
 import { formatPhoneInput } from "../../utils/formatters";
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
@@ -34,13 +34,6 @@ interface JobPostingFlowProps {
 }
 
 type FlowStep = 'selection' | 'ai-input' | 'loading' | 'review' | 'confirmation';
-
-const INDUSTRIES = [
-  "Food & Beverage", "Retail", "Tourism", "Hospitality", "Services", "Office", 
-  "Healthcare", "Marketing", "Accounting", "Real Estate", "Insurance", 
-  "Creative", "Tech", "Construction", "Manufacturing", "Automotive", 
-  "HVAC", "Electrical", "Plumbing", "Solar", "Logistics", "Agriculture", "Other"
-];
 
 export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }: JobPostingFlowProps) {
   console.log("🔷 JobPostingFlow MOUNTED/RENDERED with userProfile:", userProfile);
@@ -60,7 +53,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
 
   const [formData, setFormData] = useState<any>({
     title: "",
-    industry: "Food & Beverage",
+    industry: "Restaurant",
     custom_industry: "",
     location: "Honolulu, HI",
     pay_min: "20",
@@ -200,7 +193,7 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
       const payMatch = existingJob.pay_range?.match(/\$(\d+)-(\d+)\/(hr|yr)/);
       setFormData({
         title: existingJob.title || "",
-        industry: userProfile?.industry || "Food & Beverage",  // From employers table via userProfile
+        industry: userProfile?.industry || "Restaurant",
         custom_industry: "",
         location: existingJob.location || "Honolulu, HI",
         pay_min: payMatch ? payMatch[1] : "20",
@@ -709,7 +702,16 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
                           value={formData.industry}
                           onChange={(e) => setFormData((prev: any) => ({...prev, industry: e.target.value}))}
                         >
-                          {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                          {INDUSTRIES_BY_GROUP.map((group) => (
+                            <optgroup key={group.label} label={group.label}>
+                              {group.items.map((ind) => (
+                                <option key={ind} value={ind}>
+                                  {ind}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                          <option value="Other">Other (specify below)</option>
                         </select>
                         {formData.industry === "Other" && (
                           <input
