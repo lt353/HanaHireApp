@@ -71,6 +71,12 @@ export function createLocationMatcher(params: LocationFilterParams) {
   const { selectedLocations, islandFilters } = params;
 
   return function locationMatchesFilters(recordLocation?: string): boolean {
+    // With no location/island filters selected, show every row (including blank locations).
+    // Previously we required a non-empty location string, which hid most of the pool.
+    if (islandFilters.length === 0 && selectedLocations.length === 0) {
+      return true;
+    }
+
     const normalizedRecord = normalizeLocationText(recordLocation || "");
     if (!normalizedRecord) return false;
 
