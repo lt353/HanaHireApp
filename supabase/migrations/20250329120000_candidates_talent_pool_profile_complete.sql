@@ -1,17 +1,11 @@
--- Only candidates who finished seeker onboarding should appear in the employer talent pool.
--- Signups that stop after "Create account" stay is_profile_complete = false until they submit full onboarding.
+-- Default incomplete until the app sets is_profile_complete (see candidateTalentPool.ts):
+-- true only with a stored intro video plus the same required fields as seeker onboarding.
+-- Signups that stop after "Create account" stay false and can still log in to finish their profile.
 
 ALTER TABLE public.candidates
   ALTER COLUMN is_profile_complete SET DEFAULT false;
 
--- Legacy rows: treat video + bio as a completed profile if the flag was never set.
-UPDATE public.candidates
-SET is_profile_complete = true
-WHERE is_profile_complete IS NULL
-  AND NULLIF(TRIM(COALESCE(video_url, '')), '') IS NOT NULL
-  AND NULLIF(TRIM(COALESCE(bio, '')), '') IS NOT NULL;
-
--- Remaining NULL → explicitly incomplete (hidden from pool).
+-- Remaining NULL → incomplete until a later migration or the app sets true when pool-eligible.
 UPDATE public.candidates
 SET is_profile_complete = false
 WHERE is_profile_complete IS NULL;

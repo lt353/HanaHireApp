@@ -92,6 +92,10 @@ const JOB_POST_ALLOWED_CATEGORIES = [
   'Fitness & Recreation',
 ];
 
+function isTalentPoolCandidate(row: Record<string, unknown>): boolean {
+  return row.is_profile_complete === true;
+}
+
 // GET /data - Fetch all jobs, candidates, and employers from real database tables
 base.get('/data', async (c) => {
   try {
@@ -105,8 +109,8 @@ base.get('/data', async (c) => {
     if (candRes.error) console.error('Candidates fetch error:', candRes.error);
     if (empRes.error) console.error('Employers fetch error:', empRes.error);
 
-    const poolCandidates = (candRes.data || []).filter(
-      (row: { is_profile_complete?: boolean }) => row.is_profile_complete === true,
+    const poolCandidates = (candRes.data || []).filter((row: Record<string, unknown>) =>
+      isTalentPoolCandidate(row),
     );
     return c.json({
       jobs: jobsRes.data || [],

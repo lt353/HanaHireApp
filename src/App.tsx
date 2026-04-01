@@ -69,10 +69,7 @@ import {
   INDUSTRIES_BY_GROUP,
 } from "./data/mockData";
 import { createLocationMatcher } from "./utils/marketplaceLocationFilter";
-import {
-  matchesEducation,
-  matchesExperience,
-} from "./utils/candidateEducationExperience";
+import { candidateMeetsTalentPoolRequirements } from "./utils/candidateTalentPool";
 import {
   HAWAII_LOCATION_MANUAL_TOKEN,
   isIncompleteManualHawaiiLocation,
@@ -455,76 +452,40 @@ export default function App() {
         });
         
         const newData = await newResponse.json();
-        // Load candidates, employers, and jobs from Supabase (authoritative source)
         const [
-          { data: supabaseCandidates, error: supabaseCandidatesError },
           { data: supabaseEmployers },
           { data: supabaseJobs, error: supabaseJobsError },
         ] = await Promise.all([
-          supabase
-            .from('candidates')
-            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views, is_profile_complete')
-            .eq('visibility_preference', 'broad')
-            .eq('is_profile_complete', true),
           supabase.from('employers').select('*'),
           supabase.from('jobs').select('*').eq('status', 'active'),
         ]);
 
-        if (supabaseCandidatesError) {
-          console.error("Failed to fetch candidates from Supabase:", supabaseCandidatesError);
-        }
-
-        const fallbackPool = (newData.candidates || []).filter(
-          (c: { is_profile_complete?: boolean }) => c.is_profile_complete === true,
-        );
-        const candidatesSource = (supabaseCandidates && supabaseCandidates.length > 0)
-          ? supabaseCandidates
-          : fallbackPool;
-
-        setCandidates(candidatesSource);
+        setCandidates(newData.candidates || []);
 
         if (supabaseJobsError) console.error("Failed to fetch jobs from Supabase:", supabaseJobsError);
         const employers = supabaseEmployers && supabaseEmployers.length > 0 ? supabaseEmployers : (newData.employers || []);
         const allJobs = supabaseJobs && supabaseJobs.length > 0 ? supabaseJobs : (newData.jobs || []);
         setEmployers(employers);
         setJobs(mergeJobsWithEmployers(allJobs, employers));
-        console.log(`Successfully seeded and loaded ${allJobs.length} jobs and ${candidatesSource.length || 0} candidates`);
+        console.log(`Successfully seeded and loaded ${allJobs.length} jobs and ${(newData.candidates || []).length || 0} candidates`);
         toast.success('Marketplace initialized!');
       } else {
-        // Load candidates, employers, and jobs from Supabase (authoritative source)
         const [
-          { data: supabaseCandidates, error: supabaseCandidatesError },
           { data: supabaseEmployers },
           { data: supabaseJobs, error: supabaseJobsError },
         ] = await Promise.all([
-          supabase
-            .from('candidates')
-            .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_views, is_profile_complete')
-            .eq('visibility_preference', 'broad')
-            .eq('is_profile_complete', true),
           supabase.from('employers').select('*'),
           supabase.from('jobs').select('*').eq('status', 'active'),
         ]);
 
-        if (supabaseCandidatesError) {
-          console.error("Failed to fetch candidates from Supabase:", supabaseCandidatesError);
-        }
-
-        const fallbackPool = (data.candidates || []).filter(
-          (c: { is_profile_complete?: boolean }) => c.is_profile_complete === true,
-        );
-        const candidatesSource = (supabaseCandidates && supabaseCandidates.length > 0)
-          ? supabaseCandidates
-          : fallbackPool;
-
-        setCandidates(candidatesSource);
+        setCandidates(data.candidates || []);
 
         if (supabaseJobsError) console.error("Failed to fetch jobs from Supabase:", supabaseJobsError);
         const employers = supabaseEmployers && supabaseEmployers.length > 0 ? supabaseEmployers : (data.employers || []);
         const allJobs = supabaseJobs && supabaseJobs.length > 0 ? supabaseJobs : (data.jobs || []);
         setEmployers(employers);
         setJobs(mergeJobsWithEmployers(allJobs, employers));
-        console.log(`Loaded ${allJobs.length} jobs and ${candidatesSource.length || 0} candidates from Supabase`);
+        console.log(`Loaded ${allJobs.length} jobs and ${(data.candidates || []).length || 0} candidates (talent pool = is_profile_complete via /data)`);
       }
     } catch (err) {
       console.error("Error loading data:", err);
@@ -1423,18 +1384,9 @@ export default function App() {
     )
   );
 
-  const filteredCandidates = candidates.filter(c =>
-    c.is_profile_complete === true &&
-    locationMatchesFilters(c.location) &&
-    (filters.payRanges.length === 0 || filters.payRanges.includes(c.preferred_pay_range) || filters.payRanges.includes(c.target_pay)) &&
-    (filters.skills.length === 0 || filters.skills.some(s => c.skills?.includes(s))) &&
-    (filters.industries.length === 0 || (c.industries_interested && c.industries_interested.some((ind: string) => filters.industries.includes(ind)))) &&
-    matchesExperience(c.years_experience, filters.experience) &&
-    matchesEducation(c.education, filters.education) &&
-    (searchQuery === "" ||
-      (c.location?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-      (c.skills?.some((s: string) => s.toLowerCase().includes(searchQuery.toLowerCase())) ?? false)
-    )
+  const filteredCandidates = useMemo(
+    () => candidates.filter((c: any) => c.is_profile_complete === true),
+    [candidates],
   );
 
   const clearFilters = () => {
@@ -1937,6 +1889,18 @@ export default function App() {
               if (idToUpdate != null && !Number.isNaN(idToUpdate)) {
                 try {
                   const workStyleStr = Array.isArray(profileData.workStyles) ? profileData.workStyles?.join(', ') : (profileData.workStyles ?? null);
+                  const poolOk = candidateMeetsTalentPoolRequirements({
+                    video_url: profileData.video_url,
+                    bio: profileData.bio,
+                    skills: profileData.skills,
+                    location: profileData.location,
+                    industries: profileData.industries,
+                    availability: profileData.availability,
+                    targetPay: profileData.targetPay,
+                    preferredJobCategories: profileData.preferredJobCategories,
+                    jobTypesSeeking: profileData.jobTypesSeeking,
+                    experience: profileData.experience,
+                  });
                   const payload: Record<string, unknown> = {
                     bio: truncStr(profileData.bio, 10000),
                     location: truncStr(profileData.location, 255),
@@ -1953,7 +1917,7 @@ export default function App() {
                     video_url: truncStr(profileData.video_url, 500),
                     video_thumbnail_url: truncStr(profileData.video_thumbnail_url, 500),
                     visibility_preference: truncStr(profileData.visibility_preference ?? 'broad', 50),
-                    is_profile_complete: true,
+                    is_profile_complete: poolOk,
                     updated_at: new Date().toISOString(),
                   };
                   const { error: updateError } = await supabase
@@ -2119,6 +2083,19 @@ export default function App() {
               try {
                 const expNum = profileData.experience ? parseInt(profileData.experience, 10) : null;
                 const workStyleStr = Array.isArray(profileData.workStyles) ? profileData.workStyles.join(', ') : (profileData.workStyles ?? null);
+                const poolOk = candidateMeetsTalentPoolRequirements({
+                  video_url: profileData.videoUrl ?? profileData.video_url,
+                  bio: profileData.bio,
+                  skills: profileData.skills,
+                  location: profileData.location,
+                  industries: profileData.industries,
+                  availability: profileData.availability,
+                  targetPay: profileData.targetPay,
+                  preferredJobCategories: profileData.preferredJobCategories,
+                  jobTypesSeeking: profileData.jobTypesSeeking,
+                  experience: profileData.experience,
+                  years_experience: expNum != null && !Number.isNaN(expNum) ? expNum : null,
+                });
                 const payload: Record<string, unknown> = {
                   name: truncStr(profileData.name, 255),
                   email: truncStr(profileData.email, 255),
@@ -2136,7 +2113,7 @@ export default function App() {
                   job_types_seeking: Array.isArray(profileData.jobTypesSeeking) ? profileData.jobTypesSeeking : [],
                   preferred_job_categories: Array.isArray(profileData.preferredJobCategories) ? profileData.preferredJobCategories : [],
                   visibility_preference: truncStr(profileData.visibility_preference ?? 'broad', 50),
-                  is_profile_complete: true,
+                  is_profile_complete: poolOk,
                   updated_at: new Date().toISOString(),
                 };
                 const { data, error } = await supabase
@@ -2243,7 +2220,7 @@ export default function App() {
                   // First check candidates table (explicit select + maybeSingle avoids 406 when no row)
                   const { data: candidate } = await supabase
                     .from('candidates')
-                    .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
+                    .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference')
                     .eq('email', email)
                     .maybeSingle();
 
@@ -2280,6 +2257,9 @@ export default function App() {
                       targetPay: candidate.preferred_pay_range,
                       industries: candidate.industries_interested || [],
                       preferredJobCategories: candidate.preferred_job_categories || [],
+                      jobTypesSeeking: candidate.job_types_seeking || [],
+                      workStyles: candidate.work_style?.split(', ') || [],
+                      visibility_preference: candidate.visibility_preference,
                       videoThumbnailUrl: candidate.video_thumbnail_url,
                       videoUrl: candidate.video_url,
                       candidateId: candidate.id,
@@ -2674,7 +2654,7 @@ export default function App() {
                       // Check if email already exists — if so, just log them in (maybeSingle avoids 406 when no row)
                       const { data: existingCandidate } = await supabase
                         .from('candidates')
-                        .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title')
+                        .select('id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference')
                         .eq('email', signupFormData.email)
                         .maybeSingle();
 
@@ -2695,6 +2675,11 @@ export default function App() {
                           availability: existingCandidate.availability,
                           targetPay: existingCandidate.preferred_pay_range,
                           industries: existingCandidate.industries_interested || [],
+                          preferredJobCategories: existingCandidate.preferred_job_categories || [],
+                          jobTypesSeeking: existingCandidate.job_types_seeking || [],
+                          workStyles: existingCandidate.work_style?.split(', ') || [],
+                          visibility_preference: existingCandidate.visibility_preference,
+                          displayTitle: existingCandidate.display_title,
                           candidateId: existingCandidate.id,
                           id: existingCandidate.id
                         });
@@ -3685,11 +3670,24 @@ export default function App() {
           // Persist to Supabase candidates table
           const candidateId = userProfile?.candidateId ?? userProfile?.id;
           if (candidateId) {
+            const poolOk = candidateMeetsTalentPoolRequirements({
+              video_url: videoUrl,
+              bio: userProfile?.bio,
+              skills: userProfile?.skills,
+              location: userProfile?.location,
+              industries: userProfile?.industries,
+              availability: userProfile?.availability,
+              targetPay: userProfile?.targetPay,
+              preferredJobCategories: userProfile?.preferredJobCategories,
+              jobTypesSeeking: userProfile?.jobTypesSeeking,
+              experience: userProfile?.experience,
+            });
             const { error } = await supabase
               .from("candidates")
               .update({
                 video_url: videoUrl,
                 video_thumbnail_url: videoThumbnailUrl,
+                is_profile_complete: poolOk,
                 updated_at: new Date().toISOString(),
               })
               .eq("id", candidateId);
@@ -4049,9 +4047,10 @@ export default function App() {
                          <Play size={40} className="text-white fill-white ml-2" />
                       </div>
                    </div>
-                   {!selectedCandidate.video_url && (
-                     <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-3 py-2 text-center">
-                       <p className="text-[9px] font-black uppercase tracking-widest text-white/70">No video uploaded yet</p>
+                   {selectedCandidate.video_url == null && (
+                     <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Visual Demo Only</p>
+                       <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">No Real Video</p>
                      </div>
                    )}
                 </div>
@@ -4078,7 +4077,7 @@ export default function App() {
         <p className="text-white/90 text-xs sm:text-sm font-black uppercase tracking-widest drop-shadow-md">Video Intro + Direct Contact</p>
       </div>
    </div>
-   {!(typeof selectedCandidate.video_url === "string" && selectedCandidate.video_url.trim()) && (
+   {selectedCandidate.video_url == null && (
    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
      <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Visual Demo Only</p>
      <p className="text-[8px] font-black uppercase tracking-widest text-white/70 leading-tight mt-0.5">No Real Video</p>

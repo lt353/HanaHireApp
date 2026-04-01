@@ -66,13 +66,16 @@ function useIsMobile(breakpointPx = 768) {
   return isMobile;
 }
 
+/** Static image for cards with no thumbnail (GitHub Pages has no /api/placeholder route). */
+const CANDIDATE_THUMB_FALLBACK =
+  "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&q=60&w=800&h=450";
+
 const ImageWithFallback: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
   return <img src={src} className={className} alt="" />;
 };
 
 function candidateHasVideoUrl(c: any): boolean {
-  const v = c?.video_url ?? c?.videoUrl;
-  return typeof v === "string" && v.trim().length > 0;
+  return c?.video_url != null;
 }
 
 export const CandidatesList: React.FC<CandidatesListProps> = ({
@@ -133,6 +136,15 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
       if (!Number.isNaN(n)) return n;
       const match = String(id).match(/(\d+)$/);
       return match ? parseInt(match[1], 10) : 0;
+    };
+
+    /** Most recently created profile first (`created_at` from Supabase when present). */
+    const getProfileCreatedMs = (c: any): number => {
+      const raw = c?.created_at ?? c?.createdAt;
+      if (raw == null || raw === "") return 0;
+      if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+      const t = Date.parse(String(raw));
+      return Number.isNaN(t) ? 0 : t;
     };
 
     const getYears = (c: any) => {
@@ -200,8 +212,12 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
         case "closest":
           return getLocationScore(a.location) - getLocationScore(b.location);
         case "newest":
-        default:
+        default: {
+          const tb = getProfileCreatedMs(b);
+          const ta = getProfileCreatedMs(a);
+          if (tb !== ta) return tb - ta;
           return getIdNum(b) - getIdNum(a);
+        }
       }
     });
 
@@ -407,7 +423,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               aria-label="Sort candidates"
               className="h-full px-4 bg-white rounded-lg border border-gray-200 text-xs font-black uppercase tracking-widest text-gray-700 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
             >
-              <option value="newest">Newest profiles first</option>
+              <option value="newest">Newest profiles (by date created)</option>
               <option value="experience-high">Most experienced</option>
               <option value="experience-low">Least experienced</option>
               <option value="pay-low">Pay range: low to high</option>
@@ -474,7 +490,11 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               {/* Video preview - MOBILE */}
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-gray-100 mb-6">
                 <ImageWithFallback
-                  src={currentCandidate.thumbnail || currentCandidate.video_thumbnail_url}
+                  src={
+                    currentCandidate.thumbnail ||
+                    currentCandidate.video_thumbnail_url ||
+                    CANDIDATE_THUMB_FALLBACK
+                  }
                   className={`w-full h-full object-cover transition-all duration-700 ${isUnlocked(currentCandidate.id) ? 'blur-0' : 'blur-[7px] opacity-80'}`}
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/5">
@@ -487,7 +507,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   </div>
                 </div>
 
-                {/* Locked footer — demo line only when profile has no real intro video */}
                 {!isUnlocked(currentCandidate.id) && (
                   <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
                     <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Pay to Reveal</p>
@@ -496,6 +515,13 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                         Visual Demo · No Real Video
                       </p>
                     )}
+                  </div>
+                )}
+                {isUnlocked(currentCandidate.id) && !candidateHasVideoUrl(currentCandidate) && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none z-10">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-white/90 leading-tight">
+                      Visual Demo · No Real Video
+                    </p>
                   </div>
                 )}
               </div>
@@ -637,7 +663,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 {/* Blurred / unlocked video thumbnail - DESKTOP */}
                 <div className="w-full lg:w-56 xl:w-64 aspect-video shrink-0 rounded-2xl overflow-hidden relative bg-[#F3EAF5]/30 group-hover:scale-[1.02] transition-transform duration-500">
                   <ImageWithFallback
-                    src={c.thumbnail || c.video_thumbnail_url || "/api/placeholder/800/450"}
+                    src={c.thumbnail || c.video_thumbnail_url || CANDIDATE_THUMB_FALLBACK}
                     className={`w-full h-full object-cover transition-all duration-1000 ${isUnlocked(c.id) ? 'blur-0 scale-100' : 'blur-[7px] scale-105 opacity-85'}`}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -646,7 +672,6 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     </div>
                   </div>
 
-                  {/* Locked footer — demo line only when profile has no real intro video */}
                   {!isUnlocked(c.id) && (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none">
                       <p className="text-[9px] font-black uppercase tracking-widest text-white leading-tight">Locked Preview</p>
@@ -655,6 +680,13 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                           Visual Demo · No Real Video
                         </p>
                       )}
+                    </div>
+                  )}
+                  {isUnlocked(c.id) && !candidateHasVideoUrl(c) && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 text-center pointer-events-none z-10">
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/90 leading-tight">
+                        Visual Demo · No Real Video
+                      </p>
                     </div>
                   )}
 

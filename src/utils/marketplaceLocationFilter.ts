@@ -19,7 +19,7 @@ const normalizedIslandEntries = Object.entries(LOCATIONS_BY_ISLAND).map(
   })
 );
 
-function getIslandFromLocation(locationValue?: string): string {
+export function getIslandFromLocation(locationValue?: string): string {
   const normalized = normalizeLocationText(locationValue || "");
   if (!normalized) return "";
   for (const entry of normalizedIslandEntries) {
