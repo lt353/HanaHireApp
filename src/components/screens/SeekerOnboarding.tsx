@@ -18,6 +18,10 @@ import {
   isIncompleteManualHawaiiLocation,
   parseHawaiiLocationString,
 } from "../../utils/hawaiiLocation";
+import {
+  SeekerResumeImportCard,
+  type SeekerResumeDraft,
+} from "../seeker/SeekerResumeImportCard";
 
 type OptionGroup = { label: string; items: readonly string[] };
 
@@ -172,9 +176,15 @@ interface SeekerOnboardingProps {
   userProfile: any;
   onComplete: (profileData: any) => void;
   onNavigate?: (view: ViewType) => void;
+  /** Called after applying resume import draft from sign-up (App clears `pendingSeekerResumeDraft`). */
+  onPendingResumeDraftConsumed?: () => void;
 }
 
-export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile, onComplete }) => {
+export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
+  userProfile,
+  onComplete,
+  onPendingResumeDraftConsumed,
+}) => {
   const [bio, setBio] = useState("");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [experience, setExperience] = useState("");
@@ -212,6 +222,13 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
   const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [visibilityPreference, setVisibilityPreference] = useState<"broad" | "limited">("broad");
   const [showVideoModal, setShowVideoModal] = useState(false);
+
+  const [resumeAiSkippedPrimary, setResumeAiSkippedPrimary] = useState(false);
+  const [resumeAiSkippedSecondary, setResumeAiSkippedSecondary] = useState(false);
+  const [resumeAiApplied, setResumeAiApplied] = useState(false);
+  const [introVideoAiSuggestions, setIntroVideoAiSuggestions] = useState<string[]>([]);
+  const [resumeSuggestedJobTitles, setResumeSuggestedJobTitles] = useState<string[]>([]);
+  const [resumeIndustryHints, setResumeIndustryHints] = useState<string[]>([]);
 
   // Validation: highlight first missing required field
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -258,6 +275,13 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
     setArea(p.area);
     setOtherLocation(p.otherTown);
   }, [location]);
+
+  /** Sign-up / account location must win over resume draft; also fixes empty state if profile arrived after first paint. */
+  useEffect(() => {
+    const pl = (userProfile?.location || "").trim();
+    if (!pl) return;
+    setLocation((curr) => (curr.trim() ? curr : pl));
+  }, [userProfile?.candidateId, userProfile?.id, userProfile?.location]);
 
   const islandOptions = Object.keys(LOCATIONS_BY_ISLAND);
   const areasForSelectedIsland = island ? LOCATIONS_BY_ISLAND[island] || [] : [];
@@ -328,6 +352,203 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
       setList([...list, item]);
     }
   };
+
+  const normalizeExperienceFromDraft = (raw: string): string => {
+    const t = raw.trim();
+    if (CANDIDATE_CATEGORIES.experience.includes(t)) return t;
+    const n = parseInt(String(raw).replace(/[^\d]/g, ""), 10);
+    if (!isNaN(n)) {
+      if (n <= 1) return "0-1 year";
+      if (n <= 3) return "1-3 years";
+      if (n <= 5) return "3-5 years";
+      if (n <= 10) return "5-10 years";
+      return "10+ years";
+    }
+    return "";
+  };
+
+  /** Map resume strings onto picklist + optional custom entries (fuzzy match). */
+  const mergeResumePicklist = (
+    raw: string[],
+    allowed: readonly string[],
+    max: number,
+    allowCustom: boolean,
+  ): string[] => {
+    const allowSet = new Set(allowed);
+    const lowerCanon = new Map(allowed.map((a) => [a.toLowerCase(), a]));
+    const out: string[] = [];
+    const seen = new Set<string>();
+    const add = (s: string) => {
+      if (seen.has(s) || out.length >= max) return;
+      seen.add(s);
+      out.push(s);
+    };
+    for (const r of raw) {
+      const t = r.trim().slice(0, 120);
+      if (!t) continue;
+      if (allowSet.has(t)) {
+        add(t);
+        continue;
+      }
+      const c = lowerCanon.get(t.toLowerCase());
+      if (c) {
+        add(c);
+        continue;
+      }
+      const fuzzy = allowed.find(
+        (a) =>
+          a.toLowerCase().includes(t.toLowerCase()) ||
+          t.toLowerCase().includes(a.toLowerCase()),
+      );
+      if (fuzzy) {
+        add(fuzzy);
+        continue;
+      }
+      if (allowCustom) add(t);
+    }
+    return out;
+  };
+
+  const normalizeEducationFromDraft = (raw: string[]): string[] => {
+    const allowed = CANDIDATE_CATEGORIES.education;
+    const allowSet = new Set(allowed);
+    const lowerCanon = new Map(allowed.map((a) => [a.toLowerCase(), a]));
+    const out: string[] = [];
+    const seen = new Set<string>();
+    const add = (s: string) => {
+      if (seen.has(s)) return;
+      seen.add(s);
+      out.push(s);
+    };
+    const mapAlias = (t: string): string | null => {
+      const s = t.toLowerCase();
+      if (/some high school/.test(s)) return "Some High School";
+      if (/high school|ged|\bhs diploma\b/.test(s)) return "High School Diploma/GED";
+      if (/\bmba\b|master'?s(?!\s+high)|\bm\.s\.|\bm\.a\.|graduate degree/.test(s)) return "Master's Degree";
+      if (/\bassociate|\baa\b|\bas\b|\ba\.a\.|\ba\.s\./.test(s)) return "Associate Degree";
+      if (/bachelor|\bbs\b|\bba\b|\bb\.s\.|\bb\.a\.|undergraduate/.test(s)) return "Bachelor's Degree";
+      if (/some college/.test(s)) return "Some College";
+      if (/vocational|trade school/.test(s)) return "Vocational/Trade School";
+      if (/certification|professional certificate|\bcertificate\b/.test(s)) return "Certification/License";
+      return null;
+    };
+    for (const r of raw) {
+      const t = r.trim().slice(0, 160);
+      if (!t) continue;
+      if (allowSet.has(t)) {
+        add(t);
+        continue;
+      }
+      const canon = lowerCanon.get(t.toLowerCase());
+      if (canon) {
+        add(canon);
+        continue;
+      }
+      const alias = mapAlias(t);
+      if (alias) {
+        add(alias);
+        continue;
+      }
+      const fuzzy = allowed.find(
+        (a) =>
+          t.toLowerCase().includes(a.toLowerCase()) ||
+          a.toLowerCase().includes(t.toLowerCase()),
+      );
+      if (fuzzy) {
+        add(fuzzy);
+        continue;
+      }
+      add(t);
+    }
+    return out;
+  };
+
+  const applySeekerResumeDraft = (draft: SeekerResumeDraft) => {
+    if (draft.bio?.trim()) setBio(draft.bio.trim());
+    const skills = mergeResumePicklist(
+      draft.skills || [],
+      CANDIDATE_CATEGORIES.skills,
+      32,
+      true,
+    );
+    if (skills.length) setSelectedSkills(skills);
+    const exp = normalizeExperienceFromDraft(draft.experience || "");
+    if (exp) setExperience(exp);
+    const av = (draft.availability || "").trim();
+    if (av && CANDIDATE_CATEGORIES.availability.includes(av)) setAvailability(av);
+    else if (av) setAvailability(av);
+    const edu = normalizeEducationFromDraft(draft.education || []);
+    if (edu.length) setSelectedEducation(edu);
+    const ind = mergeResumePicklist(
+      draft.industries || [],
+      CANDIDATE_CATEGORIES.industries,
+      14,
+      true,
+    );
+    if (ind.length) setSelectedIndustries(ind);
+    const rawInd = (draft.industries || [])
+      .map((s) => (typeof s === "string" ? s.trim() : ""))
+      .filter(Boolean);
+    if (rawInd.length) setResumeIndustryHints(rawInd.slice(0, 14));
+    const ws = mergeResumePicklist(
+      draft.workStyles || [],
+      CANDIDATE_CATEGORIES.workStyles,
+      12,
+      true,
+    );
+    if (ws.length) setSelectedWorkStyles(ws);
+    const jt = mergeResumePicklist(
+      draft.jobTypesSeeking || [],
+      CANDIDATE_CATEGORIES.jobTypesSeeking,
+      6,
+      true,
+    );
+    if (jt.length) setJobTypesSeeking(jt);
+    const pjc = mergeResumePicklist(
+      draft.preferredJobCategories || [],
+      JOB_CATEGORIES.jobCategories,
+      14,
+      true,
+    );
+    if (pjc.length) setPreferredJobCategories(pjc);
+    const tp = mergeResumePicklist(
+      draft.targetPay || [],
+      CANDIDATE_CATEGORIES.targetPayRanges,
+      12,
+      true,
+    );
+    if (tp.length) setSelectedTargetPays(tp);
+    const profileLoc = (userProfile?.location || "").trim();
+    const draftLoc = (draft.location || "").trim();
+    if (profileLoc) {
+      setLocation(profileLoc);
+    } else if (draftLoc) {
+      setLocation(draftLoc);
+    }
+    const title = (draft.displayTitle || "").trim();
+    if (title) {
+      setUseCustomTitle(true);
+      setCustomTitle(title.slice(0, 50));
+    }
+    const suggestions = (draft.introVideoSuggestions || []).filter(
+      (s): s is string => typeof s === "string" && s.trim().length > 0,
+    );
+    if (suggestions.length) setIntroVideoAiSuggestions(suggestions);
+    const titles = (draft.suggestedJobTitles || []).filter(
+      (s): s is string => typeof s === "string" && s.trim().length > 0,
+    );
+    if (titles.length) setResumeSuggestedJobTitles(titles.slice(0, 12));
+    setResumeAiApplied(true);
+  };
+
+  const pendingResumeAppliedRef = useRef(false);
+  useEffect(() => {
+    const d = userProfile?.pendingSeekerResumeDraft as SeekerResumeDraft | undefined;
+    if (!d || pendingResumeAppliedRef.current) return;
+    pendingResumeAppliedRef.current = true;
+    applySeekerResumeDraft(d);
+    onPendingResumeDraftConsumed?.();
+  }, [userProfile, onPendingResumeDraftConsumed]);
 
   const handleDemoFill = () => {
     // Prefer a rich profile (demo candidate loaded from Supabase) when available
@@ -480,6 +701,16 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
           </p>
         </div>
 
+        {!resumeAiApplied && !resumeAiSkippedPrimary && (
+          <div className="mb-8">
+            <SeekerResumeImportCard
+              variant="primary"
+              onApplied={(draft) => applySeekerResumeDraft(draft)}
+              onSkip={() => setResumeAiSkippedPrimary(true)}
+            />
+          </div>
+        )}
+
         {/* Progress */}
         <div className="mb-8 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-2">
@@ -612,6 +843,27 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
             <p className="text-sm text-gray-600 font-medium">
               Here is where you sell yourself as an applicant—make it count!
             </p>
+
+            {introVideoAiSuggestions.length > 0 && (
+              <div className="rounded-xl border border-[#A63F8E]/25 bg-[#F3EAF5]/40 p-4 space-y-3">
+                <p className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest">
+                  Ideas for your intro (from your resume)
+                </p>
+                <ul className="list-none space-y-2.5">
+                  {introVideoAiSuggestions.map((s, i) => (
+                    <li
+                      key={`${i}-${s.slice(0, 24)}`}
+                      className="flex gap-3 text-sm text-gray-800 font-medium leading-snug"
+                    >
+                      <span className="text-[#A63F8E] font-black shrink-0 select-none" aria-hidden>
+                        •
+                      </span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* IDLE: no video yet */}
             {videoUploadStatus === "idle" && !videoUrl && (
@@ -748,6 +1000,14 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
               </div>
             )}
           </div>
+
+          {resumeAiSkippedPrimary && !resumeAiApplied && !resumeAiSkippedSecondary && (
+            <SeekerResumeImportCard
+              variant="secondary"
+              onApplied={(draft) => applySeekerResumeDraft(draft)}
+              onSkip={() => setResumeAiSkippedSecondary(true)}
+            />
+          )}
 
           {/* About You (Bio) */}
           <div
@@ -999,6 +1259,26 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
                 Industries of Interest
               </h2>
             </div>
+            {resumeIndustryHints.length > 0 && (
+              <div className="rounded-xl border border-[#A63F8E]/20 bg-[#F3EAF5]/35 p-4 space-y-2">
+                <p className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest">
+                  Industries inferred from your resume — we pre-selected matches; edit as you like
+                </p>
+                <ul className="list-none space-y-1.5">
+                  {resumeIndustryHints.map((t, i) => (
+                    <li
+                      key={`${i}-${t.slice(0, 20)}`}
+                      className="flex gap-2.5 text-xs text-gray-700 font-semibold leading-snug"
+                    >
+                      <span className="text-[#A63F8E] shrink-0 select-none" aria-hidden>
+                        •
+                      </span>
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <MultiSelectDropdown
               id="industries"
               label="Select or add industries"
@@ -1036,6 +1316,26 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({ userProfile,
             <p className="text-xs text-gray-500 font-medium">
               What type of work are you looking for?
             </p>
+            {resumeSuggestedJobTitles.length > 0 && (
+              <div className="rounded-xl border border-[#148F8B]/25 bg-[#148F8B]/6 p-4 space-y-2">
+                <p className="text-[10px] font-black text-[#148F8B] uppercase tracking-widest">
+                  Job titles from your resume — map to categories below or use for your display title
+                </p>
+                <ul className="list-none space-y-1.5">
+                  {resumeSuggestedJobTitles.map((t, i) => (
+                    <li
+                      key={`${i}-${t.slice(0, 20)}`}
+                      className="flex gap-2.5 text-xs text-gray-700 font-semibold leading-snug"
+                    >
+                      <span className="text-[#148F8B] shrink-0 select-none" aria-hidden>
+                        •
+                      </span>
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <MultiSelectDropdown
               id="job-categories"
               label="Select job categories"

@@ -2,9 +2,10 @@ import { Hono } from 'npm:hono@4.6.15';
 import { cors } from 'npm:hono/cors';
 import { logger } from 'npm:hono/logger';
 import { createClient } from 'npm:@supabase/supabase-js@2.39.7';
+import { Buffer } from 'node:buffer';
 
 const app = new Hono();
-const FUNCTION_VERSION = '2026-03-26f';
+const FUNCTION_VERSION = '2026-04-02c';
 
 // IMPORTANT: Each route must be prefixed with /make-server-9b95b3f5
 const base = app.basePath('/make-server-9b95b3f5');
@@ -91,6 +92,64 @@ const JOB_POST_ALLOWED_CATEGORIES = [
   'Education',
   'Fitness & Recreation',
 ];
+
+// Keep in sync with src/data/mockData.ts CANDIDATE_CATEGORIES.education
+const SEEKER_PROFILE_EDUCATION = [
+  'Some High School',
+  'High School Diploma/GED',
+  'Some College',
+  'Associate Degree',
+  'Vocational/Trade School',
+  "Bachelor's Degree",
+  "Master's Degree",
+  'Certification/License',
+] as const;
+
+// Keep in sync with src/data/mockData.ts CANDIDATE_CATEGORIES.workStyles
+const SEEKER_ALLOWED_WORK_STYLES = [
+  'Team Player',
+  'Self-Starter',
+  'Fast Learner',
+  'Reliable',
+  'Detail-Oriented',
+  'Fast-Paced',
+  'Calm Under Pressure',
+  'Outgoing',
+  'Friendly',
+  'Professional',
+  'Creative',
+  'Hands-On',
+  'Problem-Solver',
+  'Multi-Tasker',
+  'Organized',
+  'Energetic',
+  'Aloha Spirit',
+  'Cultural Ambassador',
+  'Flexible',
+  'Hardworking',
+] as const;
+
+function seekerResumeExtractionAppendix(): string {
+  return [
+    'Be thorough. Pull every useful signal from the document.',
+    '',
+    'fullName: Copy the candidate name EXACTLY as printed in the document header (largest name line). Character-for-character — do not drop letters, do not autocorrect, do not shorten (e.g. never change "Tea" to "Te"). If unsure between similar spellings, prefer the spelling that appears next to the email line, signature, or repeated headers. Pacific / Māori names: preserve every vowel shown in the PDF.',
+    '',
+    '- skills: ALL distinct skills, tools, software, equipment, languages, and competencies (max 28). Short noun phrases.',
+    '- industries: 2-10 industries they worked in or fit — each value MUST be an EXACT string from allowedIndustries.',
+    '- preferredJobCategories: 2-10 job categories they fit — each MUST be an EXACT string from allowedJobCategories.',
+    '- education: every degree, diploma, certification, or program mentioned — map to allowedEducation when possible (e.g. BS/BA → Bachelor\'s Degree).',
+    '- suggestedJobTitles: 4-12 concrete titles from their jobs (e.g. "Shift Supervisor", "Line Cook") — freeform.',
+    '- introVideoSuggestions: 6-8 strings; each is ONE bullet idea (5-15 words), actionable for a 30-60s video.',
+    '- workStyles: up to 10 traits that fit — each MUST be an EXACT string from allowedWorkStyles when applicable.',
+    '- targetPay: if pay expectations appear, map to closest allowed pay range strings when possible.',
+    '',
+    `allowedIndustries: ${JSON.stringify([...HAWAII_SMALL_BUSINESS_INDUSTRIES])}`,
+    `allowedJobCategories: ${JSON.stringify(JOB_POST_ALLOWED_CATEGORIES)}`,
+    `allowedEducation: ${JSON.stringify([...SEEKER_PROFILE_EDUCATION])}`,
+    `allowedWorkStyles: ${JSON.stringify([...SEEKER_ALLOWED_WORK_STYLES])}`,
+  ].join('\n');
+}
 
 function isTalentPoolCandidate(row: Record<string, unknown>): boolean {
   return row.is_profile_complete === true;
@@ -837,6 +896,335 @@ base.post('/job-ai-generate', async (c) => {
   };
 
   return c.json({ version: FUNCTION_VERSION, draft: normalized });
+});
+
+/** Copy a Uint8Array slice into a standalone ArrayBuffer (avoids view/offset bugs with mammoth/jszip in Deno). */
+function copyToArrayBuffer(u8: Uint8Array): ArrayBuffer {
+  const out = new ArrayBuffer(u8.byteLength);
+  new Uint8Array(out).set(u8);
+  return out;
+}
+
+/** DOC (pre-2007) OLE compound file magic — mammoth only supports DOCX (OOXML / ZIP). */
+function isLegacyWordDoc(u8: Uint8Array): boolean {
+  return u8.length >= 4 && u8[0] === 0xd0 && u8[1] === 0xcf && u8[2] === 0x11 && u8[3] === 0xe0;
+}
+
+/** DOCX is a ZIP container; should start with PK. */
+function looksLikeZip(u8: Uint8Array): boolean {
+  return u8.length >= 4 && u8[0] === 0x50 && u8[1] === 0x4b;
+}
+
+/** Encode large binary to base64 without call stack limits. */
+function uint8ToBase64(bytes: Uint8Array): string {
+  const chunks: string[] = [];
+  const chunkSize = 32768;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const sub = bytes.subarray(i, i + chunkSize);
+    chunks.push(String.fromCharCode(...sub));
+  }
+  return btoa(chunks.join(''));
+}
+
+// POST /seeker-resume-import — PDF or DOCX in memory → Claude → structured profile JSON (no Storage).
+base.post('/seeker-resume-import', async (c) => {
+  c.header('x-hanahire-function-version', FUNCTION_VERSION);
+  const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!ANTHROPIC_API_KEY) {
+    return c.json({ version: FUNCTION_VERSION, error: 'Missing ANTHROPIC_API_KEY' }, 500);
+  }
+
+  const MAX_BYTES = 10 * 1024 * 1024;
+
+  let file: File | null = null;
+  try {
+    const form = await c.req.formData();
+    const f = form.get('file');
+    if (f instanceof File) file = f;
+  } catch {
+    return c.json({ version: FUNCTION_VERSION, error: 'Invalid multipart form' }, 400);
+  }
+
+  if (!file || file.size === 0) {
+    return c.json({ version: FUNCTION_VERSION, error: 'file is required' }, 400);
+  }
+  if (file.size > MAX_BYTES) {
+    return c.json({ version: FUNCTION_VERSION, error: 'File too large (max 10 MB)' }, 400);
+  }
+
+  const name = (file.name || '').toLowerCase();
+  const type = (file.type || '').toLowerCase();
+  const isPdf = name.endsWith('.pdf') || type === 'application/pdf';
+  const isDocx =
+    name.endsWith('.docx') ||
+    type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+  if (!isPdf && !isDocx) {
+    return c.json({ version: FUNCTION_VERSION, error: 'Only PDF or DOCX files are supported' }, 400);
+  }
+
+  const buf = new Uint8Array(await file.arrayBuffer());
+
+  let docTextForClaude = '';
+  let pdfBase64: string | null = null;
+
+  if (isPdf) {
+    pdfBase64 = uint8ToBase64(buf);
+  } else {
+    if (isLegacyWordDoc(buf)) {
+      return c.json(
+        {
+          version: FUNCTION_VERSION,
+          error:
+            'Legacy Word .doc format is not supported. In Word use File → Save As → Word Document (.docx), or export as PDF, then upload again.',
+        },
+        400,
+      );
+    }
+    if (!looksLikeZip(buf)) {
+      return c.json(
+        {
+          version: FUNCTION_VERSION,
+          error:
+            'This file does not look like a valid .docx (Office Open XML). If it is a .docx, try re-saving it in Word or upload a PDF instead.',
+        },
+        400,
+      );
+    }
+    try {
+      const mammoth = await import('npm:mammoth@1.8.0');
+      const ab = copyToArrayBuffer(buf);
+      let result = await mammoth.extractRawText({ arrayBuffer: ab });
+      docTextForClaude = (result?.value || '').trim();
+      // Some DOCX variants parse more reliably via Buffer in Deno/jszip.
+      if (docTextForClaude.length < 20) {
+        result = await mammoth.extractRawText({ buffer: Buffer.from(buf) });
+        docTextForClaude = (result?.value || '').trim();
+      }
+    } catch (e: any) {
+      console.error('DOCX extract error (primary):', e);
+      try {
+        const mammoth = await import('npm:mammoth@1.8.0');
+        const result = await mammoth.extractRawText({ buffer: Buffer.from(buf) });
+        docTextForClaude = (result?.value || '').trim();
+      } catch (e2: any) {
+        console.error('DOCX extract error (buffer fallback):', e2);
+        const detail =
+          typeof e2?.message === 'string'
+            ? e2.message
+            : typeof e?.message === 'string'
+              ? e.message
+              : String(e2);
+        return c.json(
+          {
+            version: FUNCTION_VERSION,
+            error: 'Could not read DOCX text',
+            details: String(detail).slice(0, 500),
+          },
+          400,
+        );
+      }
+    }
+    if (!docTextForClaude || docTextForClaude.length < 20) {
+      return c.json(
+        {
+          version: FUNCTION_VERSION,
+          error:
+            'Could not extract enough text from this DOCX (empty or unsupported structure). Try Save As .docx in Word, or upload a PDF.',
+        },
+        400,
+      );
+    }
+  }
+
+  const appendix = seekerResumeExtractionAppendix();
+
+  const system = [
+    'You extract job seeker profile fields from a resume or career document.',
+    'Return ONLY valid JSON. No markdown fences. No prose.',
+    'Use empty string "" or [] when unknown.',
+    'fullName: exact transcription from the document header — see appendix; never shorten or "fix" spellings.',
+    'email: a valid email if clearly visible; otherwise "".',
+    'phone: US-style phone if visible (any common format); otherwise "".',
+    'experience: total years of paid work as a digit string (e.g. "2", "6", "12") — infer from employment history.',
+    'bio is 2-5 sentences, first person, friendly, professional for Hawaii small businesses.',
+    'Follow the appendix in the user message for skills, industries, job categories, education, job titles, intro video bullets, work styles, and pay.',
+    'Arrays must contain only strings; no nested objects.',
+  ].join('\n');
+
+  const jsonKeys =
+    'fullName, email, phone, bio, skills, experience, availability, education, industries, workStyles, jobTypesSeeking, preferredJobCategories, targetPay, location, displayTitle, introVideoSuggestions, suggestedJobTitles';
+
+  const userTextPrompt =
+    pdfBase64 == null
+      ? [
+          'Resume text:',
+          docTextForClaude.slice(0, 120_000),
+          '',
+          `Return JSON with keys: ${jsonKeys}.`,
+          '',
+          appendix,
+        ].join('\n')
+      : '';
+
+  const candidateModels = [
+    Deno.env.get('ANTHROPIC_MODEL'),
+    'claude-sonnet-4-6',
+    'claude-sonnet-4-20250514',
+    'claude-haiku-4-5-20251001',
+    'claude-3-5-sonnet-20241022',
+  ].filter(Boolean) as string[];
+
+  let anthropicRes: Response | null = null;
+  let lastAnthropicDetails = '';
+  let lastAnthropicStatus = 0;
+  let lastTriedModel = '';
+
+  for (const model of candidateModels) {
+    lastTriedModel = model;
+    const content: any[] =
+      pdfBase64 != null
+        ? [
+            {
+              type: 'document',
+              source: {
+                type: 'base64',
+                media_type: 'application/pdf',
+                data: pdfBase64,
+              },
+            },
+            {
+              type: 'text',
+              text: `Extract job seeker data from this PDF. Return JSON with keys: ${jsonKeys}.\n\n${appendix}`,
+            },
+          ]
+        : [{ type: 'text', text: userTextPrompt }];
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120_000);
+      try {
+        anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+          signal: controller.signal,
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-api-key': ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model,
+            max_tokens: 8192,
+            temperature: 0.2,
+            system,
+            messages: [{ role: 'user', content }],
+          }),
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
+    } catch (err: any) {
+      return c.json(
+        {
+          version: FUNCTION_VERSION,
+          error: 'Claude request failed',
+          details: String(err?.message || err),
+        },
+        502,
+      );
+    }
+
+    if (anthropicRes.ok) break;
+
+    lastAnthropicStatus = anthropicRes.status;
+    lastAnthropicDetails = await anthropicRes.text().catch(() => '');
+
+    if (lastAnthropicStatus === 404) {
+      anthropicRes = null;
+      continue;
+    }
+
+    return c.json(
+      {
+        version: FUNCTION_VERSION,
+        error: 'Claude request failed',
+        status: lastAnthropicStatus,
+        model: lastTriedModel,
+        details: lastAnthropicDetails,
+      },
+      502,
+    );
+  }
+
+  if (!anthropicRes || !anthropicRes.ok) {
+    return c.json(
+      {
+        version: FUNCTION_VERSION,
+        error: 'Claude request failed',
+        status: lastAnthropicStatus || 404,
+        model: lastTriedModel,
+        details: lastAnthropicDetails,
+      },
+      502,
+    );
+  }
+
+  const anthropicJson = (await anthropicRes.json().catch(() => ({}))) as any;
+  const text = Array.isArray(anthropicJson?.content)
+    ? anthropicJson.content.filter((x: any) => x?.type === 'text').map((x: any) => x.text).join('\n')
+    : '';
+
+  let extracted: any = null;
+  try {
+    extracted = JSON.parse(text);
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/m);
+    if (match) {
+      try {
+        extracted = JSON.parse(match[0]);
+      } catch {
+        extracted = null;
+      }
+    }
+  }
+
+  if (!extracted || typeof extracted !== 'object') {
+    return c.json({ version: FUNCTION_VERSION, error: 'Claude returned invalid JSON', raw: text.slice(0, 2000) }, 502);
+  }
+
+  const safeStr = (v: any) => (typeof v === 'string' ? v.trim() : '');
+  const safeList = (v: any, max = 12) =>
+    Array.isArray(v) ? v.map((x) => safeStr(x)).filter(Boolean).slice(0, max) : [];
+
+  const normalizeEmail = (raw: string) => {
+    const s = raw.trim().toLowerCase();
+    if (!s || s.length > 254) return '';
+    // Loose RFC-style check; resumes rarely have invalid emails if visible
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return '';
+    return s;
+  };
+
+  const draft = {
+    fullName: safeStr(extracted.fullName).slice(0, 120),
+    email: normalizeEmail(safeStr(extracted.email)),
+    phone: safeStr(extracted.phone).slice(0, 40),
+    bio: safeStr(extracted.bio),
+    skills: safeList(extracted.skills, 28),
+    experience: safeStr(extracted.experience),
+    availability: safeStr(extracted.availability),
+    education: safeList(extracted.education, 10),
+    industries: safeList(extracted.industries, 14),
+    workStyles: safeList(extracted.workStyles, 10),
+    jobTypesSeeking: safeList(extracted.jobTypesSeeking, 6),
+    preferredJobCategories: safeList(extracted.preferredJobCategories, 14),
+    targetPay: safeList(extracted.targetPay, 10),
+    location: safeStr(extracted.location),
+    displayTitle: safeStr(extracted.displayTitle),
+    introVideoSuggestions: safeList(extracted.introVideoSuggestions, 10),
+    suggestedJobTitles: safeList(extracted.suggestedJobTitles, 12),
+  };
+
+  return c.json({ version: FUNCTION_VERSION, draft });
 });
 
 Deno.serve(app.fetch);

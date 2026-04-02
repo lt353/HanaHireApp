@@ -100,8 +100,6 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
           <p className="text-base sm:text-xl font-black uppercase tracking-widest text-gray-600">Questions?</p>
           <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-[11px] font-black uppercase tracking-widest text-gray-400">
             <button type="button" className="hover:text-[#148F8B]" onClick={() => onNavigate("settings")}>Contact Us</button>
-            <button type="button" className="hover:text-[#148F8B]" onClick={() => onNavigate("about")}>How It Works</button>
-            <button type="button" className="hover:text-[#148F8B]">Pricing</button>
             <button type="button" className="hover:text-[#148F8B]" onClick={() => onNavigate("legal")}>Legal &amp; EEO</button>
           </div>
         </div>

@@ -87,7 +87,7 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole, onNavigate }) => {
                   <h3 className="text-xl sm:text-2xl font-black tracking-tight">Create Your Profile</h3>
                 </div>
                 <p className="text-sm sm:text-base text-gray-800 font-medium leading-relaxed">
-                  Record a quick video intro (or voice/text). Show your personality in 60 seconds. No lengthy resumes required. 
+                  Let AI assist your with filling out your profile. Record a quick video intro. Show your personality in 60 seconds. No lengthy resumes required. 
                 </p>
               </div>
             </div>

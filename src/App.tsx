@@ -46,6 +46,10 @@ import { Cart } from "./components/screens/Cart";
 import { SeekerDashboard } from "./components/screens/SeekerDashboard";
 import { EmployerDashboard } from "./components/screens/EmployerDashboard";
 import { SeekerOnboarding } from "./components/screens/SeekerOnboarding";
+import {
+	SeekerResumeImportCard,
+	type SeekerResumeDraft,
+} from "./components/seeker/SeekerResumeImportCard";
 import { EmployerOnboarding } from "./components/screens/EmployerOnboarding";
 import { JobPostingFlow } from "./components/screens/JobPostingFlow";
 import { ProfileTitleCustomization } from "./components/screens/ProfileTitleCustomization";
@@ -115,6 +119,30 @@ const DEMO_ACCOUNTS = {
 	candidate: "luca.kahananui@email.com",
 };
 
+const RESUME_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Name/email/phone are applied on sign-up only; omit from profile for onboarding to avoid duplicating PII. */
+function seekerResumeDraftForOnboarding(d: SeekerResumeDraft): SeekerResumeDraft {
+	const { fullName: _fn, email: _em, phone: _ph, ...rest } = d;
+	return rest;
+}
+
+function mergeResumeDraftIntoSignupFormState(
+	prev: Record<string, string>,
+	draft: SeekerResumeDraft,
+): Record<string, string> {
+	const next = { ...prev };
+	const name = draft.fullName?.trim();
+	if (name && !prev.name?.trim()) next.name = name.slice(0, 120);
+	const em = draft.email?.trim().toLowerCase();
+	if (em && RESUME_EMAIL_RE.test(em) && !prev.email?.trim()) next.email = em;
+	const ph = draft.phone?.trim();
+	if (ph && !prev.phone?.trim()) next.phone = formatPhoneInput(ph);
+	const loc = draft.location?.trim();
+	if (loc && !prev.location?.trim()) next.location = loc;
+	return next;
+}
+
 export default function App() {
 	const [currentView, setCurrentView] = useState<ViewType>("landing");
 	const [jobs, setJobs] = useState<any[]>([]);
@@ -134,6 +162,19 @@ export default function App() {
 	const [signupFormData, setSignupFormData] = useState<Record<string, string>>(
 		{},
 	);
+	/** Resume AI on seeker sign-up: carried into SeekerOnboarding via userProfile.pendingSeekerResumeDraft */
+	const [pendingSeekerResumeDraft, setPendingSeekerResumeDraft] =
+		useState<SeekerResumeDraft | null>(null);
+	const [seekerSignupResumeSkippedPrimary, setSeekerSignupResumeSkippedPrimary] =
+		useState(false);
+	const [seekerSignupResumeSkippedSecondary, setSeekerSignupResumeSkippedSecondary] =
+		useState(false);
+	const [seekerSignupResumeApplied, setSeekerSignupResumeApplied] =
+		useState(false);
+	/** Shown in success banner after import on sign-up */
+	const [seekerResumeImportFileName, setSeekerResumeImportFileName] = useState<
+		string | null
+	>(null);
 	const [employerImportWebsite, setEmployerImportWebsite] = useState("");
 	const [isEmployerImporting, setIsEmployerImporting] = useState(false);
 
@@ -1554,6 +1595,11 @@ export default function App() {
 					setPendingUnlockJobIds(itemIds);
 					setShowPaymentModal(false);
 					setPaymentTarget(null);
+					setPendingSeekerResumeDraft(null);
+					setSeekerSignupResumeSkippedPrimary(false);
+					setSeekerSignupResumeSkippedSecondary(false);
+					setSeekerSignupResumeApplied(false);
+					setSeekerResumeImportFileName(null);
 					setAuthMode("signup");
 					setSignupStep("form");
 					setSignupRole("seeker");
@@ -2459,7 +2505,11 @@ export default function App() {
 							}}
 						/>
 						<SeekerOnboarding
+							key={`seeker-onb-${userProfile?.candidateId ?? userProfile?.id ?? "na"}`}
 							userProfile={userProfile}
+							onPendingResumeDraftConsumed={
+								handleSeekerPendingResumeDraftConsumed
+							}
 							onComplete={async (profileData) => {
 								const seekerEmail = profileData.email;
 								const candidateId = profileData.candidateId ?? profileData.id;
@@ -2916,10 +2966,23 @@ export default function App() {
 		setSignupStep("role-select");
 		setSignupRole(null);
 		setSignupFormData({});
+		setPendingSeekerResumeDraft(null);
+		setSeekerSignupResumeSkippedPrimary(false);
+		setSeekerSignupResumeSkippedSecondary(false);
+		setSeekerSignupResumeApplied(false);
+		setSeekerResumeImportFileName(null);
 		setLoginEmail("");
 		setLoginPassword("");
 		setShowAuthModal(true);
 	};
+
+	const handleSeekerPendingResumeDraftConsumed = useCallback(() => {
+		setUserProfile((p: any) => {
+			if (!p?.pendingSeekerResumeDraft) return p;
+			const { pendingSeekerResumeDraft: _draft, ...rest } = p;
+			return rest;
+		});
+	}, []);
 
 	const handleLogout = () => {
 		setIsLoggedIn(false);
@@ -3356,6 +3419,11 @@ export default function App() {
 											setSignupStep("role-select");
 											setSignupRole(null);
 											setSignupFormData({});
+											setPendingSeekerResumeDraft(null);
+											setSeekerSignupResumeSkippedPrimary(false);
+											setSeekerSignupResumeSkippedSecondary(false);
+											setSeekerSignupResumeApplied(false);
+											setSeekerResumeImportFileName(null);
 										}}
 										className="text-xs font-black text-gray-600 uppercase tracking-widest hover:text-[#148F8B] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
 									>
@@ -3373,6 +3441,72 @@ export default function App() {
 										</p>
 									</div>
 								)}
+
+								{signupRole === "seeker" && seekerSignupResumeApplied && (
+									<div className="rounded-[2rem] border-2 border-[#148F8B]/35 bg-gradient-to-br from-[#148F8B]/10 to-[#A63F8E]/5 p-6 space-y-3 shadow-sm">
+										<div className="flex items-start gap-3">
+											<div className="w-12 h-12 rounded-xl bg-[#148F8B]/20 flex items-center justify-center shrink-0">
+												<CheckCircle
+													className="w-7 h-7 text-[#148F8B]"
+													aria-hidden
+												/>
+											</div>
+											<div className="min-w-0 space-y-1">
+												<p className="text-xs font-black text-gray-500 uppercase tracking-[0.28em]">
+													Resume imported
+												</p>
+												<p className="text-sm font-bold text-gray-900">
+													{seekerResumeImportFileName ? (
+														<>“{seekerResumeImportFileName}” is ready.</>
+													) : (
+														<>Your resume is ready.</>
+													)}
+												</p>
+												<p className="text-xs text-gray-600 font-medium leading-relaxed">
+													We pre-fill name, email, phone, and location when we can
+													read them from your resume — add a password below. Skills,
+													bio, and the rest of your profile are filled on the next
+													screen.
+												</p>
+											</div>
+										</div>
+										<button
+											type="button"
+											onClick={() => {
+												setSeekerSignupResumeApplied(false);
+												setPendingSeekerResumeDraft(null);
+												setSeekerResumeImportFileName(null);
+												setSeekerSignupResumeSkippedPrimary(false);
+												setSeekerSignupResumeSkippedSecondary(false);
+											}}
+											className="text-xs font-black uppercase tracking-widest text-[#148F8B] hover:underline"
+										>
+											Replace with a different file
+										</button>
+									</div>
+								)}
+
+								{signupRole === "seeker" &&
+									!seekerSignupResumeApplied &&
+									!seekerSignupResumeSkippedPrimary && (
+										<SeekerResumeImportCard
+											variant="primary"
+											onApplied={(draft, fileName) => {
+												setPendingSeekerResumeDraft(
+													seekerResumeDraftForOnboarding(draft),
+												);
+												setSeekerResumeImportFileName(fileName);
+												setSignupFormData((prev) =>
+													mergeResumeDraftIntoSignupFormState(prev, draft),
+												);
+												setSeekerSignupResumeApplied(true);
+												toast.success(
+													"Resume imported — add your account details below.",
+												);
+											}}
+											onSkip={() => setSeekerSignupResumeSkippedPrimary(true)}
+										/>
+									)}
 
 								{/* Demo Auto-Fill Button */}
 								<button
@@ -3414,6 +3548,31 @@ export default function App() {
 										Auto-fill Demo Data
 									</span>
 								</button>
+
+								{signupRole === "seeker" &&
+									seekerSignupResumeSkippedPrimary &&
+									!seekerSignupResumeApplied &&
+									!seekerSignupResumeSkippedSecondary && (
+										<SeekerResumeImportCard
+											variant="secondary"
+											onApplied={(draft, fileName) => {
+												setPendingSeekerResumeDraft(
+													seekerResumeDraftForOnboarding(draft),
+												);
+												setSeekerResumeImportFileName(fileName);
+												setSignupFormData((prev) =>
+													mergeResumeDraftIntoSignupFormState(prev, draft),
+												);
+												setSeekerSignupResumeApplied(true);
+												toast.success(
+													"Resume imported — add your account details below.",
+												);
+											}}
+											onSkip={() =>
+												setSeekerSignupResumeSkippedSecondary(true)
+											}
+										/>
+									)}
 
 								<form
 									onSubmit={async (e) => {
@@ -3737,12 +3896,20 @@ export default function App() {
 													role: signupRole,
 													...signupFormData,
 													candidateId: candidateData.id,
+													...(pendingSeekerResumeDraft
+														? { pendingSeekerResumeDraft }
+														: {}),
 												};
 												setUserProfile(profile);
 												setUserRole(signupRole!);
 												setIsLoggedIn(true);
 												setShowAuthModal(false);
 												setSignupFormData({});
+												setPendingSeekerResumeDraft(null);
+												setSeekerSignupResumeSkippedPrimary(false);
+												setSeekerSignupResumeSkippedSecondary(false);
+												setSeekerSignupResumeApplied(false);
+												setSeekerResumeImportFileName(null);
 												setIsSignupLoading(false);
 												handleNavigate("seeker-onboarding");
 												setShowSeekerConsentModal(true);
