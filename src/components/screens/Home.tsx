@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Video, Search, CheckCircle, Sparkles, Clock, Shield, Users, Briefcase } from "lucide-react";
+import { Video, Search, CheckCircle, Sparkles, Clock, Shield, Users, Briefcase, Scale } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { INTERACTION_FEE } from "../../data/mockData";
 import heroImg from "../../assets/hero-image.jpg";
@@ -10,7 +10,7 @@ interface HomeProps {
   onNavigate?: (view: ViewType) => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
+export const Home: React.FC<HomeProps> = ({ onSelectRole, onNavigate }) => {
   // Preload hero image for faster loading
   useEffect(() => {
     const link = document.createElement('link');
@@ -240,6 +240,14 @@ export const Home: React.FC<HomeProps> = ({ onSelectRole }) => {
               I'm Hiring
             </button>
           </div>
+          <button
+            type="button"
+            onClick={() => onNavigate?.("legal")}
+            className="flex items-center gap-1.5 mx-auto text-xs font-black uppercase tracking-widest text-gray-400 hover:text-[#148F8B] transition-colors"
+          >
+            <Scale size={12} />
+            Legal Compliance &amp; EEO Information
+          </button>
         </div>
       </section>
     </div>

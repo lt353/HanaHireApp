@@ -102,6 +102,7 @@ export const About: React.FC<AboutProps> = ({ onSelectRole, onNavigate }) => {
             <button type="button" className="hover:text-[#148F8B]" onClick={() => onNavigate("settings")}>Contact Us</button>
             <button type="button" className="hover:text-[#148F8B]" onClick={() => onNavigate("about")}>How It Works</button>
             <button type="button" className="hover:text-[#148F8B]">Pricing</button>
+            <button type="button" className="hover:text-[#148F8B]" onClick={() => onNavigate("legal")}>Legal &amp; EEO</button>
           </div>
         </div>
       </div>

@@ -56,6 +56,9 @@ import { VideoUploadProgressProvider } from "./contexts/VideoUploadProgressConte
 import { VideoUploadTopBar } from "./components/layout/VideoUploadTopBar";
 import { ApplicationQuestionsModal } from "./components/screens/ApplicationQuestionsModal";
 import type { ApplicationSubmissionPayload } from "./components/screens/ApplicationQuestionsModal";
+import { SeekerConsentModal } from "./components/modals/SeekerConsentModal";
+import { EmployerConsentModal } from "./components/modals/EmployerConsentModal";
+import { LegalCompliance } from "./components/screens/LegalCompliance";
 import { Messages } from "./components/screens/Messages";
 import type { ConversationRow, MessageRow } from "./components/screens/Messages";
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
@@ -76,7 +79,7 @@ import {
   parseHawaiiLocationString,
 } from "./utils/hawaiiLocation";
 
-export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding" | "employer-profile-edit" | "messages";
+export type ViewType = "landing" | "jobs" | "candidates" | "employer" | "seeker" | "job-posting" | "cart" | "about" | "legal" | "settings" | "profile-title-customization" | "profile-editor" | "seeker-onboarding" | "employer-onboarding" | "employer-profile-edit" | "messages";
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-9b95b3f5`;
 
 const STORAGE_KEY_ANON_SAVED_JOB_IDS = "hanahire_anon_saved_job_ids";
@@ -118,6 +121,9 @@ export default function App() {
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [showVideoUpdateModal, setShowVideoUpdateModal] = useState(false);
   const [candidateVideoPlayerUrl, setCandidateVideoPlayerUrl] = useState<string | null>(null);
+  const [showSeekerConsentModal, setShowSeekerConsentModal] = useState(false);
+  const [showEmployerConsentModal, setShowEmployerConsentModal] = useState(false);
+  const [pendingEmployerAction, setPendingEmployerAction] = useState<"post-job" | "browse-candidates" | "employer-onboarding" | null>(null);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -1057,6 +1063,12 @@ export default function App() {
   }, [selectedCandidate?.id, selectedCandidate?.application?.id, userRole, userProfile?.email, userProfile?.employerId, conversations]);
 
   const handleNavigate = (view: ViewType, options?: { selectConversation?: string }) => {
+    // Employer consent gate — intercept navigation to protected employer views
+    if ((view === 'candidates' || view === 'employer-onboarding') && userRole === 'employer' && !userProfile?.eeoc_consent_accepted) {
+      setPendingEmployerAction(view === 'candidates' ? "browse-candidates" : "employer-onboarding");
+      setShowEmployerConsentModal(true);
+      return;
+    }
     if (view === 'messages' && !options?.selectConversation) {
       setSelectedConversationId(null);
     } else if (options?.selectConversation) {
@@ -1412,7 +1424,7 @@ export default function App() {
   const renderScreen = () => {
     // Show landing page immediately, don't block on data loading
     if (currentView === "landing") {
-      return <Home onSelectRole={selectRole} />;
+      return <Home onSelectRole={selectRole} onNavigate={handleNavigate} />;
     }
     
     // Don't block onboarding flows on initial data loading (otherwise it can look like a white screen)
@@ -1429,6 +1441,8 @@ export default function App() {
     switch (currentView) {
       case "about":
         return <About onSelectRole={selectRole} onNavigate={handleNavigate} />;
+      case "legal":
+        return <LegalCompliance onNavigate={handleNavigate} />;
       case "settings":
         return <Settings onRefreshData={fetchInitialData} />;
       case "jobs":
@@ -1497,6 +1511,7 @@ export default function App() {
       onSelectJob={(job) => setSelectedJob(job)}
       interactionFee={INTERACTION_FEE}
       viewerLocation={userProfile?.location}
+      employers={employers}
     />
   );
       case "candidates":
@@ -1639,7 +1654,14 @@ export default function App() {
             unlockedCandidateIds={unlockedCandidateIds}
             applications={employerApplications}
             onNavigate={handleNavigate}
-            onShowPostJob={() => handleNavigate("job-posting")}
+            onShowPostJob={() => {
+              if (!userProfile?.eeoc_consent_accepted) {
+                setPendingEmployerAction("post-job");
+                setShowEmployerConsentModal(true);
+              } else {
+                handleNavigate("job-posting");
+              }
+            }}
             onSelectJob={setSelectedJob}
             onSelectCandidate={(c) => { setSelectedCandidate(c); setCandidateVideoPlayerUrl(null); }}
             onShowPayment={(t) => { setPaymentTarget(t); setShowPaymentModal(true); }}
@@ -1806,8 +1828,25 @@ export default function App() {
         );
       case "seeker-onboarding":
         return (
-          <SeekerOnboarding
-            userProfile={userProfile}
+          <>
+            <SeekerConsentModal
+              isOpen={!userProfile?.profile_consent_accepted && showSeekerConsentModal}
+              onAgree={async () => {
+                const ts = new Date().toISOString();
+                const candidateId = userProfile?.candidateId ?? userProfile?.id;
+                if (candidateId) {
+                  await supabase
+                    .from('candidates')
+                    .update({ profile_consent_accepted: true, profile_consent_timestamp: ts })
+                    .eq('id', candidateId);
+                }
+                setUserProfile((prev: any) => ({ ...prev, profile_consent_accepted: true, profile_consent_timestamp: ts }));
+                setShowSeekerConsentModal(false);
+              }}
+              onCancel={() => { setShowSeekerConsentModal(false); handleNavigate("landing"); }}
+            />
+            <SeekerOnboarding
+              userProfile={userProfile}
             onComplete={async (profileData) => {
               const seekerEmail = profileData.email;
               const candidateId = profileData.candidateId ?? profileData.id;
@@ -1942,6 +1981,7 @@ export default function App() {
               handleNavigate("seeker");
             }}
           />
+          </>
         );
       case "employer-onboarding":
         return (
@@ -2148,7 +2188,7 @@ export default function App() {
           />
         );
       default:
-        return <Home onSelectRole={selectRole} />;
+        return <Home onSelectRole={selectRole} onNavigate={handleNavigate} />;
     }
   };
 
@@ -2509,6 +2549,7 @@ export default function App() {
                         setShowAuthModal(false);
                         setSignupFormData({});
                         setIsSignupLoading(false);
+                        if (!profile.eeoc_consent_accepted) setShowEmployerConsentModal(true);
                         handleNavigate("employer-onboarding");
                         toast.success("Demo account detected! Let's go through the onboarding.");
                         return;
@@ -2545,6 +2586,7 @@ export default function App() {
                         setShowAuthModal(false);
                         setSignupFormData({});
                         setIsSignupLoading(false);
+                        if (!existingEmployer.eeoc_consent_accepted) setShowEmployerConsentModal(true);
                         handleNavigate("employer-onboarding");
                         toast.success("Welcome back! Review your profile details.");
                         return;
@@ -2580,6 +2622,7 @@ export default function App() {
                       setShowAuthModal(false);
                       setSignupFormData({});
                       setIsSignupLoading(false);
+                      setShowEmployerConsentModal(true);
                       handleNavigate("employer-onboarding");
                       toast.success("Account created! Let's set up your profile.");
                     }
@@ -2646,7 +2689,7 @@ export default function App() {
                         setShowAuthModal(false);
                         setSignupFormData({});
                         setIsSignupLoading(false);
-                        handleNavigate("seeker-onboarding");
+                        handleNavigate("seeker-onboarding"); setShowSeekerConsentModal(true);
                         toast.success("Demo account detected! Let's go through the onboarding.");
                         return;
                       }
@@ -2730,7 +2773,7 @@ export default function App() {
                       setShowAuthModal(false);
                       setSignupFormData({});
                       setIsSignupLoading(false);
-                      handleNavigate("seeker-onboarding");
+                      handleNavigate("seeker-onboarding"); setShowSeekerConsentModal(true);
                       toast.success("Account created! Let's set up your profile.");
                     }
                   } catch (err: any) {
@@ -3775,6 +3818,28 @@ export default function App() {
   </div>
 )}
 
+      {/* --- Consent Modals --- */}
+      <EmployerConsentModal
+        isOpen={showEmployerConsentModal}
+        onAgree={async (employeeCountRange) => {
+          const ts = new Date().toISOString();
+          const employerId = userProfile?.employerId ?? userProfile?.id;
+          if (employerId) {
+            await supabase
+              .from('employers')
+              .update({ eeoc_consent_accepted: true, eeoc_consent_timestamp: ts, employee_count_range: employeeCountRange })
+              .eq('id', employerId);
+          }
+          setUserProfile((prev: any) => ({ ...prev, eeoc_consent_accepted: true, eeoc_consent_timestamp: ts, employee_count_range: employeeCountRange }));
+          setShowEmployerConsentModal(false);
+          if (pendingEmployerAction === "post-job") handleNavigate("job-posting");
+          else if (pendingEmployerAction === "browse-candidates") handleNavigate("candidates");
+          else if (pendingEmployerAction === "employer-onboarding") handleNavigate("employer-onboarding");
+          setPendingEmployerAction(null);
+        }}
+        onCancel={() => { setShowEmployerConsentModal(false); setPendingEmployerAction(null); }}
+      />
+
       {/* --- Detail Modals --- */}
       <Modal isOpen={!!selectedJob} onClose={() => setSelectedJob(null)} title="Job Details">
         {selectedJob && (
@@ -3788,12 +3853,7 @@ export default function App() {
                     ? logoRaw.trim()
                     : "";
                 if (!logoUrl) return null;
-                const seekerUnlocked =
-                  userRole === "seeker" &&
-                  unlockedJobIds.some(
-                    (id: any) => Number(id) === Number(selectedJob.id),
-                  );
-                const showLogo = userRole === "employer" || seekerUnlocked;
+                const showLogo = true;
                 if (!showLogo) return null;
                 return (
                   <div className="flex justify-center sm:justify-start">
@@ -3852,9 +3912,7 @@ export default function App() {
               <div className="p-5 bg-[#F3EAF5]/30 rounded-2xl space-y-1">
                 <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Business</span>
                 <p className="font-black text-base tracking-tight">
-                  {(selectedJob.is_anonymous && !unlockedJobIds.includes(selectedJob.id))
-                    ? `[${selectedJob.company_industry || 'Local'} Business]`
-                    : selectedJob.company_name}
+                  {selectedJob.company_name}
                 </p>
               </div>
               {selectedJob.applicant_count !== undefined && (
@@ -3873,8 +3931,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Company description - only visible once job is unlocked */}
-            {selectedJob.company_description && unlockedJobIds.includes(selectedJob.id) && (
+            {selectedJob.company_description && (
               <div className="space-y-2">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">About the Business</h4>
                 <p className="text-sm text-gray-600 leading-relaxed font-medium">{selectedJob.company_description}</p>
@@ -3920,8 +3977,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Business website - only visible once job is unlocked */}
-            {unlockedJobIds.includes(selectedJob.id) && selectedJob.website && (
+            {selectedJob.website && (
               <div className="space-y-2">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Business Website</h4>
                 <p className="text-sm text-gray-600 leading-relaxed font-medium">
@@ -3937,8 +3993,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Contact Info - only visible once job is unlocked */}
-            {unlockedJobIds.includes(selectedJob.id) && (selectedJob.contact_email || selectedJob.contact_phone) && (
+            {(selectedJob.contact_email || selectedJob.contact_phone) && (
               <div className="space-y-2">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Contact Information</h4>
                 <div className="space-y-1">
@@ -3978,11 +4033,21 @@ export default function App() {
             )}
 
             {/* CTA - Seeker actions */}
-            {userRole !== 'employer' && !unlockedJobIds.includes(selectedJob.id) && (
-              <Button className="w-full h-20 text-xl rounded-3xl bg-[#148F8B] hover:bg-[#136068] text-white shadow-2xl shadow-[#148F8B]/25 hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => { setPaymentTarget({ type: 'seeker', items: [selectedJob] }); setShowPaymentModal(true); setSelectedJob(null); }}>
-  Apply & Reveal Business
-</Button>
+            {userRole !== 'employer' && (
+              <Button
+                className="w-full h-20 text-xl rounded-3xl bg-[#148F8B] hover:bg-[#136068] text-white shadow-2xl shadow-[#148F8B]/25 hover:scale-105 active:scale-95 transition-all duration-200"
+                disabled={applications.some((a: any) => a.job_id === selectedJob.id)}
+                onClick={() => { setPendingApplyItems([selectedJob]); setShowQuestionsModal(true); setSelectedJob(null); }}
+              >
+                {applications.some((a: any) => a.job_id === selectedJob.id) ? "Applied ✓" : "Apply Now"}
+              </Button>
             )}
+            <a
+              href={`mailto:support@hanahire.com?subject=Report%20Discrimination%20or%20Abuse&body=Job%20ID%3A%20${selectedJob.id}%0AJob%20Title%3A%20${encodeURIComponent(selectedJob.title || '')}%0A%0APlease%20describe%20what%20happened%3A`}
+              className="inline-flex items-center justify-center gap-1.5 mx-auto px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-[10px] font-black text-red-500 hover:bg-red-100 hover:text-red-600 uppercase tracking-widest transition-colors"
+            >
+              Report Discrimination or Abuse
+            </a>
           </div>
         )}
       </Modal>
@@ -4381,6 +4446,12 @@ export default function App() {
   Unlock Full Video & Contact
 </Button>
             )}
+            <a
+              href={`mailto:support@hanahire.com?subject=Report%20Discrimination%20or%20Abuse&body=Candidate%20ID%3A%20${selectedCandidate.id}%0A%0APlease%20describe%20what%20happened%3A`}
+              className="inline-flex items-center justify-center gap-1.5 mx-auto px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-[10px] font-black text-red-500 hover:bg-red-100 hover:text-red-600 uppercase tracking-widest transition-colors"
+            >
+              Report Discrimination or Abuse
+            </a>
           </div>
         )}
       </Modal>

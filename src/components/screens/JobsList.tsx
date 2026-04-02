@@ -6,12 +6,81 @@ import {
   MapPin,
   DollarSign,
   Briefcase,
-  Lock,
   Trash2,
   RotateCcw,
   X,
+  Building2,
+  ListChecks,
+  Phone,
+  Mail,
+  Globe,
 } from "lucide-react";
 import { getJobCategoryStyle } from "../../utils/jobCategoryStyles";
+
+const INDUSTRY_BORDER_COLORS: Record<string, string> = {
+  // Food & Beverage → Food Service orange-red
+  "Restaurant": "#FF6B4A",
+  "Cafe/Coffee Shop": "#FF6B4A",
+  "Food Truck": "#FF6B4A",
+  "Bakery": "#FF6B4A",
+  "Bar/Brewery": "#FF6B4A",
+  // Retail → Retail & Sales orange
+  "Retail Store": "#FB923C",
+  "Surf Shop": "#FB923C",
+  "Boutique": "#FB923C",
+  "Gift Shop": "#FB923C",
+  "Farmers Market": "#FB923C",
+  // Hospitality → Hospitality Services green
+  "Hotel/Resort": "#10B981",
+  "Vacation Rental": "#10B981",
+  "Bed & Breakfast": "#10B981",
+  "Luau/Entertainment": "#10B981",
+  // Tourism → Tourism & Recreation sky blue
+  "Tour Company": "#0EA5E9",
+  "Activity Desk": "#0EA5E9",
+  "Rental Shop": "#0EA5E9",
+  // Wellness → Healthcare & Wellness cyan
+  "Spa/Wellness": "#06B6D4",
+  "Dental/Medical Office": "#06B6D4",
+  // Maintenance & property → Maintenance & Facilities slate
+  "Landscaping": "#64748B",
+  "Pool Service": "#64748B",
+  "Cleaning Service": "#64748B",
+  "Pest Control": "#64748B",
+  "Property Management": "#64748B",
+  // Trades → Trades & Construction dark slate
+  "Construction": "#475569",
+  "Home Repair": "#475569",
+  "HVAC": "#475569",
+  "Plumbing": "#475569",
+  "Electrical": "#475569",
+  "Auto Repair": "#475569",
+  "Marine Services": "#475569",
+  "Farm/Agriculture": "#059669",
+  // Office / Finance → blue / indigo
+  "Real Estate": "#1E40AF",
+  "Law Firm": "#4F46E5",
+  "Accounting Firm": "#4F46E5",
+  "Insurance Agency": "#4F46E5",
+  // Creative / Marketing
+  "Marketing Agency": "#D946EF",
+  // Tech
+  "IT Services": "#0066FF",
+  // Education / Kids
+  "Childcare": "#F59E0B",
+  // Fitness
+  "Fitness Studio": "#EC4899",
+  // Non-profit / Leadership
+  "Non-Profit": "#8B5CF6",
+};
+
+function getIndustryBorderColor(industry: string | null | undefined): string {
+  if (!industry) return "#e5e7eb";
+  return INDUSTRY_BORDER_COLORS[industry] ?? "#e5e7eb";
+}
+import { Modal } from "../ui/Modal";
+import { CollapsibleFilter } from "../CollapsibleFilter";
+import { Button } from "../ui/Button";
 
 type JobSortOption =
   | "newest"
@@ -36,6 +105,7 @@ interface JobsListProps {
   onSelectJob: (job: any) => void;
   interactionFee: number;
   viewerLocation?: string;
+  employers?: any[];
 }
 
 function useIsMobile(breakpointPx = 768) {
@@ -117,8 +187,26 @@ export const JobsList: React.FC<JobsListProps> = ({
   onShowFilters,
   onSelectJob,
   viewerLocation,
+  employers = [],
 }) => {
   const isMobile = useIsMobile(768);
+  const [browseMode, setBrowseMode] = React.useState<"jobs" | "businesses">("jobs");
+  const [selectedBusiness, setSelectedBusiness] = React.useState<any | null>(null);
+  const [showBizFilterModal, setShowBizFilterModal] = React.useState(false);
+  const [bizIndustryFilter, setBizIndustryFilter] = React.useState<string[]>([]);
+  const [bizLocationFilter, setBizLocationFilter] = React.useState<string[]>([]);
+
+  const bizIndustries = React.useMemo(() => {
+    const set = new Set<string>();
+    employers.forEach((e) => { if (e.industry) set.add(e.industry); });
+    return Array.from(set).sort();
+  }, [employers]);
+
+  const bizLocations = React.useMemo(() => {
+    const set = new Set<string>();
+    employers.forEach((e) => { if (e.location) set.add(e.location); });
+    return Array.from(set).sort();
+  }, [employers]);
 
   const jobs: any[] = Array.isArray(filteredJobs) ? filteredJobs : [];
   const unlockedIds: any[] = Array.isArray(unlockedJobIds) ? unlockedJobIds : [];
@@ -232,8 +320,7 @@ export const JobsList: React.FC<JobsListProps> = ({
   };
 
   const isInQueue = (id: any) => queue.some((q) => q?.id === id);
-  const isUnlocked = (id: any) =>
-    unlockedIds.some((u) => Number(u) === Number(id));
+  const isUnlocked = (_id: any) => true;
   const isApplied = (id: any) => appliedIds.includes(id);
 
   // Toggle bookmark - add or remove from queue
@@ -366,10 +453,44 @@ export const JobsList: React.FC<JobsListProps> = ({
     >
       {/* Header */}
       <div className="space-y-4">
-        <h2 className="text-6xl font-black tracking-tighter">Browse Jobs</h2>
+        <h2 className="text-6xl font-black tracking-tighter">
+          {browseMode === "jobs" ? "Browse Jobs" : "Browse Businesses"}
+        </h2>
         <p className="text-2xl text-gray-500 font-medium">
-          Swipe right to save jobs. Review and apply from your saved folder.
+          {browseMode === "jobs"
+            ? "Swipe right to save jobs. Review and apply from your saved folder."
+            : "Explore local businesses hiring in Hawaii."}
         </p>
+      </div>
+
+      {/* Browse mode toggle */}
+      <div className="flex w-fit">
+        <div className="flex items-center gap-2 p-2 bg-gray-100 rounded-2xl shadow-inner">
+          <button
+            type="button"
+            onClick={() => setBrowseMode("jobs")}
+            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all duration-200 ${
+              browseMode === "jobs"
+                ? "bg-[#148F8B] text-white shadow-lg shadow-[#148F8B]/30"
+                : "text-gray-500 hover:text-gray-800 hover:bg-white/60"
+            }`}
+          >
+            <ListChecks size={17} />
+            Job Listings
+          </button>
+          <button
+            type="button"
+            onClick={() => setBrowseMode("businesses")}
+            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all duration-200 ${
+              browseMode === "businesses"
+                ? "bg-[#148F8B] text-white shadow-lg shadow-[#148F8B]/30"
+                : "text-gray-500 hover:text-gray-800 hover:bg-white/60"
+            }`}
+          >
+            <Building2 size={17} />
+            Businesses
+          </button>
+        </div>
       </div>
 
       {/* Search + Filters + Sort */}
@@ -380,42 +501,320 @@ export const JobsList: React.FC<JobsListProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             type="text"
-            placeholder="Search jobs by title, location..."
-            aria-label="Search jobs by title or location"
+            placeholder={browseMode === "jobs" ? "Search jobs by title, location..." : "Search businesses by name, industry..."}
+            aria-label={browseMode === "jobs" ? "Search jobs by title or location" : "Search businesses by name or industry"}
             className="w-full pl-14 pr-5 py-5 rounded-lg bg-white border border-gray-100 shadow-sm focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-lg"
           />
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="h-16 px-8 bg-white rounded-lg border border-gray-200 font-black uppercase tracking-widest text-[10px] text-gray-700 inline-flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
-            onClick={onShowFilters}
-          >
-            <Filter size={20} /> Filters
-          </button>
-
-          <div className="h-16">
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value as JobSortOption)}
-              aria-label="Sort jobs"
-              className="h-full px-4 bg-white rounded-lg border border-gray-200 text-xs font-black uppercase tracking-widest text-gray-700 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
+          {browseMode === "jobs" ? (
+            <>
+              <button
+                type="button"
+                className="h-16 px-8 bg-white rounded-lg border border-gray-200 font-black uppercase tracking-widest text-[10px] text-gray-700 inline-flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200"
+                onClick={onShowFilters}
+              >
+                <Filter size={20} /> Filters
+              </button>
+              <div className="h-16">
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as JobSortOption)}
+                  aria-label="Sort jobs"
+                  className="h-full px-4 bg-white rounded-lg border border-gray-200 text-xs font-black uppercase tracking-widest text-gray-700 cursor-pointer hover:scale-105 active:scale-95 transition-all duration-200"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="pay-high">Pay: high to low</option>
+                  <option value="pay-low">Pay: low to high</option>
+                  <option value="job-type">Job type (full-time first)</option>
+                  <option value="closest">Closest to me</option>
+                  <option value="applicants">Most applicants</option>
+                  <option value="industry">Industry</option>
+                </select>
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              className={`h-16 px-8 rounded-lg border font-black uppercase tracking-widest text-[10px] inline-flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all duration-200 ${
+                bizIndustryFilter.length > 0 || bizLocationFilter.length > 0
+                  ? "bg-[#148F8B] text-white border-[#148F8B]"
+                  : "bg-white text-gray-700 border-gray-200"
+              }`}
+              onClick={() => setShowBizFilterModal(true)}
             >
-              <option value="newest">Newest first</option>
-              <option value="pay-high">Pay: high to low</option>
-              <option value="pay-low">Pay: low to high</option>
-              <option value="job-type">Job type (full-time first)</option>
-              <option value="closest">Closest to me</option>
-              <option value="applicants">Most applicants</option>
-              <option value="industry">Industry</option>
-            </select>
-          </div>
+              <Filter size={20} />
+              Filters
+              {(bizIndustryFilter.length + bizLocationFilter.length) > 0 && (
+                <span className="ml-1 bg-white/30 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black">
+                  {bizIndustryFilter.length + bizLocationFilter.length}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
+      {/* BUSINESSES view */}
+      {browseMode === "businesses" ? (() => {
+        const query = searchQuery.trim().toLowerCase();
+        const filtered = employers.filter((emp) => {
+          const matchesQuery = !query || (
+            (emp.business_name || "").toLowerCase().includes(query) ||
+            (emp.industry || "").toLowerCase().includes(query) ||
+            (emp.location || "").toLowerCase().includes(query) ||
+            (emp.company_description || "").toLowerCase().includes(query)
+          );
+          const matchesIndustry = bizIndustryFilter.length === 0 || bizIndustryFilter.includes(emp.industry);
+          const matchesLocation = bizLocationFilter.length === 0 || bizLocationFilter.includes(emp.location);
+          return matchesQuery && matchesIndustry && matchesLocation;
+        });
+
+        return (
+          <>
+
+            {/* Business cards grid */}
+            {filtered.length === 0 ? (
+              <div className="p-16 bg-white border-4 border-dashed border-gray-100 rounded-3xl text-center">
+                <p className="text-gray-400 font-black text-xl uppercase tracking-widest">No businesses found</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filtered.map((emp) => {
+                  const logo = typeof emp.company_logo_url === "string" && emp.company_logo_url.trim() ? emp.company_logo_url.trim() : null;
+                  return (
+                    <button
+                      key={emp.id}
+                      type="button"
+                      onClick={() => setSelectedBusiness(emp)}
+                      className="text-left bg-white rounded-2xl p-5 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4 cursor-pointer group"
+                      style={{
+                        borderLeft: `6px solid ${getIndustryBorderColor(emp.industry)}`,
+                        borderTop: "1px solid #f3f4f6",
+                        borderRight: "1px solid #f3f4f6",
+                        borderBottom: "1px solid #f3f4f6",
+                      }}
+                    >
+                      {/* Top: logo + name + verified badge */}
+                      <div className="flex items-start gap-3">
+                        <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
+                          {logo ? (
+                            <img src={logo} alt="" className="w-full h-full object-contain p-1" />
+                          ) : (
+                            <span className="text-2xl font-black text-gray-300">
+                              {(emp.business_name || "?")[0].toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-base font-black tracking-tight leading-snug group-hover:text-[#148F8B] transition-colors">{emp.business_name || "Unnamed Business"}</h3>
+                            {emp.business_verified && (
+                              <span className="shrink-0 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#148F8B]/10 text-[#0D7377]">Verified</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {emp.industry && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#148F8B]/10 text-[#0D7377]">{emp.industry}</span>
+                            )}
+                            {emp.company_size && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">{emp.company_size}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {emp.location && (
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                          <MapPin size={11} className="shrink-0" />
+                          <span>{emp.location}</span>
+                        </div>
+                      )}
+
+                      {emp.company_description && (
+                        <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{emp.company_description}</p>
+                      )}
+
+                      <span className="text-xs font-black text-[#148F8B] uppercase tracking-widest group-hover:underline mt-auto">
+                        View profile →
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Business profile modal */}
+            {selectedBusiness && (() => {
+              const emp = selectedBusiness;
+              const logo = typeof emp.company_logo_url === "string" && emp.company_logo_url.trim() ? emp.company_logo_url.trim() : null;
+              const website = emp.website && (emp.website.startsWith("http") ? emp.website : `https://${emp.website}`);
+              return (
+                <div
+                  className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                  onClick={() => setSelectedBusiness(null)}
+                >
+                  <div
+                    className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Header band */}
+                    <div className="relative h-14 rounded-t-3xl bg-gradient-to-br from-[#148F8B] to-[#0D7377]">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBusiness(null)}
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition-all"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    {/* Logo overlapping header */}
+                    <div className="px-6 pb-10">
+                      <div className="-mt-8 mb-4 w-16 h-16 rounded-2xl border-4 border-white bg-white shadow-lg flex items-center justify-center overflow-hidden">
+                        {logo ? (
+                          <img src={logo} alt="" className="w-full h-full object-contain p-1" />
+                        ) : (
+                          <span className="text-2xl font-black text-gray-300">{(emp.business_name || "?")[0].toUpperCase()}</span>
+                        )}
+                      </div>
+
+                      {/* Name + verified */}
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h2 className="text-2xl font-black tracking-tight">{emp.business_name || "Unnamed Business"}</h2>
+                        {emp.business_verified && (
+                          <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#148F8B]/10 text-[#0D7377]">Verified</span>
+                        )}
+                      </div>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2 mb-5">
+                        {emp.industry && <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#148F8B]/10 text-[#0D7377]">{emp.industry}</span>}
+                        {emp.company_size && <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-700">{emp.company_size}</span>}
+                      </div>
+
+                      {/* Contact info */}
+                      <div className="space-y-3 mb-6">
+                        {emp.location && (
+                          <div className="flex items-center gap-3 text-sm text-gray-700">
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"><MapPin size={15} className="text-gray-500" /></div>
+                            <span className="font-semibold">{emp.location}</span>
+                          </div>
+                        )}
+                        {emp.email && (
+                          <a href={`mailto:${emp.email}`} className="flex items-center gap-3 text-sm text-gray-700 hover:text-[#148F8B] transition-colors group/row">
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover/row:bg-[#148F8B]/10 flex items-center justify-center shrink-0 transition-colors"><Mail size={15} className="text-gray-500 group-hover/row:text-[#148F8B]" /></div>
+                            <span className="font-semibold">{emp.email}</span>
+                          </a>
+                        )}
+                        {emp.phone && (
+                          <a href={`tel:${emp.phone}`} className="flex items-center gap-3 text-sm text-gray-700 hover:text-[#148F8B] transition-colors group/row">
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover/row:bg-[#148F8B]/10 flex items-center justify-center shrink-0 transition-colors"><Phone size={15} className="text-gray-500 group-hover/row:text-[#148F8B]" /></div>
+                            <span className="font-semibold">{emp.phone}</span>
+                          </a>
+                        )}
+                        {website && (
+                          <a href={website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-gray-700 hover:text-[#148F8B] transition-colors group/row">
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover/row:bg-[#148F8B]/10 flex items-center justify-center shrink-0 transition-colors"><Globe size={15} className="text-gray-500 group-hover/row:text-[#148F8B]" /></div>
+                            <span className="font-semibold truncate">{emp.website}</span>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* About */}
+                      {emp.company_description && (
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">About</p>
+                          <p className="text-sm text-gray-700 leading-relaxed">{emp.company_description}</p>
+                        </div>
+                      )}
+
+                      {/* Report link */}
+                      <div className="pt-2 border-t border-gray-100">
+                        <a
+                          href={`mailto:support@hanahire.com?subject=Report%20Discrimination%20or%20Abuse&body=Business%3A%20${encodeURIComponent(emp.business_name || '')}%0ABusiness%20ID%3A%20${emp.id}%0A%0APlease%20describe%20what%20happened%3A`}
+                          className="inline-flex items-center justify-center gap-1.5 mx-auto px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-[10px] font-black text-red-500 hover:bg-red-100 hover:text-red-600 uppercase tracking-widest transition-colors"
+                        >
+                          Report Discrimination or Abuse
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Business filter modal */}
+            <Modal
+              isOpen={showBizFilterModal}
+              onClose={() => setShowBizFilterModal(false)}
+              title="Refine Businesses"
+            >
+              <div className="space-y-6 max-h-[70vh] overflow-y-auto px-2">
+                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
+                  <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Business Filters</span>
+                  <button
+                    type="button"
+                    onClick={() => { setBizIndustryFilter([]); setBizLocationFilter([]); }}
+                    className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest hover:underline hover:scale-105 active:scale-95 transition-all duration-200"
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  Hold Cmd/Ctrl to select multiple
+                </p>
+
+                <CollapsibleFilter title="Industry" isOpen={true}>
+                  <select
+                    multiple
+                    value={bizIndustryFilter}
+                    onChange={(e) => setBizIndustryFilter(Array.from(e.target.selectedOptions, (o) => o.value))}
+                    className="w-full h-44 p-3 rounded-2xl border-2 border-gray-200 bg-white text-xs font-bold"
+                  >
+                    {bizIndustries.map((ind) => (
+                      <option key={ind} value={ind}>{ind}</option>
+                    ))}
+                  </select>
+                </CollapsibleFilter>
+
+                <CollapsibleFilter title="Location" isOpen={true}>
+                  <select
+                    multiple
+                    value={bizLocationFilter}
+                    onChange={(e) => setBizLocationFilter(Array.from(e.target.selectedOptions, (o) => o.value))}
+                    className="w-full h-44 p-3 rounded-2xl border-2 border-gray-200 bg-white text-xs font-bold"
+                  >
+                    {bizLocations.map((loc) => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </CollapsibleFilter>
+
+                <div className="pt-6">
+                  <Button
+                    className="w-full h-16 rounded-2xl text-lg hover:scale-105 active:scale-95 transition-all duration-200"
+                    onClick={() => setShowBizFilterModal(false)}
+                  >
+                    Show {employers.filter((emp) => {
+                      const q = searchQuery.trim().toLowerCase();
+                      const mq = !q || (emp.business_name || "").toLowerCase().includes(q) || (emp.industry || "").toLowerCase().includes(q) || (emp.location || "").toLowerCase().includes(q) || (emp.company_description || "").toLowerCase().includes(q);
+                      const mi = bizIndustryFilter.length === 0 || bizIndustryFilter.includes(emp.industry);
+                      const ml = bizLocationFilter.length === 0 || bizLocationFilter.includes(emp.location);
+                      return mq && mi && ml;
+                    }).length} Results
+                  </Button>
+                </div>
+              </div>
+            </Modal>
+          </>
+        );
+      })() : null}
+
       {/* MOBILE: Swipe card */}
-      {isMobile ? (
+      {browseMode === "jobs" && isMobile ? (
         <div className="space-y-6">
           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
             <span>
@@ -494,7 +893,7 @@ export const JobsList: React.FC<JobsListProps> = ({
                 <span className="flex items-center gap-1"><MapPin size={10} /> {currentJob.location}</span>
                 <span className="flex items-center gap-1 text-[#148F8B]"><DollarSign size={10} /> {currentJob.pay_range}</span>
                 <span className="flex items-center gap-1"><Briefcase size={10} /> {currentJob.job_type}</span>
-                <span className="text-gray-400 flex items-center gap-1"><Lock size={10} /> {isApplied(currentJob.id) ? "Applied" : isUnlocked(currentJob.id) ? "Unlocked" : "Locked"}</span>
+                {isApplied(currentJob.id) && <span className="text-[#148F8B] flex items-center gap-1 font-black">Applied ✓</span>}
               </div>
 
               {/* Description — full width */}
@@ -530,7 +929,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             </div>
           )}
         </div>
-      ) : (
+      ) : browseMode === "jobs" ? (
         /* DESKTOP: Compact cards + floating Apply button tied to bookmark queue */
         <div className="space-y-3">
           {/* Floating Apply button — visible when items are bookmarked */}
@@ -609,7 +1008,7 @@ export const JobsList: React.FC<JobsListProps> = ({
             })
           )}
         </div>
-      )}
+      ) : null}
 
       {/* ── Passed Jobs Bin (slide-up panel) ── */}
       {showPassedBin && (
