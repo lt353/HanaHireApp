@@ -22,6 +22,13 @@ export const SeekerConsentModal: React.FC<SeekerConsentModalProps> = ({
 }) => {
   const [checked, setChecked] = React.useState<boolean[]>(CHECKBOXES.map(() => false));
 
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const allChecked = checked.every(Boolean);
@@ -30,9 +37,12 @@ export const SeekerConsentModal: React.FC<SeekerConsentModalProps> = ({
     setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
 
   return (
-    <div className="fixed inset-0 top-14 md:top-20 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header */}
+    <div className="fixed inset-0 top-14 md:top-20 bottom-20 md:bottom-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden"
+        style={{ height: "calc(100vh - 10.5rem)" }}
+      >
+        {/* Header — always visible */}
         <div className="px-8 pt-8 pb-6 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#148F8B]/10 flex items-center justify-center shrink-0">
@@ -44,7 +54,7 @@ export const SeekerConsentModal: React.FC<SeekerConsentModalProps> = ({
         </div>
 
         {/* Scrollable body */}
-        <div className="overflow-y-auto px-8 py-6 space-y-6 flex-1">
+        <div className="overflow-y-auto px-8 py-6 space-y-6" style={{ flex: "1 1 0" }}>
           {/* How your profile helps */}
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">How Your Profile Helps You</p>
@@ -92,7 +102,7 @@ export const SeekerConsentModal: React.FC<SeekerConsentModalProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer — always visible */}
         <div className="px-8 pb-8 pt-4 border-t border-gray-100 flex gap-3 shrink-0">
           <button
             type="button"
