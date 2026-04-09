@@ -388,7 +388,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 									<p className="text-xs text-gray-600 font-medium">
 										{isVerified
 											? `${userProfile.businessName || "Your business"} is verified. You can post jobs and unlock candidates.`
-											: "Add your business license to get a Verified Business Badge on your job posts — for a small fee. You can still post jobs and browse candidates without verifying."}
+											: "Add your business license in profile settings to show a Verified Business badge on your job posts. You can still post jobs and browse candidates without it."}
 									</p>
 								</div>
 								{isVerified && (

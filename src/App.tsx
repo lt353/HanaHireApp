@@ -2817,6 +2817,9 @@ export default function App() {
 										typeof profileData.companyLogoUrl === "string"
 											? profileData.companyLogoUrl.trim()
 											: "";
+									const hasBusinessLicense =
+										typeof profileData.businessLicense === "string" &&
+										profileData.businessLicense.trim().length > 0;
 									const { error: updateError } = await supabase
 										.from("employers")
 										.update({
@@ -2830,6 +2833,7 @@ export default function App() {
 											website: profileData.website || null,
 											business_license_number:
 												profileData.businessLicense || null,
+											business_verified: hasBusinessLicense,
 											profile_complete: trimmedLogo.length > 0,
 											updated_at: new Date().toISOString(),
 										})
@@ -2850,7 +2854,13 @@ export default function App() {
 									console.error("Unexpected error updating employer:", err);
 								}
 							}
-							setUserProfile(profileData);
+							const hasBusinessLicense =
+								typeof profileData.businessLicense === "string" &&
+								profileData.businessLicense.trim().length > 0;
+							setUserProfile({
+								...profileData,
+								businessVerified: hasBusinessLicense,
+							});
 							handleNavigate("employer");
 							toast.success(
 								"Business profile saved! Welcome to your dashboard.",
@@ -2871,6 +2881,9 @@ export default function App() {
 										typeof profileData.companyLogoUrl === "string"
 											? profileData.companyLogoUrl.trim()
 											: "";
+									const hasBusinessLicense =
+										typeof profileData.businessLicense === "string" &&
+										profileData.businessLicense.trim().length > 0;
 									const { error: updateError } = await supabase
 										.from("employers")
 										.update({
@@ -2884,6 +2897,7 @@ export default function App() {
 											website: profileData.website || null,
 											business_license_number:
 												profileData.businessLicense || null,
+											business_verified: hasBusinessLicense,
 											profile_complete: trimmedLogo.length > 0,
 											updated_at: new Date().toISOString(),
 										})
@@ -2904,7 +2918,13 @@ export default function App() {
 									console.error("Unexpected error updating employer:", err);
 								}
 							}
-							setUserProfile(profileData);
+							const hasBusinessLicense =
+								typeof profileData.businessLicense === "string" &&
+								profileData.businessLicense.trim().length > 0;
+							setUserProfile({
+								...profileData,
+								businessVerified: hasBusinessLicense,
+							});
 							handleNavigate("employer");
 							toast.success("Business profile updated.");
 						}}
@@ -3140,12 +3160,10 @@ export default function App() {
 										let detectedRole: "seeker" | "employer" = "seeker";
 										let fullProfile: any = null;
 
-										// First check candidates table (explicit select + maybeSingle avoids 406 when no row)
+										// First check candidates table (select * so login works before/without legal-consent migration columns)
 										const { data: candidate } = await supabase
 											.from("candidates")
-											.select(
-												"id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_consent_accepted, profile_consent_timestamp",
-											)
+											.select("*")
 											.eq("email", email)
 											.maybeSingle();
 
@@ -3916,9 +3934,7 @@ export default function App() {
 												// Check if email already exists — if so, just log them in (maybeSingle avoids 406 when no row)
 												const { data: existingCandidate } = await supabase
 													.from("candidates")
-													.select(
-														"id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_consent_accepted, profile_consent_timestamp",
-													)
+													.select("*")
 													.eq("email", signupFormData.email)
 													.maybeSingle();
 
@@ -4456,13 +4472,12 @@ export default function App() {
 														className="text-[#2ECC71] shrink-0 mt-0.5"
 													/>
 													<p className="text-xs text-gray-600 font-medium">
-														Skip for now or verify your business license to
-														unlock a{" "}
+														Optional: add your license to show a{" "}
 														<span className="font-black text-[#2ECC71]">
-															Verified Business Badge
+															Verified Business
 														</span>{" "}
-														— displayed on your job posts for a small fee.
-														Builds trust with job seekers.
+														badge on your posts (no extra charge). Builds trust
+														with job seekers.
 													</p>
 												</div>
 											</div>

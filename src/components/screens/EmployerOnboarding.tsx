@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Building2, Zap, CheckCircle, Upload, ChevronRight, Shield, Sparkles, BadgeCheck, Mic } from "lucide-react";
+import { Building2, Zap, CheckCircle, Upload, ChevronRight, Shield, Sparkles, Mic } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
 import {
   JOB_CATEGORIES,
@@ -48,7 +48,6 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
   const [companyLogoUrl, setCompanyLogoUrl] = useState(userProfile?.companyLogoUrl || "");
   const [isLogoUploading, setIsLogoUploading] = useState(false);
   const [businessLicense, setBusinessLicense] = useState(userProfile?.businessLicense || "");
-  const [wantsBadge, setWantsBadge] = useState(false);
   const logoFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // --- Speech to Text (Web Speech API) for Business Description ---
@@ -265,7 +264,6 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
       website,
       companyLogoUrl,
       businessLicense,
-      wantsBadge: businessLicense.length > 0 ? wantsBadge : false,
     };
     onComplete(profileData);
   };
@@ -569,7 +567,6 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
               value={businessLicense}
               onChange={(e) => {
                 setBusinessLicense(e.target.value);
-                if (e.target.value.length === 0) setWantsBadge(false);
               }}
               placeholder="HI-BIZ-XXXX-XXXXX"
               className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base tracking-widest"
@@ -577,40 +574,11 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
             <div className="p-4 bg-[#A63F8E]/5 rounded-xl border border-[#A63F8E]/10 flex items-start gap-3">
               <Shield size={18} className="text-[#A63F8E] shrink-0 mt-0.5" />
               <p className="text-xs text-gray-600 font-medium">
-                Skip for now or add your license to unlock a{' '}
-                <span className="font-black text-[#A63F8E]">✓ Verified Business Badge</span>
-                {' '}on your job posts — for a small fee. Helps candidates feel confident applying.
+                Optional: add your Hawaii business license number to show a{" "}
+                <span className="font-black text-[#A63F8E]">Verified Business</span> badge on your job
+                posts — no extra charge. Helps candidates trust your listing.
               </p>
             </div>
-
-            {/* Verified Badge Upsell — shown only when license entered */}
-            {businessLicense.length > 0 && (
-              <div
-                onClick={() => setWantsBadge(!wantsBadge)}
-                className={`cursor-pointer p-4 rounded-xl border-2 transition-all duration-200 flex items-start gap-3 ${
-                  wantsBadge
-                    ? 'bg-amber-50 border-amber-400'
-                    : 'bg-gray-50 border-gray-200 hover:border-amber-300'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${
-                  wantsBadge ? 'bg-amber-400 border-amber-400' : 'border-gray-300'
-                }`}>
-                  {wantsBadge && <CheckCircle size={12} className="text-white" />}
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <BadgeCheck size={16} className="text-amber-500" />
-                    <p className="text-xs font-black text-amber-700 uppercase tracking-widest">
-                      Add Verified Business Badge — $9.99
-                    </p>
-                  </div>
-                  <p className="text-xs text-gray-600 font-medium">
-                    Display a verified badge on all your job listings once your license is confirmed. Candidates are significantly more likely to apply to verified employers.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Logo Upload Placeholder */}
@@ -656,15 +624,6 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
 
           {/* Submit */}
           <div className="pt-4 space-y-4">
-            {/* Badge charge reminder */}
-            {wantsBadge && businessLicense.length > 0 && (
-              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 flex items-center gap-3">
-                <BadgeCheck size={18} className="text-amber-500 shrink-0" />
-                <p className="text-xs text-amber-700 font-medium">
-                  A <span className="font-black">$9.99 badge fee</span> will be charged after your business license is confirmed.
-                </p>
-              </div>
-            )}
             <Button
               onClick={handleSubmit}
               className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 shadow-[#A63F8E]/20 flex items-center justify-center gap-3"
