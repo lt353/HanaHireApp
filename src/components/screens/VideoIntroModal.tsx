@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X, Camera, Upload, AlertCircle, Save } from "lucide-react";
+import { X, Camera, Upload, AlertCircle, Save, Link2 } from "lucide-react";
 import { supabase } from "../../utils/supabase/client";
 import { projectId, publicAnonKey } from "../../utils/supabase/info";
 import { Check } from "lucide-react"; // Add this to your imports at the top
@@ -17,7 +17,11 @@ function formatBytes(bytes: number): string {
 	return `${mb.toFixed(1)} MB`;
 }
 
-type Step = "choose" | "record" | "upload" | "preview";
+type Step = "choose" | "record" | "upload" | "preview" | "link";
+
+type PreviewState =
+	| { kind: "blob"; blob: Blob; duration: number }
+	| { kind: "url"; url: string; duration: number };
 type UploadStatus = "uploading" | "saving" | "done" | "error";
 
 interface VideoIntroModalProps {
@@ -80,6 +84,11 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 	const [uploadFile, setUploadFile] = useState<File | null>(null);
 	const [uploadDuration, setUploadDuration] = useState(0);
 
+	/** Direct HTTPS URL to an MP4/WebM file (not Google Drive / YouTube pages). */
+	const [externalVideoUrl, setExternalVideoUrl] = useState<string | null>(null);
+	const [linkDuration, setLinkDuration] = useState(0);
+	const [linkInput, setLinkInput] = useState("");
+
 	const [thumbnailTimeSeconds, setThumbnailTimeSeconds] = useState(2);
 	const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(
 		null,
@@ -102,6 +111,9 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 		setElapsed(0);
 		setUploadFile(null);
 		setUploadDuration(0);
+		setExternalVideoUrl(null);
+		setLinkDuration(0);
+		setLinkInput("");
 		setThumbnailTimeSeconds(2);
 		setThumbnailPreviewUrl(null);
 		setUploadProgress(0);
@@ -266,6 +278,84 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 		return null;
 	};
 
+	const getPreviewState = (): PreviewState | null => {
+		if (externalVideoUrl)
+			return { kind: "url", url: externalVideoUrl, duration: linkDuration };
+		const b = getPreviewBlob();
+		if (b) return { kind: "blob", blob: b.blob, duration: b.duration };
+		return null;
+	};
+
+	const probeVideoUrl = (url: string): Promise<number> => {
+		return new Promise((resolve, reject) => {
+			const video = document.createElement("video");
+			video.preload = "metadata";
+			video.crossOrigin = "anonymous";
+			const done = () => {
+				video.removeAttribute("src");
+				video.load();
+			};
+			video.onloadedmetadata = () => {
+				const d = Math.round(video.duration);
+				done();
+				if (!Number.isFinite(d) || d <= 0) {
+					reject(
+						new Error(
+							"Could not read video length. Use a direct link to an MP4 or WebM file.",
+						),
+					);
+					return;
+				}
+				resolve(d);
+			};
+			video.onerror = () => {
+				done();
+				reject(
+					new Error(
+						"Could not load this URL. Use a direct HTTPS link to a .mp4 or .webm file (not Google Drive or YouTube).",
+					),
+				);
+			};
+			video.src = url;
+		});
+	};
+
+	const handleLinkContinue = async () => {
+		setError(null);
+		const trimmed = linkInput.trim();
+		if (!trimmed) {
+			setError("Enter a URL.");
+			return;
+		}
+		let parsed: URL;
+		try {
+			parsed = new URL(trimmed);
+		} catch {
+			setError("Enter a valid URL.");
+			return;
+		}
+		if (parsed.protocol !== "https:") {
+			setError("URL must use https://");
+			return;
+		}
+		try {
+			const d = await probeVideoUrl(trimmed);
+			if (d > MAX_DURATION) {
+				setError(`Video must be up to ${MAX_DURATION} seconds.`);
+				return;
+			}
+			setExternalVideoUrl(trimmed);
+			setLinkDuration(d);
+			setStep("preview");
+		} catch (e: unknown) {
+			const msg =
+				e instanceof Error && e.message
+					? e.message
+					: "Could not use this URL.";
+			setError(msg);
+		}
+	};
+
 	const generateThumbnail = (
 		videoBlob: Blob,
 		atTimeSeconds: number = 2,
@@ -323,9 +413,225 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 		});
 	};
 
+	const generateThumbnailFromUrl = (
+		videoUrl: string,
+		atTimeSeconds: number = 2,
+	): Promise<Blob> => {
+		return new Promise((resolve, reject) => {
+			const video = document.createElement("video");
+			video.muted = true;
+			video.playsInline = true;
+			video.crossOrigin = "anonymous";
+			video.preload = "auto";
+			const timeout = window.setTimeout(() => {
+				video.src = "";
+				video.load();
+				reject(
+					new Error(
+						"Thumbnail timed out. The host may block cross-origin access — try uploading the file instead.",
+					),
+				);
+			}, 20000);
+			const cleanup = () => {
+				window.clearTimeout(timeout);
+				video.src = "";
+				video.load();
+			};
+			video.onloadeddata = () => {
+				const t = Math.min(
+					Math.max(0, atTimeSeconds),
+					video.duration || 0,
+				);
+				video.currentTime = t;
+			};
+			video.onseeked = () => {
+				try {
+					const maxW = 640;
+					const w = video.videoWidth;
+					const h = video.videoHeight;
+					if (!w || !h) {
+						cleanup();
+						reject(new Error("No video dimensions"));
+						return;
+					}
+					const scale = w > maxW ? maxW / w : 1;
+					const canvas = document.createElement("canvas");
+					canvas.width = scale < 1 ? maxW : w;
+					canvas.height = scale < 1 ? Math.round(h * scale) : h;
+					const ctx = canvas.getContext("2d");
+					if (!ctx) {
+						cleanup();
+						reject(new Error("Canvas context"));
+						return;
+					}
+					ctx.drawImage(video, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+					canvas.toBlob(
+						(b) => {
+							cleanup();
+							if (b) resolve(b);
+							else reject(new Error("Thumbnail blob"));
+						},
+						"image/jpeg",
+						0.8,
+					);
+				} catch (err) {
+					cleanup();
+					reject(err);
+				}
+			};
+			video.onerror = () => {
+				cleanup();
+				reject(
+					new Error(
+						"Could not capture thumbnail (CORS or invalid video). Try uploading the file.",
+					),
+				);
+			};
+			video.src = videoUrl;
+		});
+	};
+
 	const uploadAndComplete = () => {
-		const preview = getPreviewBlob();
-		if (!preview) return;
+		const previewState = getPreviewState();
+		if (!previewState) return;
+
+		if (previewState.kind === "url") {
+			const bar = videoUploadBar;
+			const useBackground = Boolean(backgroundUpload && bar);
+			let barJobId = 0;
+			const uploadedEpoch = modalEpochRef.current;
+			const url = previewState.url;
+			const dur = previewState.duration;
+
+			onUploadStart?.({
+				estimatedSizeBytes: 0,
+				durationSeconds: dur,
+			});
+
+			if (useBackground && bar) {
+				suppressResetOnCloseRef.current = true;
+				barJobId = bar.beginUpload("Saving video link…");
+				onClose();
+			}
+
+			setError(null);
+			setUploadProgress(0);
+			setUploadStatus("uploading");
+			setUploadErrorMessage(null);
+			if (!useBackground) {
+				setStep("upload");
+			}
+
+			(async () => {
+				try {
+					const userId = candidateId ?? Math.floor(Date.now() / 1000);
+					const ts = Date.now();
+					const thumbPath = `${userId}_${uploadPrefix}_${ts}_thumb.jpg`;
+					const bucket = "candidate-videos";
+
+					setUploadStatus("saving");
+					if (useBackground) bar?.setSaving("Saving thumbnail…", barJobId);
+
+					let thumbBlob: Blob | null = null;
+					try {
+						thumbBlob = await generateThumbnailFromUrl(
+							url,
+							thumbnailTimeSeconds,
+						);
+					} catch {
+						try {
+							thumbBlob = await generateThumbnailFromUrl(
+								url,
+								Math.min(2, Math.max(0, dur - 0.5)),
+							);
+						} catch {
+							try {
+								thumbBlob = await generateThumbnailFromUrl(url, 0);
+							} catch {
+								thumbBlob = null;
+							}
+						}
+					}
+
+					if (uploadedEpoch !== modalEpochRef.current) {
+						if (useBackground && bar) bar.dismissIfGeneration(barJobId);
+						return;
+					}
+
+					if (!thumbBlob) {
+						onComplete(url, url, dur);
+						setUploadStatus("done");
+						suppressResetOnCloseRef.current = false;
+						resetModalFields();
+						if (useBackground && bar) {
+							bar.setDone("Video saved", barJobId);
+						} else {
+							await new Promise((r) => setTimeout(r, 1500));
+							onClose();
+						}
+						return;
+					}
+
+					const { error: uploadThumbError } = await supabase.storage
+						.from(bucket)
+						.upload(thumbPath, thumbBlob, {
+							contentType: "image/jpeg",
+							upsert: true,
+						});
+
+					if (uploadedEpoch !== modalEpochRef.current) {
+						if (useBackground && bar) bar.dismissIfGeneration(barJobId);
+						return;
+					}
+
+					const thumbPublicUrl = uploadThumbError
+						? url
+						: (supabase.storage.from(bucket).getPublicUrl(thumbPath).data
+								.publicUrl ?? url);
+
+					onComplete(url, thumbPublicUrl, dur);
+
+					if (!uploadThumbError && onThumbnailReady) {
+						onThumbnailReady(thumbPublicUrl);
+					}
+
+					setUploadStatus("done");
+					suppressResetOnCloseRef.current = false;
+					resetModalFields();
+
+					if (useBackground && bar) {
+						bar.setDone("Video saved", barJobId);
+					} else {
+						await new Promise((r) => setTimeout(r, 1500));
+						onClose();
+					}
+				} catch (err: unknown) {
+					if (uploadedEpoch !== modalEpochRef.current) {
+						if (useBackground && bar) bar.dismissIfGeneration(barJobId);
+						return;
+					}
+					const message =
+						err instanceof Error && err.message
+							? err.message
+							: "Could not save video link.";
+					console.error("Video link save error:", err);
+					suppressResetOnCloseRef.current = false;
+					resetModalFields();
+					if (useBackground && bar) {
+						bar.setError(message, barJobId);
+					} else {
+						setUploadStatus("error");
+						setUploadErrorMessage(message);
+					}
+					onUploadError?.(message);
+				}
+			})();
+
+			return;
+		}
+
+		if (previewState.kind !== "blob") return;
+		const preview = previewState;
 
 		const bar = videoUploadBar;
 		const useBackground = Boolean(backgroundUpload && bar);
@@ -493,41 +799,81 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 		})();
 	};
 
-	const previewBlob = getPreviewBlob();
+	const activePreview = getPreviewState();
 	const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (step === "preview" && previewBlob) {
-			const url = URL.createObjectURL(previewBlob.blob);
+		if (step === "preview" && activePreview) {
+			if (activePreview.kind === "url") {
+				setPreviewObjectUrl(activePreview.url);
+				setThumbnailTimeSeconds((t) =>
+					Math.min(t, Math.max(0, activePreview.duration - 0.5)),
+				);
+				return () => setPreviewObjectUrl(null);
+			}
+			const url = URL.createObjectURL(activePreview.blob);
 			setPreviewObjectUrl(url);
 			setThumbnailTimeSeconds((t) =>
-				Math.min(t, Math.max(0, previewBlob.duration - 0.5)),
+				Math.min(t, Math.max(0, activePreview.duration - 0.5)),
 			);
 			return () => {
 				URL.revokeObjectURL(url);
 				setPreviewObjectUrl(null);
 			};
-		} else {
-			setPreviewObjectUrl(null);
 		}
-	}, [step, !!recordedBlob, !!uploadFile]);
+		setPreviewObjectUrl(null);
+	}, [step, externalVideoUrl, linkDuration, recordedBlob, uploadFile]);
 
 	// Thumbnail preview image at chosen time (for preview step only). Revoke blob URLs only when leaving preview to avoid ERR_FILE_NOT_FOUND.
 	useEffect(() => {
-		if (step !== "preview" || !previewBlob) {
+		if (step !== "preview" || !activePreview) {
 			thumbnailBlobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
 			thumbnailBlobUrlsRef.current = [];
 			setThumbnailPreviewUrl(null);
 			return;
 		}
-		const url = URL.createObjectURL(previewBlob.blob);
+		if (activePreview.kind === "url") {
+			const video = document.createElement("video");
+			video.crossOrigin = "anonymous";
+			video.muted = true;
+			video.playsInline = true;
+			const time = Math.min(
+				Math.max(0, thumbnailTimeSeconds),
+				activePreview.duration,
+			);
+			let cancelled = false;
+			video.onseeked = () => {
+				if (cancelled) return;
+				try {
+					const canvas = document.createElement("canvas");
+					canvas.width = video.videoWidth;
+					canvas.height = video.videoHeight;
+					const ctx = canvas.getContext("2d");
+					if (!ctx) return;
+					ctx.drawImage(video, 0, 0);
+					setThumbnailPreviewUrl(canvas.toDataURL("image/jpeg", 0.85));
+				} catch {
+					setThumbnailPreviewUrl(null);
+				}
+			};
+			video.onerror = () => setThumbnailPreviewUrl(null);
+			video.src = activePreview.url;
+			video.currentTime = time;
+			return () => {
+				cancelled = true;
+				setThumbnailPreviewUrl(null);
+				video.src = "";
+				video.load();
+			};
+		}
+		const url = URL.createObjectURL(activePreview.blob);
 		thumbnailBlobUrlsRef.current.push(url);
 		const video = document.createElement("video");
 		video.muted = true;
 		video.playsInline = true;
 		const time = Math.min(
 			Math.max(0, thumbnailTimeSeconds),
-			previewBlob.duration,
+			activePreview.duration,
 		);
 		let cancelled = false;
 		video.onseeked = () => {
@@ -546,26 +892,36 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 			cancelled = true;
 			setThumbnailPreviewUrl(null);
 		};
-	}, [step, thumbnailTimeSeconds, previewObjectUrl]);
+	}, [
+		step,
+		thumbnailTimeSeconds,
+		previewObjectUrl,
+		externalVideoUrl,
+		linkDuration,
+		recordedBlob,
+		uploadFile,
+	]);
 
 	if (!isOpen) return null;
 
 	const title =
 		step === "choose"
 			? "Record Your Video Intro"
-			: step === "record"
-				? isRecording
-					? "Recording…"
-					: "Get ready to record"
-				: step === "upload"
-					? uploadStatus === "done"
-						? "Saved"
-						: uploadStatus === "error"
-							? "Upload failed"
-							: uploadStatus === "saving"
-								? "Saving to your profile…"
-								: "Uploading video…"
-					: "Video Intro";
+			: step === "link"
+				? "Video from link"
+				: step === "record"
+					? isRecording
+						? "Recording…"
+						: "Get ready to record"
+					: step === "upload"
+						? uploadStatus === "done"
+							? "Saved"
+							: uploadStatus === "error"
+								? "Upload failed"
+								: uploadStatus === "saving"
+									? "Saving to your profile…"
+									: "Uploading video…"
+						: "Video Intro";
 
 	return createPortal(
 		<div
@@ -586,6 +942,12 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 					setStep("choose");
 					setRecordedBlob(null);
 					setUploadFile(null);
+					setExternalVideoUrl(null);
+					setLinkDuration(0);
+				} else if (step === "link") {
+					setStep("choose");
+					setLinkInput("");
+					setError(null);
 				} else {
 					onClose();
 				}
@@ -609,6 +971,12 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 								setStep("choose");
 								setRecordedBlob(null);
 								setUploadFile(null);
+								setExternalVideoUrl(null);
+								setLinkDuration(0);
+							} else if (step === "link") {
+								setStep("choose");
+								setLinkInput("");
+								setError(null);
 							} else {
 								onClose();
 							}
@@ -695,8 +1063,49 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 											onChange={handleFileSelect}
 										/>
 									</label>
+									<button
+										type="button"
+										onClick={() => {
+											setError(null);
+											setStep("link");
+										}}
+										className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-800 font-bold hover:border-[#148F8B]/40 hover:bg-[#148F8B]/5 transition-colors"
+									>
+										<Link2 size={24} className="text-[#148F8B]" />
+										Use video URL
+									</button>
+									<p className="text-[11px] text-gray-500 font-medium leading-snug px-1">
+										Direct HTTPS link to an <span className="font-bold">.mp4</span> or{" "}
+										<span className="font-bold">.webm</span> file (e.g. your CDN). Google
+										Drive / YouTube links won&apos;t work.
+									</p>
 								</div>
 							</>
+						)}
+
+						{step === "link" && (
+							<div className="space-y-4">
+								<p className="text-gray-600 font-medium text-sm">
+									Paste a <span className="font-black">direct</span> link to your intro
+									video file. The server must allow playback (some hosts block thumbnails).
+								</p>
+								<input
+									type="url"
+									value={linkInput}
+									onChange={(e) => setLinkInput(e.target.value)}
+									placeholder="https://example.com/path/intro.mp4"
+									className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#148F8B]/10 outline-none font-bold text-base"
+									autoComplete="off"
+								/>
+								<button
+									type="button"
+									onClick={() => void handleLinkContinue()}
+									className="w-full py-4 rounded-2xl bg-[#148F8B] text-white font-black hover:bg-[#136068] transition-colors flex items-center justify-center gap-2"
+								>
+									<Link2 size={20} />
+									Continue
+								</button>
+							</div>
 						)}
 
 						{step === "record" && (
@@ -883,20 +1292,27 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 							</div>
 						)}
 
-						{step === "preview" && previewBlob && (
+						{step === "preview" && activePreview && (
 							<div className="space-y-4">
 								<div className="aspect-video bg-gray-900 rounded-2xl overflow-hidden">
 									<video
 										src={previewObjectUrl || undefined}
 										controls
+										crossOrigin={activePreview.kind === "url" ? "anonymous" : undefined}
 										className="w-full h-full object-contain"
 									/>
 								</div>
 								<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-gray-600">
-									<span>Duration: {previewBlob.duration}s</span>
-									<span>Size: {formatBytes(previewBlob.blob.size)}</span>
-									{previewBlob.blob.size > MAX_FILE_BYTES && (
-										<span className="text-red-500">Max 50 MB</span>
+									<span>Duration: {activePreview.duration}s</span>
+									{activePreview.kind === "blob" ? (
+										<>
+											<span>Size: {formatBytes(activePreview.blob.size)}</span>
+											{activePreview.blob.size > MAX_FILE_BYTES && (
+												<span className="text-red-500">Max 50 MB</span>
+											)}
+										</>
+									) : (
+										<span className="text-[#148F8B] font-bold">External URL</span>
 									)}
 								</div>
 								<div className="space-y-2">
@@ -907,7 +1323,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 										<input
 											type="range"
 											min={0}
-											max={Math.max(0, previewBlob.duration - 0.5)}
+											max={Math.max(0, activePreview.duration - 0.5)}
 											step={0.5}
 											value={thumbnailTimeSeconds}
 											aria-label="Choose thumbnail frame time"
@@ -931,24 +1347,38 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 										</div>
 									)}
 								</div>
-								{previewBlob.duration <= MAX_DURATION ? (
+								{activePreview.duration <= MAX_DURATION ? (
 									<div className="flex gap-3">
 										<button
 											type="button"
 											onClick={async () => {
+												const wasUrl = activePreview?.kind === "url";
+												const prevUrl =
+													activePreview?.kind === "url"
+														? activePreview.url
+														: "";
 												setRecordedBlob(null);
 												setRecordedDuration(0);
 												setUploadFile(null);
 												setUploadDuration(0);
+												setExternalVideoUrl(null);
+												setLinkDuration(0);
 												if (uploadFile) {
 													setStep("choose");
+												} else if (wasUrl) {
+													setLinkInput(prevUrl);
+													setStep("link");
 												} else {
 													await openRecordView();
 												}
 											}}
 											className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"
 										>
-											{uploadFile ? "Choose different file" : "Re-record"}
+											{uploadFile
+												? "Choose different file"
+												: activePreview?.kind === "url"
+													? "Different URL"
+													: "Re-record"}
 										</button>
 										<button
 											type="button"
@@ -965,20 +1395,34 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 									<button
 										type="button"
 										onClick={async () => {
+											const wasUrl = activePreview?.kind === "url";
+											const prevUrl =
+												activePreview?.kind === "url"
+													? activePreview.url
+													: "";
 											setRecordedBlob(null);
 											setRecordedDuration(0);
 											setUploadFile(null);
 											setUploadDuration(0);
+											setExternalVideoUrl(null);
+											setLinkDuration(0);
 											if (uploadFile) {
 												setStep("choose");
+											} else if (wasUrl) {
+												setLinkInput(prevUrl);
+												setStep("link");
 											} else {
 												await openRecordView();
 											}
 										}}
 										className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-700 font-bold hover:bg-gray-50"
 									>
-										{uploadFile ? "Choose different file" : "Re-record"} (up to
-										60 seconds)
+										{uploadFile
+											? "Choose different file"
+											: activePreview?.kind === "url"
+												? "Different URL"
+												: "Re-record"}{" "}
+										(up to 60 seconds)
 									</button>
 								)}
 							</div>

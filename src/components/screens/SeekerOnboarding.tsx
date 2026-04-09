@@ -913,11 +913,11 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
                   className="w-full py-12 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#148F8B] hover:border-[#148F8B]/50 hover:bg-[#148F8B]/5 transition-all"
                 >
                   <Camera size={36} />
-                  <span className="font-black text-xs uppercase tracking-widest">Record or upload your 30–60 second intro</span>
+                  <span className="font-black text-xs uppercase tracking-widest">Record, upload, or link your 30–60 second intro</span>
                   <span className="text-[10px] text-gray-400 font-medium">Tap to get started</span>
                 </button>
                 <p className="text-xs text-gray-500">
-                  You can record with your camera or upload a video file (up to 60 seconds, max 50 MB).
+                  Record with your camera, upload a file, or paste a direct MP4/WebM URL (up to 60 seconds, max 50 MB for uploads).
                 </p>
               </>
             )}
