@@ -115,8 +115,10 @@ const truncStr = (
 
 // Demo account emails for demo flow (go through onboarding but don't create new records)
 const DEMO_ACCOUNTS = {
-	employer: "demo@koabeachbistro.com",
-	candidate: "luca.kahananui@email.com",
+	/** DB employer id 134 — DaKine Handyman */
+	employer: "dakinehandyman@gmail.com",
+	/** DB candidate id 128 — Kyle Malone */
+	candidate: "kyle.malone808@gmail.com",
 };
 
 const RESUME_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -558,8 +560,9 @@ export default function App() {
 		}
 	}, [currentView]);
 
-	const fetchInitialData = async () => {
-		setIsLoading(true);
+	const fetchInitialData = async (options?: { quiet?: boolean }) => {
+		const quiet = options?.quiet === true;
+		if (!quiet) setIsLoading(true);
 		try {
 			// Fetch data from server
 			const response = await fetch(`${API_BASE}/data`, {
@@ -620,18 +623,21 @@ export default function App() {
 						"Failed to fetch jobs from Supabase:",
 						supabaseJobsError,
 					);
-				const employers =
-					supabaseEmployers && supabaseEmployers.length > 0
+				const allEmployersForMerge =
+					supabaseEmployers != null && supabaseEmployers.length > 0
 						? supabaseEmployers
 						: newData.employers || [];
+				const employersVisible = allEmployersForMerge.filter(
+					(e: { profile_complete?: boolean }) => e.profile_complete === true,
+				);
 				const allJobs =
 					supabaseJobs && supabaseJobs.length > 0
 						? supabaseJobs
 						: newData.jobs || [];
-				setEmployers(employers);
-				setJobs(mergeJobsWithEmployers(allJobs, employers));
+				setEmployers(employersVisible);
+				setJobs(mergeJobsWithEmployers(allJobs, allEmployersForMerge));
 				console.log(
-					`Successfully seeded and loaded ${allJobs.length} jobs and ${(newData.candidates || []).length || 0} candidates`,
+					`Successfully seeded and loaded ${allJobs.length} jobs and ${(newData.candidates || []).length || 0} candidates (employer pool = profile_complete)`,
 				);
 				toast.success("Marketplace initialized!");
 			} else {
@@ -650,18 +656,21 @@ export default function App() {
 						"Failed to fetch jobs from Supabase:",
 						supabaseJobsError,
 					);
-				const employers =
-					supabaseEmployers && supabaseEmployers.length > 0
+				const allEmployersForMerge =
+					supabaseEmployers != null && supabaseEmployers.length > 0
 						? supabaseEmployers
 						: data.employers || [];
+				const employersVisible = allEmployersForMerge.filter(
+					(e: { profile_complete?: boolean }) => e.profile_complete === true,
+				);
 				const allJobs =
 					supabaseJobs && supabaseJobs.length > 0
 						? supabaseJobs
 						: data.jobs || [];
-				setEmployers(employers);
-				setJobs(mergeJobsWithEmployers(allJobs, employers));
+				setEmployers(employersVisible);
+				setJobs(mergeJobsWithEmployers(allJobs, allEmployersForMerge));
 				console.log(
-					`Loaded ${allJobs.length} jobs and ${(data.candidates || []).length || 0} candidates (talent pool = is_profile_complete via /data)`,
+					`Loaded ${allJobs.length} jobs and ${(data.candidates || []).length || 0} candidates (talent pool = is_profile_complete; employer/job pool = profile_complete)`,
 				);
 			}
 		} catch (err) {
@@ -671,7 +680,7 @@ export default function App() {
 			setCandidates([]);
 			setEmployers([]);
 		} finally {
-			setIsLoading(false);
+			if (!quiet) setIsLoading(false);
 		}
 	};
 
@@ -754,10 +763,24 @@ export default function App() {
 						.in("id", itemIds);
 
 					if (!jobsError && savedJobs) {
-						// Merge saved jobs with employer data
+						const empIds = [
+							...new Set(
+								savedJobs
+									.map((j) => Number(j.employer_id))
+									.filter((id) => !Number.isNaN(id)),
+							),
+						];
+						let employersForMerge: any[] = employers;
+						if (empIds.length > 0) {
+							const { data: empRows } = await supabase
+								.from("employers")
+								.select("*")
+								.in("id", empIds);
+							if (empRows && empRows.length > 0) employersForMerge = empRows;
+						}
 						const mergedSavedJobs = mergeJobsWithEmployers(
 							savedJobs,
-							employers,
+							employersForMerge,
 						);
 						setSeekerQueue(mergedSavedJobs);
 						console.log(`Loaded ${mergedSavedJobs.length} saved jobs`);
@@ -1502,10 +1525,15 @@ export default function App() {
 
 	const handleNavigate = (
 		view: ViewType,
-		options?: { selectConversation?: string },
+		options?: {
+			selectConversation?: string;
+			/** After saving consent in the modal, React state is not updated yet in the same tick — use this so we do not re-intercept and block onboarding/dashboard. */
+			skipEmployerConsentGate?: boolean;
+		},
 	) => {
 		// Employer consent gate — intercept navigation to protected employer views
 		if (
+			!options?.skipEmployerConsentGate &&
 			(view === "candidates" || view === "employer-onboarding") &&
 			userRole === "employer" &&
 			!userProfile?.eeoc_consent_accepted
@@ -1907,8 +1935,14 @@ export default function App() {
 		0,
 	);
 
+	const publicEmployerIds = useMemo(
+		() => new Set(employers.map((e: { id?: unknown }) => Number(e.id))),
+		[employers],
+	);
+
 	const filteredJobs = jobs.filter(
 		(j) =>
+			publicEmployerIds.has(Number(j.employer_id)) &&
 			j.status !== "filled" &&
 			(filters.industries.length === 0 ||
 				filters.industries.includes(j.company_industry)) &&
@@ -2051,6 +2085,27 @@ export default function App() {
 						interactionFee={INTERACTION_FEE}
 						viewerLocation={userProfile?.location}
 						employers={employers}
+						onOpenMessageWithEmployer={
+							isLoggedIn &&
+							userRole === "seeker" &&
+							(userProfile?.candidateId ?? userProfile?.id)
+								? (employerId: number) => {
+										const eid = Number(employerId);
+										const candidateId = Number(
+											userProfile?.candidateId ?? userProfile?.id,
+										);
+										if (!eid || !candidateId) return;
+										void getOrCreateConversation(eid, candidateId).then(
+											(id) => {
+												handleNavigate(
+													"messages",
+													id ? { selectConversation: id } : undefined,
+												);
+											},
+										);
+									}
+								: undefined
+						}
 					/>
 				);
 			case "candidates":
@@ -2448,6 +2503,7 @@ export default function App() {
 					<JobPostingFlow
 						userProfile={userProfile}
 						existingJob={editingJob}
+						onMarketplaceRefresh={() => void fetchInitialData({ quiet: true })}
 						onBack={() => {
 							setEditingJob(null);
 							handleNavigate("employer");
@@ -2458,16 +2514,20 @@ export default function App() {
 								[updatedJob],
 								employers,
 							)[0];
+							const mid = Number(mergedJob?.id);
 
-							if (editingJob?.id) {
-								// Update existing job in the list
-								setJobs(
-									jobs.map((j) => (j.id === updatedJob.id ? mergedJob : j)),
+							setJobs((prev) => {
+								if (editingJob?.id) {
+									return prev.map((j: any) =>
+										Number(j.id) === Number(updatedJob.id) ? mergedJob : j,
+									);
+								}
+								// New job: avoid duplicate if quiet refresh already added this id
+								const rest = prev.filter(
+									(j: any) => !Number.isFinite(mid) || Number(j.id) !== mid,
 								);
-							} else {
-								// Add new job to the list
-								setJobs([mergedJob, ...jobs]);
-							}
+								return [mergedJob, ...rest];
+							});
 							setEditingJob(null);
 							handleNavigate("employer");
 						}}
@@ -2501,12 +2561,14 @@ export default function App() {
 							}}
 							onCancel={() => {
 								setShowSeekerConsentModal(false);
-								handleNavigate("landing");
 							}}
 						/>
 						<SeekerOnboarding
 							key={`seeker-onb-${userProfile?.candidateId ?? userProfile?.id ?? "na"}`}
 							userProfile={userProfile}
+							onRequestVideoProfileConsent={() =>
+								setShowSeekerConsentModal(true)
+							}
 							onPendingResumeDraftConsumed={
 								handleSeekerPendingResumeDraftConsumed
 							}
@@ -2703,6 +2765,7 @@ export default function App() {
 					<EmployerOnboarding
 						isEditing={false}
 						userProfile={userProfile}
+						onMarketplaceRefresh={() => void fetchInitialData({ quiet: true })}
 						onComplete={async (profileData) => {
 							// Check if this is a demo account
 							if (profileData.isDemoAccount) {
@@ -2729,8 +2792,17 @@ export default function App() {
 										bio: existingEmployer.company_description,
 										companyLogoUrl: existingEmployer.company_logo_url,
 										businessVerified: existingEmployer.business_verified,
+										website: existingEmployer.website,
+										businessLicense:
+											existingEmployer.business_license_number,
 										employerId: existingEmployer.id,
 										id: existingEmployer.id,
+										eeoc_consent_accepted:
+											existingEmployer.eeoc_consent_accepted === true,
+										eeoc_consent_timestamp:
+											existingEmployer.eeoc_consent_timestamp ?? undefined,
+										employee_count_range:
+											existingEmployer.employee_count_range ?? undefined,
 									});
 									handleNavigate("employer");
 									toast.success("Demo complete! Welcome to your dashboard.");
@@ -2741,6 +2813,10 @@ export default function App() {
 							// Regular account: update employers table with onboarding data
 							if (profileData.employerId) {
 								try {
+									const trimmedLogo =
+										typeof profileData.companyLogoUrl === "string"
+											? profileData.companyLogoUrl.trim()
+											: "";
 									const { error: updateError } = await supabase
 										.from("employers")
 										.update({
@@ -2749,10 +2825,12 @@ export default function App() {
 											location: profileData.location || null,
 											phone: profileData.phone || null,
 											industry: profileData.industry || null,
-											company_logo_url: profileData.companyLogoUrl || null,
+											company_logo_url:
+												trimmedLogo.length > 0 ? trimmedLogo : null,
 											website: profileData.website || null,
 											business_license_number:
 												profileData.businessLicense || null,
+											profile_complete: trimmedLogo.length > 0,
 											updated_at: new Date().toISOString(),
 										})
 										.eq("id", profileData.employerId);
@@ -2765,6 +2843,8 @@ export default function App() {
 										toast.error(
 											"Profile saved locally, but failed to sync to database.",
 										);
+									} else {
+										void fetchInitialData({ quiet: true });
 									}
 								} catch (err) {
 									console.error("Unexpected error updating employer:", err);
@@ -2783,9 +2863,14 @@ export default function App() {
 					<EmployerOnboarding
 						isEditing={true}
 						userProfile={userProfile}
+						onMarketplaceRefresh={() => void fetchInitialData({ quiet: true })}
 						onComplete={async (profileData) => {
 							if (profileData.employerId) {
 								try {
+									const trimmedLogo =
+										typeof profileData.companyLogoUrl === "string"
+											? profileData.companyLogoUrl.trim()
+											: "";
 									const { error: updateError } = await supabase
 										.from("employers")
 										.update({
@@ -2794,10 +2879,12 @@ export default function App() {
 											location: profileData.location || null,
 											phone: profileData.phone || null,
 											industry: profileData.industry || null,
-											company_logo_url: profileData.companyLogoUrl || null,
+											company_logo_url:
+												trimmedLogo.length > 0 ? trimmedLogo : null,
 											website: profileData.website || null,
 											business_license_number:
 												profileData.businessLicense || null,
+											profile_complete: trimmedLogo.length > 0,
 											updated_at: new Date().toISOString(),
 										})
 										.eq("id", profileData.employerId);
@@ -2810,6 +2897,8 @@ export default function App() {
 										toast.error(
 											"Profile saved locally, but failed to sync to database.",
 										);
+									} else {
+										void fetchInitialData({ quiet: true });
 									}
 								} catch (err) {
 									console.error("Unexpected error updating employer:", err);
@@ -3055,7 +3144,7 @@ export default function App() {
 										const { data: candidate } = await supabase
 											.from("candidates")
 											.select(
-												"id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference",
+												"id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_consent_accepted, profile_consent_timestamp",
 											)
 											.eq("email", email)
 											.maybeSingle();
@@ -3119,6 +3208,10 @@ export default function App() {
 												videoUrl: candidate.video_url,
 												candidateId: candidate.id,
 												id: candidate.id,
+												profile_consent_accepted:
+													candidate.profile_consent_accepted === true,
+												profile_consent_timestamp:
+													candidate.profile_consent_timestamp ?? undefined,
 											};
 										} else {
 											// If not a candidate, check employers table (maybeSingle avoids 406 when no row)
@@ -3149,6 +3242,12 @@ export default function App() {
 													businessLicense: employer.business_license_number,
 													employerId: employer.id,
 													id: employer.id,
+													eeoc_consent_accepted:
+														employer.eeoc_consent_accepted === true,
+													eeoc_consent_timestamp:
+														employer.eeoc_consent_timestamp ?? undefined,
+													employee_count_range:
+														employer.employee_count_range ?? undefined,
 												};
 											}
 										}
@@ -3591,7 +3690,7 @@ export default function App() {
 														role: signupRole,
 														...signupFormData,
 														isDemoAccount: true, // Flag for onboarding handler
-														employerId: 72, // Demo employer ID
+														employerId: 134, // Demo employer id — DaKine Handyman
 													};
 													setUserProfile(profile);
 													setUserRole(signupRole!);
@@ -3613,7 +3712,7 @@ export default function App() {
 													.from("employers")
 													.select("*")
 													.eq("email", signupFormData.email)
-													.single();
+													.maybeSingle();
 
 												if (existingEmployer) {
 													await Promise.all([
@@ -3652,6 +3751,14 @@ export default function App() {
 															existingEmployer.website,
 														employerId: existingEmployer.id,
 														id: existingEmployer.id,
+														eeoc_consent_accepted:
+															existingEmployer.eeoc_consent_accepted === true,
+														eeoc_consent_timestamp:
+															existingEmployer.eeoc_consent_timestamp ??
+															undefined,
+														employee_count_range:
+															existingEmployer.employee_count_range ??
+															undefined,
 													});
 													setUserRole("employer");
 													setIsLoggedIn(true);
@@ -3693,11 +3800,17 @@ export default function App() {
 													return;
 												}
 
-												// Store employer with database ID
+												// Store employer with database ID (include consent columns from row)
 												const profile: any = {
 													role: signupRole,
 													...signupFormData,
 													employerId: employerData.id,
+													eeoc_consent_accepted:
+														employerData.eeoc_consent_accepted === true,
+													eeoc_consent_timestamp:
+														employerData.eeoc_consent_timestamp ?? undefined,
+													employee_count_range:
+														employerData.employee_count_range ?? undefined,
 												};
 												setUserProfile(profile);
 												setUserRole(signupRole!);
@@ -3767,6 +3880,11 @@ export default function App() {
 																candidateId: candidate.id,
 																id: candidate.id,
 																isDemoAccount: true,
+																profile_consent_accepted:
+																	candidate.profile_consent_accepted === true,
+																profile_consent_timestamp:
+																	candidate.profile_consent_timestamp ??
+																	undefined,
 															};
 															setUserProfile(mappedProfile);
 														}
@@ -3789,7 +3907,6 @@ export default function App() {
 													setSignupFormData({});
 													setIsSignupLoading(false);
 													handleNavigate("seeker-onboarding");
-													setShowSeekerConsentModal(true);
 													toast.success(
 														"Demo account detected! Let's go through the onboarding.",
 													);
@@ -3800,7 +3917,7 @@ export default function App() {
 												const { data: existingCandidate } = await supabase
 													.from("candidates")
 													.select(
-														"id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference",
+														"id, name, email, phone, location, video_url, video_thumbnail_url, bio, skills, years_experience, education, availability, preferred_pay_range, industries_interested, work_style, job_types_seeking, preferred_job_categories, display_title, visibility_preference, profile_consent_accepted, profile_consent_timestamp",
 													)
 													.eq("email", signupFormData.email)
 													.maybeSingle();
@@ -3839,6 +3956,11 @@ export default function App() {
 														displayTitle: existingCandidate.display_title,
 														candidateId: existingCandidate.id,
 														id: existingCandidate.id,
+														profile_consent_accepted:
+															existingCandidate.profile_consent_accepted === true,
+														profile_consent_timestamp:
+															existingCandidate.profile_consent_timestamp ??
+															undefined,
 													});
 													setUserRole("seeker");
 													setIsLoggedIn(true);
@@ -3912,7 +4034,6 @@ export default function App() {
 												setSeekerResumeImportFileName(null);
 												setIsSignupLoading(false);
 												handleNavigate("seeker-onboarding");
-												setShowSeekerConsentModal(true);
 												toast.success(
 													"Account created! Let's set up your profile.",
 												);
@@ -5721,13 +5842,14 @@ export default function App() {
 							employee_count_range: employeeCountRange,
 						}));
 						setShowEmployerConsentModal(false);
-						if (pendingEmployerAction === "post-job")
-							handleNavigate("job-posting");
-						else if (pendingEmployerAction === "browse-candidates")
-							handleNavigate("candidates");
-						else if (pendingEmployerAction === "employer-onboarding")
-							handleNavigate("employer-onboarding");
+						const next = pendingEmployerAction;
 						setPendingEmployerAction(null);
+						const skip = { skipEmployerConsentGate: true as const };
+						if (next === "post-job") handleNavigate("job-posting", skip);
+						else if (next === "browse-candidates")
+							handleNavigate("candidates", skip);
+						else if (next === "employer-onboarding")
+							handleNavigate("employer-onboarding", skip);
 					}}
 					onCancel={() => {
 						setShowEmployerConsentModal(false);

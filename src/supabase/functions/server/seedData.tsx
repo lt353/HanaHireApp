@@ -69,7 +69,8 @@ export const generateMockEmployers = () => {
     company_size: company.size,
     company_description: `${company.name} is an established firm in Hawaii dedicated to local excellence.`,
     business_license: `HI-BIZ-2024-${10000 + idx}`,
-    business_verified: idx % 2 === 0
+    business_verified: idx % 2 === 0,
+    profile_complete: true,
   }));
 };
 

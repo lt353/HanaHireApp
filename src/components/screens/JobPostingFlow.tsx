@@ -31,11 +31,18 @@ interface JobPostingFlowProps {
   onNavigate?: (view: ViewType) => void;
   userProfile?: any;
   existingJob?: any;
+  onMarketplaceRefresh?: () => void;
 }
 
 type FlowStep = 'selection' | 'ai-input' | 'loading' | 'review' | 'confirmation';
 
-export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }: JobPostingFlowProps) {
+export function JobPostingFlow({
+	userProfile,
+	existingJob,
+	onBack,
+	onComplete,
+	onMarketplaceRefresh,
+}: JobPostingFlowProps) {
   console.log("🔷 JobPostingFlow MOUNTED/RENDERED with userProfile:", userProfile);
   const [step, setStep] = useState<FlowStep>('selection');
   const [prompt, setPrompt] = useState("");
@@ -382,8 +389,13 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
           industry: formData.industry === "Other" ? formData.custom_industry : formData.industry,
         };
 
-        if (formData.image_url) {
-          employerData.company_logo_url = formData.image_url;
+        const imageTrim =
+          typeof formData.image_url === "string"
+            ? formData.image_url.trim()
+            : "";
+        if (imageTrim.length > 0) {
+          employerData.company_logo_url = imageTrim;
+          employerData.profile_complete = true;
         }
 
         const { error: employerError } = await supabase
@@ -395,6 +407,8 @@ export function JobPostingFlow({ userProfile, existingJob, onBack, onComplete }:
           console.error("Error updating employer info:", employerError);
           toast.error("Failed to update company information");
           // Continue anyway - don't block job posting
+        } else if (imageTrim.length > 0) {
+          onMarketplaceRefresh?.();
         }
       }
 

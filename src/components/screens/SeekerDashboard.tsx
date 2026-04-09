@@ -307,14 +307,14 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 													}
 												: isUnlocked
 													? {
-															label: "Unlocked — apply to message",
+															label: "Job unlocked",
 															bg: "bg-[#148F8B]/10",
 															text: "text-[#148F8B]",
 														}
 													: {
-															label: "Action needed — apply to read",
+															label: "You can message anytime",
 															bg: "bg-amber-50",
-															text: "text-amber-700",
+															text: "text-amber-800",
 														};
 
 										return (
@@ -865,13 +865,12 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 											</div>
 										)}
 
-										{/* Message employer (when applied) + Apply CTA */}
+										{/* Message employer + Apply CTA (messaging does not require unlock/apply) */}
 										<div
 											className="pt-4 border-t border-gray-100 space-y-2"
 											onClick={(e) => e.stopPropagation()}
 										>
-											{hasApplied &&
-												onOpenMessageWithEmployer &&
+											{onOpenMessageWithEmployer &&
 												job.employer_id != null && (
 													<Button
 														className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white shadow-lg shadow-[#148F8B]/20 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-black uppercase tracking-widest"

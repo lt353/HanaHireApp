@@ -27,6 +27,10 @@ function isTalentPoolCandidate(row: Record<string, unknown>): boolean {
   return row.is_profile_complete === true;
 }
 
+function isEmployerJobPoolVisible(row: Record<string, unknown>): boolean {
+  return row.profile_complete === true;
+}
+
 // GET /data - Fetch all jobs, candidates, and employers from real database tables
 base.get('/data', async (c) => {
   try {
@@ -43,10 +47,20 @@ base.get('/data', async (c) => {
     const poolCandidates = (candRes.data || []).filter((row: Record<string, unknown>) =>
       isTalentPoolCandidate(row),
     );
+    const allEmployers = empRes.data || [];
+    const poolEmployers = allEmployers.filter((row: Record<string, unknown>) =>
+      isEmployerJobPoolVisible(row),
+    );
+    const visibleEmployerIds = new Set(
+      poolEmployers.map((e: Record<string, unknown>) => Number(e.id)),
+    );
+    const poolJobs = (jobsRes.data || []).filter((j: Record<string, unknown>) =>
+      visibleEmployerIds.has(Number(j.employer_id)),
+    );
     return c.json({ 
-      jobs: jobsRes.data || [], 
+      jobs: poolJobs, 
       candidates: poolCandidates,
-      employers: empRes.data || []
+      employers: poolEmployers
     });
   } catch (error) {
     console.error('Error fetching data from Supabase:', error);

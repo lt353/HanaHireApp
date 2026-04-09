@@ -25,9 +25,16 @@ interface EmployerOnboardingProps {
   onComplete: (profileData: any) => void;
   onNavigate?: (view: ViewType) => void;
   isEditing?: boolean;
+  /** Called after a logo file is uploaded and saved to `employers` (refreshes marketplace). */
+  onMarketplaceRefresh?: () => void;
 }
 
-export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProfile, onComplete, isEditing = false }) => {
+export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
+  userProfile,
+  onComplete,
+  isEditing = false,
+  onMarketplaceRefresh,
+}) => {
   // Prefill bio when profile (or AI import) provides it.
   const [bio, setBio] = useState(userProfile?.bio || "");
   const [industry, setIndustry] = useState(userProfile?.industry || "");
@@ -205,7 +212,10 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
         setCompanySize(d.companySize);
         setLocation(d.location);
         setPhone(d.phone);
-        setWebsite("www.alohabistro.com");
+        setWebsite(typeof d.website === "string" ? d.website : "");
+        setCompanyLogoUrl(
+          typeof d.companyLogoUrl === "string" ? d.companyLogoUrl : "",
+        );
         setBusinessLicense(d.businessLicense);
         toast.info("Using local demo data (demo employer not found in Supabase).");
         return;
@@ -292,6 +302,25 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({ userProf
       }
 
       setCompanyLogoUrl(data.publicUrl);
+
+      const employerId = userProfile?.employerId ?? userProfile?.id;
+      if (employerId != null) {
+        const { error: persistError } = await supabase
+          .from("employers")
+          .update({
+            company_logo_url: data.publicUrl,
+            profile_complete: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", employerId);
+        if (persistError) {
+          console.error("Failed to save logo to profile:", persistError);
+          toast.error("Logo uploaded but could not save to your profile. Try saving the form.");
+        } else {
+          onMarketplaceRefresh?.();
+        }
+      }
+
       toast.success("Logo uploaded.");
     } catch (err: any) {
       toast.error(err?.message || "Logo upload failed.");

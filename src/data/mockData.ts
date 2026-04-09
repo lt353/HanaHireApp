@@ -273,36 +273,77 @@ export const CANDIDATE_CATEGORIES = {
 
 // Demo profiles matching the real demo accounts in the database
 export const DEMO_PROFILES = {
+  /** Candidate id 128 — Kyle Malone */
   seeker: {
-    email: "luca.kahananui@email.com",
+    email: "kyle.malone808@gmail.com",
     password: "demo123",
-    name: "Luca Kahananui",
-    phone: "(808) 555-1234",
-    location: "Honolulu, Oʻahu",
+    name: "Kyle Malone",
+    phone: "(808) 635-2222",
+    location: "Poʻipū, Kauaʻi",
     skills: [
       "Customer Service",
-      "Bartending",
-      "Food Handlers Card",
-      "Aloha Spirit",
+      "Leadership",
+      "Cash Handling",
+      "Administrative",
+      "Microsoft Office",
+      "Landscaping",
+      "Construction",
+      "Plumbing",
+      "Management",
+      "Hospitality",
+      "Office Management",
+      "Hard Labor",
     ],
-    experience: "1-3 years",
+    experience: "10+ years",
     education: "Associate Degree",
     availability: "Immediate",
-    bio: "Aloha! Friendly and hardworking hospitality professional with 3 years of experience in food & beverage. Love working with people and bringing the Aloha spirit to every interaction.",
-    targetPay: "$20-25/hr",
-    industries: ["Restaurant", "Bar/Brewery", "Hotel/Resort"],
+    bio: `I'm the kind of person who doesn't mind jumping between different types of work. One day I'm handling guest complaints and making sure the front desk runs smooth, the next I'm out back fixing irrigation or moving furniture. I've been doing this long enough that not much phases me anymore.
+
+What drives me? Honestly, I like being useful. I don't want to sit around - I want to solve problems, whether that's calming down an upset guest or figuring out why the landscaping equipment won't start. I'm pretty easygoing with people but I take the work seriously. I show up on time, I finish what I start, and I don't need someone watching over my shoulder to stay busy.
+
+I'm not looking to specialize in just one thing. I like variety. If you need someone who can talk professionally with clients and also get their hands dirty with the hard work, that's me.`,
+    targetPay: "$30-35/hr",
+    /** Second band for onboarding multi-select */
+    targetPays: ["$30-35/hr", "$28-35/hr"],
+    industries: [
+      "Tour Company",
+      "Plumbing",
+      "Hotel/Resort",
+      "Construction",
+      "Property Management",
+    ],
+    jobTypesSeeking: ["Full-time"],
+    preferredJobCategories: [
+      "Customer Service",
+      "Tourism & Recreation",
+      "Office & Admin",
+      "Maintenance & Facilities",
+      "Hospitality Services",
+      "Trades & Construction",
+    ],
+    workStyles: [
+      "Team Player",
+      "Outgoing",
+      "Hands-On",
+      "Problem-Solver",
+      "Energetic",
+    ],
+    displayTitle: "Hospitality + Hands on Labor",
   },
+  /** Employer id 134 — DaKine Handyman */
   employer: {
-    email: "demo@koabeachbistro.com",
+    email: "dakinehandyman@gmail.com",
     password: "demo123",
-    businessName: "Koa Beach Bistro",
-    contactName: "Makani Torres",
-    phone: "(808) 555-9876",
-    location: "Waikīkī, Oʻahu",
-    industry: "Restaurant",
+    businessName: "DaKine Handyman",
+    phone: "(808) 634-5409",
+    location: "Kalaheo, Kauaʻi",
+    industry: "Home Repair",
     companySize: "Small Business (10-25)",
-    businessLicense: "HI-BIZ-2024-88432",
-    bio: "Beachfront restaurant in Waikiki serving fresh Hawaiian cuisine with ocean views. We pride ourselves on a supportive team culture and aloha spirit.",
+    businessLicense: "HI-FB-000005",
+    website: "https://dakinehandyman.com/",
+    companyLogoUrl:
+      "https://img1.wsimg.com/isteam/ip/4fa5556d-c038-44fb-8023-1e791bac44b4/logo/9eb9c56f-78d6-4fc0-921b-c43a4e166cce.jpg/:/rs=w:103,h:103,cg:true,m/cr=w:103,h:103/qt=q:100/ll",
+    bio: `DaKine Handyman is a family-owned home repair and improvement company proudly serving Kauaʻi. We've built a strong reputation across the island for quality workmanship, reliability, and treating every client's home with care and respect. Our small, tight-knit crew takes pride in doing the job right — and we're looking for someone who shares that same standard. Join a team where your skills are valued and your work makes a real difference in the community.`,
   },
 };
 

@@ -41,6 +41,8 @@ export interface Employer {
   company_logo_url?: string;
   business_verified: boolean;
   website?: string | null;
+  /** When true, business and its jobs appear in public job / employer pools. */
+  profile_complete?: boolean;
 }
 
 export interface JobWithEmployer extends Job {

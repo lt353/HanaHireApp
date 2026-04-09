@@ -14,8 +14,13 @@ import {
 	Phone,
 	Mail,
 	Globe,
+	MessageSquare,
+	ArrowRight,
 } from "lucide-react";
 import { getJobCategoryStyle } from "../../utils/jobCategoryStyles";
+import { Modal } from "../ui/Modal";
+import { CollapsibleFilter } from "../CollapsibleFilter";
+import { Button } from "../ui/Button";
 
 const INDUSTRY_BORDER_COLORS: Record<string, string> = {
 	// Food & Beverage → Food Service orange-red
@@ -106,9 +111,65 @@ function sortEmployersNewestFirst(list: any[]): any[] {
 	});
 }
 
-import { Modal } from "../ui/Modal";
-import { CollapsibleFilter } from "../CollapsibleFilter";
-import { Button } from "../ui/Button";
+function EmployerHiringStatusBadge({
+	openJobCount,
+	compact,
+	modal,
+}: {
+	openJobCount: number;
+	/** Single-line truncate for fixed-height business cards */
+	compact?: boolean;
+	/** Business profile modal: roomier pills */
+	modal?: boolean;
+}) {
+	if (openJobCount > 0) {
+		return (
+			<span
+				className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#148F8B] font-black uppercase tracking-widest text-white shadow-sm ${modal ? "px-4 py-2 text-[10px]" : "px-3 py-1.5 text-[9px]"}`}
+			>
+				<Briefcase
+					size={modal ? 13 : 11}
+					className="shrink-0 text-white"
+					aria-hidden
+				/>
+				Hiring
+			</span>
+		);
+	}
+	if (compact) {
+		return (
+			<span
+				className="max-w-full truncate rounded-full bg-[#A63F8E] px-3 py-1.5 text-center text-[8px] font-black uppercase leading-none tracking-widest text-white shadow-sm"
+				title="Enquire about future job posts"
+			>
+				Enquire about future job posts
+			</span>
+		);
+	}
+	if (modal) {
+		return (
+			<span
+				className="inline-block max-w-full rounded-2xl bg-[#A63F8E] px-4 py-2.5 text-center text-[10px] font-black uppercase leading-snug tracking-widest text-white shadow-sm sm:text-xs"
+				title="Enquire about future job posts"
+			>
+				Enquire about future job posts
+			</span>
+		);
+	}
+	return (
+		<span
+			className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#A63F8E] text-white leading-tight text-center max-w-[min(100%,13.5rem)] shadow-sm max-h-[28px] overflow-hidden line-clamp-2 box-border"
+			style={{
+				display: "-webkit-box",
+				WebkitBoxOrient: "vertical",
+				WebkitLineClamp: 2,
+			}}
+			title="Enquire about future job posts"
+		>
+			Enquire about future job posts
+		</span>
+	);
+}
 
 type JobSortOption =
 	| "newest"
@@ -134,6 +195,8 @@ interface JobsListProps {
 	interactionFee: number;
 	viewerLocation?: string;
 	employers?: any[];
+	/** Logged-in seeker: open/create DM with this employer (from business profile modal). */
+	onOpenMessageWithEmployer?: (employerId: number) => void;
 }
 
 function useIsMobile(breakpointPx = 768) {
@@ -160,22 +223,46 @@ function useIsMobile(breakpointPx = 768) {
 }
 
 function trimmedCompanyLogoUrl(job: any): string | null {
-	const u = job?.company_logo_url;
-	if (typeof u !== "string") return null;
-	const t = u.trim();
+	const raw =
+		job?.company_logo_url ?? job?.employer?.company_logo_url ?? null;
+	if (typeof raw !== "string") return null;
+	const t = raw.trim();
 	return t.length > 0 ? t : null;
+}
+
+function companyLogoUrlFromEmployersList(
+	job: any,
+	employers?: any[],
+): string | null {
+	if (!employers?.length || job?.employer_id == null) return null;
+	const id = Number(job.employer_id);
+	const emp = employers.find((e) => Number(e?.id) === id);
+	const raw = emp?.company_logo_url;
+	if (typeof raw !== "string") return null;
+	const t = raw.trim();
+	return t.length > 0 ? t : null;
+}
+
+function resolvedJobListingLogoUrl(job: any, employers?: any[]): string | null {
+	return (
+		trimmedCompanyLogoUrl(job) ?? companyLogoUrlFromEmployersList(job, employers)
+	);
 }
 
 function JobListingThumbnail({
 	job,
 	showEmployerLogo,
 	sizePx,
+	employers,
 }: {
 	job: any;
 	showEmployerLogo: boolean;
 	sizePx: number;
+	employers?: any[];
 }) {
-	const logo = showEmployerLogo ? trimmedCompanyLogoUrl(job) : null;
+	const logo = showEmployerLogo
+		? resolvedJobListingLogoUrl(job, employers)
+		: null;
 	if (logo) {
 		return (
 			<div
@@ -221,6 +308,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 	onSelectJob,
 	viewerLocation,
 	employers = [],
+	onOpenMessageWithEmployer,
 }) => {
 	const isMobile = useIsMobile(768);
 	const [browseMode, setBrowseMode] = React.useState<"jobs" | "businesses">(
@@ -236,10 +324,6 @@ export const JobsList: React.FC<JobsListProps> = ({
 	const [bizLocationFilter, setBizLocationFilter] = React.useState<string[]>(
 		[],
 	);
-	/** Per-card: expanded company description on Browse Businesses grid */
-	const [expandedBizDescriptions, setExpandedBizDescriptions] = React.useState<
-		Record<string, boolean>
-	>({});
 
 	const bizIndustries = React.useMemo(() => {
 		const set = new Set<string>();
@@ -256,6 +340,29 @@ export const JobsList: React.FC<JobsListProps> = ({
 		});
 		return Array.from(set).sort();
 	}, [employers]);
+
+	const jobsByEmployerId = React.useMemo(() => {
+		const m = new Map();
+		const list = Array.isArray(filteredJobs) ? filteredJobs : [];
+		for (const j of list) {
+			if (j?.status === "filled") continue;
+			const eid = Number(j?.employer_id);
+			if (Number.isNaN(eid)) continue;
+			if (!m.has(eid)) m.set(eid, []);
+			const row = m.get(eid);
+			if (row) row.push(j);
+		}
+		for (const arr of m.values()) {
+			arr.sort((a: any, b: any) => {
+				const ta = Date.parse(String(a?.posted_at || a?.postedAt || ""));
+				const tb = Date.parse(String(b?.posted_at || b?.postedAt || ""));
+				if (!Number.isNaN(tb) && !Number.isNaN(ta) && tb !== ta)
+					return tb - ta;
+				return Number(b?.id) - Number(a?.id);
+			});
+		}
+		return m;
+	}, [filteredJobs]);
 
 	const jobs: any[] = Array.isArray(filteredJobs) ? filteredJobs : [];
 	const unlockedIds: any[] = Array.isArray(unlockedJobIds)
@@ -377,7 +484,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 	};
 
 	const isInQueue = (id: any) => queue.some((q) => q?.id === id);
-	const isUnlocked = (_id: any) => true;
+	const isUnlocked = (id: any) => unlockedIds.includes(id);
 	const isApplied = (id: any) => appliedIds.includes(id);
 
 	// Toggle bookmark - add or remove from queue
@@ -661,28 +768,47 @@ export const JobsList: React.FC<JobsListProps> = ({
 										</p>
 									</div>
 								) : (
-									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
 										{sortedFiltered.map((emp) => {
 											const logo =
 												typeof emp.company_logo_url === "string" &&
 												emp.company_logo_url.trim()
 													? emp.company_logo_url.trim()
 													: null;
-											const cardKey = String(emp.id);
-											const descRaw =
+											const descTrim =
 												typeof emp.company_description === "string"
 													? emp.company_description.trim()
 													: "";
-											const descExpanded =
-												expandedBizDescriptions[cardKey] === true;
-											const readMoreThreshold = 80;
-											const showReadMoreToggle =
-												descRaw.length > readMoreThreshold;
+											const openJobCount =
+												jobsByEmployerId.get(Number(emp.id))?.length ?? 0;
+											const industryTrim =
+												typeof emp.industry === "string"
+													? emp.industry.trim()
+													: "";
+											const companySizeTrim =
+												typeof emp.company_size === "string"
+													? emp.company_size.trim()
+													: "";
+											const cardLabel =
+												`${emp.business_name || "Business"} profile`;
 											return (
 												<div
 													key={emp.id}
 													role="button"
 													tabIndex={0}
+													aria-label={cardLabel}
+													className="group flex w-full cursor-pointer flex-col rounded-2xl bg-white p-3 text-left shadow-sm outline-none transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-[#148F8B] focus-visible:ring-offset-2"
+													style={{
+														boxSizing: "border-box",
+														height: 424,
+														minHeight: 424,
+														maxHeight: 424,
+														overflow: "hidden",
+														borderLeft: `6px solid ${getIndustryBorderColor(emp.industry)}`,
+														borderTop: "1px solid #f3f4f6",
+														borderRight: "1px solid #f3f4f6",
+														borderBottom: "1px solid #f3f4f6",
+													}}
 													onClick={() => setSelectedBusiness(emp)}
 													onKeyDown={(e) => {
 														if (e.key === "Enter" || e.key === " ") {
@@ -690,100 +816,137 @@ export const JobsList: React.FC<JobsListProps> = ({
 															setSelectedBusiness(emp);
 														}
 													}}
-													className={`text-left bg-white rounded-2xl p-4 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-[min-height] duration-200 flex flex-col w-full max-w-full cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-[#148F8B] focus-visible:ring-offset-2 ${
-														descExpanded ? "min-h-[320px] h-auto" : "h-[320px]"
-													}`}
-													style={{
-														borderLeft: `6px solid ${getIndustryBorderColor(emp.industry)}`,
-														borderTop: "1px solid #f3f4f6",
-														borderRight: "1px solid #f3f4f6",
-														borderBottom: "1px solid #f3f4f6",
-													}}
 												>
-													{/* Top: logo + name + verified badge */}
-													<div className="flex items-start gap-3 shrink-0 min-w-0">
-														<div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-1.5">
+													{/* 1. Logo */}
+													<div
+														className="mb-1 flex flex-shrink-0 overflow-hidden rounded-xl bg-gray-50"
+														style={{
+															boxSizing: "border-box",
+															height: 168,
+															maxHeight: 168,
+															minHeight: 168,
+															overflow: "hidden",
+															flexShrink: 0,
+														}}
+													>
+														<div
+															className="min-h-0 min-w-0"
+															style={{
+																display: "flex",
+																alignItems: "center",
+																justifyContent: "center",
+																width: "100%",
+																height: "100%",
+															}}
+														>
 															{logo ? (
 																<img
 																	src={logo}
 																	alt=""
-																	className="max-h-full max-w-full object-contain"
+																	className="object-contain"
+																	style={{
+																		maxWidth: "100%",
+																		maxHeight: "100%",
+																		width: "auto",
+																		height: "auto",
+																		objectFit: "contain",
+																	}}
 																	loading="lazy"
 																/>
 															) : (
-																<span className="text-2xl font-black text-gray-300">
+																<span className="text-4xl font-black leading-none text-gray-300">
 																	{(emp.business_name || "?")[0].toUpperCase()}
 																</span>
 															)}
 														</div>
-														<div className="min-w-0 flex-1">
-															<div className="flex flex-wrap items-center gap-2">
-																<h3 className="text-base font-black tracking-tight leading-snug group-hover:text-[#148F8B] transition-colors">
-																	{emp.business_name || "Unnamed Business"}
-																</h3>
-																{emp.business_verified && (
-																	<span className="shrink-0 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#148F8B]/10 text-[#0D7377]">
-																		Verified
-																	</span>
-																)}
-															</div>
-															<div className="mt-1.5 flex flex-wrap gap-1.5">
-																{emp.industry && (
-																	<span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#148F8B]/10 text-[#0D7377]">
-																		{emp.industry}
-																	</span>
-																)}
-																{emp.company_size && (
-																	<span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">
-																		{emp.company_size}
-																	</span>
-																)}
-															</div>
-														</div>
 													</div>
 
-													{emp.location && (
-														<div className="mt-1 flex shrink-0 items-center gap-1.5 text-xs font-semibold text-gray-500">
-															<MapPin size={11} className="shrink-0" />
-															<span>{emp.location}</span>
-														</div>
-													)}
+													{/* 2. Company name */}
+													<div className="flex h-[40px] flex-shrink-0 items-center justify-center overflow-hidden text-center">
+														<h3 className="m-0 line-clamp-2 text-sm font-black leading-tight tracking-tight text-gray-900 group-hover:text-[#148F8B]">
+															{emp.business_name || "Unnamed Business"}
+														</h3>
+													</div>
 
-													<div className="mt-2 flex min-h-0 flex-1 flex-col">
-														{descRaw ? (
-															<>
-																<div
-																	className={`min-h-0 flex-1 overflow-hidden ${descExpanded ? "overflow-visible" : ""}`}
-																>
-																	<p className="text-sm text-gray-600 leading-relaxed">
-																		{descRaw}
-																	</p>
-																</div>
-																{showReadMoreToggle && (
-																	<button
-																		type="button"
-																		className="mt-2 shrink-0 text-left text-[11px] font-black uppercase tracking-widest text-[#148F8B] hover:underline"
-																		onClick={(e) => {
-																			e.stopPropagation();
-																			setExpandedBizDescriptions((prev) => ({
-																				...prev,
-																				[cardKey]: !prev[cardKey],
-																			}));
-																		}}
-																	>
-																		{descExpanded ? "Read less" : "Read more"}
-																	</button>
-																)}
-															</>
+													{/* 3. Industry */}
+													<div className="flex h-[18px] flex-shrink-0 items-center justify-center overflow-hidden pb-0.5">
+														<p
+															className={`m-0 w-full truncate text-center text-[10px] font-semibold text-gray-600 ${industryTrim ? "" : "invisible"}`}
+															aria-hidden={!industryTrim}
+														>
+															{industryTrim || "·"}
+														</p>
+													</div>
+
+													{/* 4. Company size */}
+													<div className="flex h-[18px] flex-shrink-0 items-center justify-center overflow-hidden pb-0.5">
+														<p
+															className={`m-0 w-full truncate text-center text-[10px] font-semibold text-purple-700 ${companySizeTrim ? "" : "invisible"}`}
+															aria-hidden={!companySizeTrim}
+														>
+															{companySizeTrim || "·"}
+														</p>
+													</div>
+
+													{/* 5. Badge */}
+													<div className="flex h-[30px] flex-shrink-0 items-center justify-center overflow-hidden pb-0.5">
+														<EmployerHiringStatusBadge
+															openJobCount={openJobCount}
+															compact
+														/>
+													</div>
+
+													{/* 6. Location */}
+													<div className="flex h-[20px] flex-shrink-0 items-center justify-center gap-1 overflow-hidden pb-0.5 text-[10px] font-semibold text-gray-500">
+														<MapPin
+															size={11}
+															className={emp.location ? "shrink-0 text-gray-500" : "invisible shrink-0"}
+															aria-hidden
+														/>
+														<span
+															className={
+																emp.location
+																	? "min-w-0 truncate"
+																	: "invisible select-none"
+															}
+															aria-hidden={!emp.location}
+														>
+															{emp.location || "·"}
+														</span>
+													</div>
+
+													{/* 7. Description — 4 lines */}
+													<div className="h-[80px] flex-shrink-0 overflow-hidden">
+														{descTrim ? (
+															<p
+																className="m-0 line-clamp-4 text-sm leading-tight text-gray-600"
+																style={{
+																	display: "-webkit-box",
+																	WebkitBoxOrient: "vertical",
+																	WebkitLineClamp: 4,
+																}}
+																title={descTrim.length > 160 ? descTrim : undefined}
+															>
+																{descTrim}
+															</p>
 														) : (
-															<p className="text-sm italic leading-relaxed text-gray-400">
+															<p
+																className="m-0 line-clamp-4 text-sm italic leading-tight text-gray-400"
+																style={{
+																	display: "-webkit-box",
+																	WebkitBoxOrient: "vertical",
+																	WebkitLineClamp: 4,
+																}}
+															>
 																No description yet.
 															</p>
 														)}
 													</div>
 
-													<span className="mt-auto shrink-0 border-t border-gray-100 pt-2 text-xs font-black uppercase tracking-widest text-[#148F8B] group-hover:underline">
-														View profile →
+													{/* 8. CTA */}
+													<span className="flex shrink-0 items-center justify-center gap-1 pt-1 text-center text-xs font-black uppercase tracking-widest text-[#148F8B] group-hover:underline">
+														View profile to read more
+														<ArrowRight size={14} className="text-[#148F8B]" aria-hidden />
 													</span>
 												</div>
 											);
@@ -795,6 +958,9 @@ export const JobsList: React.FC<JobsListProps> = ({
 								{selectedBusiness &&
 									(() => {
 										const emp = selectedBusiness;
+										const modalJobs =
+											jobsByEmployerId.get(Number(emp.id)) ?? [];
+										const modalOpenJobCount = modalJobs.length;
 										const logo =
 											typeof emp.company_logo_url === "string" &&
 											emp.company_logo_url.trim()
@@ -825,18 +991,18 @@ export const JobsList: React.FC<JobsListProps> = ({
 														</button>
 													</div>
 
-													{/* Logo overlapping header */}
 													<div className="px-6 pb-10">
-														<div className="-mt-8 mb-4 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-white p-1.5 shadow-lg">
+														{/* Logo overlapping header */}
+														<div className="-mt-[min(28%,7rem)] mb-4 w-1/2 mx-auto aspect-square rounded-2xl border-4 border-white bg-white shadow-lg flex items-center justify-center overflow-hidden relative z-10">
 															{logo ? (
 																<img
 																	src={logo}
 																	alt=""
-																	className="max-h-full max-w-full object-contain"
+																	className="max-h-full max-w-full object-contain p-2"
 																	loading="lazy"
 																/>
 															) : (
-																<span className="text-2xl font-black text-gray-300">
+																<span className="text-4xl font-black text-gray-300">
 																	{(emp.business_name || "?")[0].toUpperCase()}
 																</span>
 															)}
@@ -855,7 +1021,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 														</div>
 
 														{/* Tags */}
-														<div className="flex flex-wrap gap-2 mb-5">
+														<div className="flex flex-wrap gap-2 items-center mb-5">
 															{emp.industry && (
 																<span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-[#148F8B]/10 text-[#0D7377]">
 																	{emp.industry}
@@ -866,7 +1032,56 @@ export const JobsList: React.FC<JobsListProps> = ({
 																	{emp.company_size}
 																</span>
 															)}
+															<EmployerHiringStatusBadge
+																openJobCount={modalOpenJobCount}
+																modal
+															/>
 														</div>
+
+														{modalJobs.length > 0 && (
+															<div className="mb-6">
+																<p className="mb-1 text-base font-black uppercase tracking-tight text-gray-900">
+																	Open roles:
+																</p>
+																
+																<div className="flex flex-col gap-2">
+																	{modalJobs.map((job: any) => (
+																		<button
+																			key={job.id}
+																			type="button"
+																			className="group/job w-full rounded-2xl border-2 border-[#148F8B]/40 bg-[#148F8B]/5 px-4 py-3.5 text-left shadow-sm transition-all hover:border-[#148F8B] hover:bg-[#148F8B]/10 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#148F8B] focus-visible:ring-offset-2"
+																			onClick={() => {
+																				onSelectJob(job);
+																				setSelectedBusiness(null);
+																			}}
+																		>
+																			<div className="flex items-start gap-3">
+																				<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#148F8B] text-white shadow-sm">
+																					<Briefcase
+																						size={20}
+																						className="shrink-0"
+																						aria-hidden
+																					/>
+																				</div>
+																				<div className="min-w-0 flex-1 pt-0.5">
+																					<span className="block text-sm font-black text-gray-900 group-hover/job:text-[#0D7377]">
+																						{job.title}
+																					</span>
+																					<span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-[#148F8B]">
+																						View job details
+																						<ArrowRight
+																							size={14}
+																							className="shrink-0 transition-transform group-hover/job:translate-x-0.5"
+																							aria-hidden
+																						/>
+																					</span>
+																				</div>
+																			</div>
+																		</button>
+																	))}
+																</div>
+															</div>
+														)}
 
 														{/* Contact info */}
 														<div className="space-y-3 mb-6">
@@ -934,6 +1149,25 @@ export const JobsList: React.FC<JobsListProps> = ({
 																</a>
 															)}
 														</div>
+
+														{onOpenMessageWithEmployer && emp.id != null && (
+															<div
+																className="mb-6"
+																onClick={(e) => e.stopPropagation()}
+															>
+																<Button
+																	type="button"
+																	className="w-full h-12 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white shadow-lg shadow-[#148F8B]/20 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+																	onClick={() => {
+																		setSelectedBusiness(null);
+																		onOpenMessageWithEmployer(Number(emp.id));
+																	}}
+																>
+																	<MessageSquare size={16} />
+																	Message this business
+																</Button>
+															</div>
+														)}
 
 														{/* About */}
 														{emp.company_description && (
@@ -1129,8 +1363,9 @@ export const JobsList: React.FC<JobsListProps> = ({
 							<div className="flex items-start gap-3">
 								<JobListingThumbnail
 									job={currentJob}
-									showEmployerLogo={isUnlocked(currentJob.id)}
+									showEmployerLogo
 									sizePx={56}
+									employers={employers}
 								/>
 								<div
 									className="flex-1 min-w-0 cursor-pointer"
@@ -1383,8 +1618,9 @@ export const JobsList: React.FC<JobsListProps> = ({
 										>
 											<JobListingThumbnail
 												job={job}
-												showEmployerLogo={isUnlocked(job.id)}
+												showEmployerLogo
 												sizePx={132}
+												employers={employers}
 											/>
 											<div className="flex flex-wrap gap-2 justify-center">
 												{job.company_industry && (
@@ -1575,7 +1811,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 							) : (
 								[...passedJobs].reverse().map((job) => {
 									const binLogo = isUnlocked(job.id)
-										? trimmedCompanyLogoUrl(job)
+										? resolvedJobListingLogoUrl(job, employers)
 										: null;
 									return (
 										<div

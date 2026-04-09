@@ -101,10 +101,20 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 	// Collapsible answers/media per applicant card
 	const [openAnswersId, setOpenAnswersId] = useState<number | null>(null);
 
-	// Filter jobs to show only the employer's posted jobs
+	// Filter jobs to show only the employer's posted jobs (dedupe by id — state can briefly hold duplicates after post + refresh)
 	const myJobs = useMemo(() => {
-		if (!isLoggedIn || !userProfile?.employerId) return jobs.slice(0, 2);
-		return jobs.filter((j) => j.employer_id === userProfile.employerId);
+		const raw =
+			!isLoggedIn || !userProfile?.employerId
+				? jobs.slice(0, 2)
+				: jobs.filter((j) => j.employer_id === userProfile.employerId);
+		const seen = new Set<number>();
+		return raw.filter((j) => {
+			const id = Number(j.id);
+			if (!Number.isFinite(id)) return true;
+			if (seen.has(id)) return false;
+			seen.add(id);
+			return true;
+		});
 	}, [isLoggedIn, userProfile, jobs]);
 
 	/** Real job applications only (DB requires job_id on applications). */

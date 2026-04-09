@@ -176,6 +176,8 @@ interface SeekerOnboardingProps {
   userProfile: any;
   onComplete: (profileData: any) => void;
   onNavigate?: (view: ViewType) => void;
+  /** Called when the user tries to record/upload video intro but has not accepted profile/video consent yet (parent shows SeekerConsentModal). */
+  onRequestVideoProfileConsent?: () => void;
   /** Called after applying resume import draft from sign-up (App clears `pendingSeekerResumeDraft`). */
   onPendingResumeDraftConsumed?: () => void;
 }
@@ -183,6 +185,7 @@ interface SeekerOnboardingProps {
 export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
   userProfile,
   onComplete,
+  onRequestVideoProfileConsent,
   onPendingResumeDraftConsumed,
 }) => {
   const [bio, setBio] = useState("");
@@ -222,6 +225,18 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
   const [showVideoPreview, setShowVideoPreview] = useState(false);
   const [visibilityPreference, setVisibilityPreference] = useState<"broad" | "limited">("broad");
   const [showVideoModal, setShowVideoModal] = useState(false);
+
+  const needsProfileVideoConsent =
+    userProfile?.profile_consent_accepted !== true;
+
+  const openVideoIntroFlow = React.useCallback(() => {
+    setVideoUploadError(null);
+    if (needsProfileVideoConsent && onRequestVideoProfileConsent) {
+      onRequestVideoProfileConsent();
+      return;
+    }
+    setShowVideoModal(true);
+  }, [needsProfileVideoConsent, onRequestVideoProfileConsent]);
 
   const [resumeAiSkippedPrimary, setResumeAiSkippedPrimary] = useState(false);
   const [resumeAiSkippedSecondary, setResumeAiSkippedSecondary] = useState(false);
@@ -603,14 +618,38 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
     setSelectedSkills(d.skills);
     setExperience(d.experience);
     setAvailability(d.availability);
-    setSelectedTargetPays(d.targetPay ? [d.targetPay] : []);
+    setSelectedTargetPays(
+      "targetPays" in d && Array.isArray(d.targetPays) && d.targetPays.length
+        ? d.targetPays
+        : d.targetPay
+          ? [d.targetPay]
+          : [],
+    );
     setSelectedEducation(d.education ? [d.education] : []);
     setSelectedIndustries(d.industries);
-    setSelectedWorkStyles(["Team Player", "Outgoing", "Energetic"]);
-    setJobTypesSeeking(["Full-time", "Part-time"]);
-    setPreferredJobCategories(['Food Service', 'Hospitality Services']);
+    setSelectedWorkStyles(
+      "workStyles" in d && Array.isArray(d.workStyles) && d.workStyles.length
+        ? d.workStyles
+        : ["Team Player", "Outgoing", "Energetic"],
+    );
+    setJobTypesSeeking(
+      "jobTypesSeeking" in d && Array.isArray(d.jobTypesSeeking) && d.jobTypesSeeking.length
+        ? d.jobTypesSeeking
+        : ["Full-time", "Part-time"],
+    );
+    setPreferredJobCategories(
+      "preferredJobCategories" in d &&
+        Array.isArray(d.preferredJobCategories) &&
+        d.preferredJobCategories.length
+        ? d.preferredJobCategories
+        : ["Food Service", "Hospitality Services"],
+    );
     setUseCustomTitle(true);
-    setCustomTitle("Experienced Bartender & Hospitality Pro");
+    setCustomTitle(
+      "displayTitle" in d && typeof d.displayTitle === "string" && d.displayTitle.trim()
+        ? d.displayTitle.trim()
+        : "Experienced Bartender & Hospitality Pro",
+    );
   };
 
   const handleSubmit = () => {
@@ -870,10 +909,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
               <>
                 <button
                   type="button"
-                  onClick={() => {
-                    setVideoUploadError(null);
-                    setShowVideoModal(true);
-                  }}
+                  onClick={openVideoIntroFlow}
                   className="w-full py-12 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center gap-3 text-gray-600 hover:text-[#148F8B] hover:border-[#148F8B]/50 hover:bg-[#148F8B]/5 transition-all"
                 >
                   <Camera size={36} />
@@ -964,7 +1000,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
                     onClick={() => {
                       setVideoUploadStatus("idle");
                       setVideoUploadError(null);
-                      setShowVideoModal(true);
+                      openVideoIntroFlow();
                     }}
                     className="flex items-center gap-1.5 text-sm font-bold text-[#148F8B] hover:underline"
                   >
@@ -991,7 +1027,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
                     setVideoUrl("");
                     setVideoThumbnailUrl("");
                     setVideoDuration(0);
-                    setShowVideoModal(true);
+                    openVideoIntroFlow();
                   }}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600"
                 >
