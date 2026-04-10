@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner@2.0.3";
 import {
   ArrowLeft,
   User,
   Briefcase,
   Target,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "../ui/Button.tsx";
 import {
@@ -21,6 +22,83 @@ interface ProfileEditorProps {
   userProfile?: any;
 }
 
+function CollapsiblePickSection({
+  title,
+  selectedCount,
+  selectedPreview,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  selectedCount: number;
+  /** Pills / chips for current selections — always visible above the fold. */
+  selectedPreview: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border-2 border-[#148F8B]/25 bg-white shadow-sm shadow-[#148F8B]/5 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className={`w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-left transition-colors ${
+          open
+            ? "bg-[#148F8B]/10"
+            : "bg-gradient-to-r from-[#148F8B]/12 to-[#A63F8E]/8 hover:from-[#148F8B]/18 hover:to-[#A63F8E]/12"
+        }`}
+      >
+        <span className="flex items-center gap-3 min-w-0">
+          <span
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#148F8B] text-white shadow-md ring-2 ring-white/40"
+            aria-hidden
+          >
+            <ChevronDown
+              size={20}
+              strokeWidth={2.5}
+              className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            />
+          </span>
+          <span className="flex flex-col min-w-0 text-left gap-0.5">
+            <span className="text-[11px] font-black text-gray-900 uppercase tracking-[0.22em]">
+              {title}
+            </span>
+            <span className="text-[11px] font-bold text-[#0d6b68]">
+              {open
+                ? "Tap to collapse — hides suggestions & custom field"
+                : "Expandable section — tap to browse full lists & add your own"}
+            </span>
+          </span>
+        </span>
+        <span className="shrink-0 rounded-full border-2 border-[#148F8B]/35 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#148F8B] tabular-nums">
+          {selectedCount} selected
+        </span>
+      </button>
+
+      <div className="px-4 sm:px-5 py-3 bg-[#FAF9F7] border-y border-gray-100">
+        <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.28em] mb-2">
+          Your selections
+        </p>
+        {selectedCount > 0 ? (
+          <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto pr-1 [scrollbar-gutter:stable]">
+            {selectedPreview}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500 font-medium leading-relaxed">
+            Nothing here yet. Use <span className="font-bold text-[#148F8B]">expand</span> above to
+            pick from the list or type your own.
+          </p>
+        )}
+      </div>
+
+      {open && (
+        <div className="px-4 sm:px-5 pb-5 pt-4 space-y-3 bg-white">{children}</div>
+      )}
+    </div>
+  );
+}
+
 export const ProfileEditor: React.FC<ProfileEditorProps> = ({
   onBack,
   onSave,
@@ -33,7 +111,46 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [location, setLocation] = useState(userProfile?.location || "");
 
   // Professional Info
-  const [profileTitle, setProfileTitle] = useState(userProfile?.displayTitle || userProfile?.customTitle || "");
+  const [profileTitle, setProfileTitle] = useState(
+    userProfile?.displayTitle ||
+      userProfile?.customTitle ||
+      userProfile?.display_title ||
+      "",
+  );
+  /** Login used to omit display_title from client profile; load from DB if missing. */
+  useEffect(() => {
+    const id = Number(userProfile?.candidateId ?? userProfile?.id);
+    if (!Number.isFinite(id) || id <= 0) return;
+    const fromProps = String(
+      userProfile?.displayTitle ??
+        userProfile?.customTitle ??
+        userProfile?.display_title ??
+        "",
+    ).trim();
+    if (fromProps) return;
+
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("candidates")
+        .select("display_title")
+        .eq("id", id)
+        .maybeSingle();
+      if (cancelled || error || data?.display_title == null) return;
+      const t = String(data.display_title).trim();
+      if (t) setProfileTitle(t);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    userProfile?.candidateId,
+    userProfile?.id,
+    userProfile?.displayTitle,
+    userProfile?.customTitle,
+    userProfile?.display_title,
+  ]);
+
   const [bio, setBio] = useState(userProfile?.bio || "");
   const [selectedSkills, setSelectedSkills] = useState<string[]>(userProfile?.skills || []);
   const [experience, setExperience] = useState(userProfile?.experience || "");
@@ -213,13 +330,11 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 />
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
-                  Skills
-                </label>
-
-                {selectedSkills.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
+              <CollapsiblePickSection
+                title="Skills"
+                selectedCount={selectedSkills.length}
+                selectedPreview={
+                  <>
                     {selectedSkills.map((skill) => (
                       <button
                         key={skill}
@@ -231,9 +346,9 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                         <span className="text-[9px] opacity-80">×</span>
                       </button>
                     ))}
-                  </div>
-                )}
-
+                  </>
+                }
+              >
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
                   Suggested Skills
                 </p>
@@ -284,7 +399,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     Custom skills will appear in the selected list above.
                   </p>
                 </div>
-              </div>
+              </CollapsiblePickSection>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -348,13 +463,11 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
             </div>
 
             <div className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 space-y-6">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
-                  Interested Industries
-                </label>
-
-                {selectedIndustries.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
+              <CollapsiblePickSection
+                title="Interested Industries"
+                selectedCount={selectedIndustries.length}
+                selectedPreview={
+                  <>
                     {selectedIndustries.map((industry) => (
                       <button
                         key={industry}
@@ -366,9 +479,9 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                         <span className="text-[9px] opacity-80">×</span>
                       </button>
                     ))}
-                  </div>
-                )}
-
+                  </>
+                }
+              >
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
                   Suggested Industries
                 </p>
@@ -419,18 +532,13 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     Custom industries will appear in the selected list above.
                   </p>
                 </div>
-              </div>
+              </CollapsiblePickSection>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
-                  Preferred Job Types
-                </label>
-                <p className="text-xs text-gray-500 font-medium ml-2">
-                  What type of work are you looking for?
-                </p>
-
-                {preferredJobCategories.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
+              <CollapsiblePickSection
+                title="Preferred Job Types"
+                selectedCount={preferredJobCategories.length}
+                selectedPreview={
+                  <>
                     {preferredJobCategories.map((cat) => (
                       <button
                         key={cat}
@@ -442,8 +550,12 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                         <span className="text-[9px] opacity-80">×</span>
                       </button>
                     ))}
-                  </div>
-                )}
+                  </>
+                }
+              >
+                <p className="text-xs text-gray-500 font-medium">
+                  What type of work are you looking for?
+                </p>
 
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
                   Job Categories
@@ -464,15 +576,13 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     </button>
                   ))}
                 </div>
-              </div>
+              </CollapsiblePickSection>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">
-                  Work Styles
-                </label>
-
-                {selectedWorkStyles.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
+              <CollapsiblePickSection
+                title="Work Styles"
+                selectedCount={selectedWorkStyles.length}
+                selectedPreview={
+                  <>
                     {selectedWorkStyles.map((style) => (
                       <button
                         key={style}
@@ -484,9 +594,9 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                         <span className="text-[9px] opacity-80">×</span>
                       </button>
                     ))}
-                  </div>
-                )}
-
+                  </>
+                }
+              >
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">
                   Suggested Work Styles
                 </p>
@@ -528,7 +638,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     Custom work styles will appear in the selected list above.
                   </p>
                 </div>
-              </div>
+              </CollapsiblePickSection>
 
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] ml-2">

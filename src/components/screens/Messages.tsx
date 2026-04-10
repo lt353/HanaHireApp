@@ -547,7 +547,7 @@ export const Messages: React.FC<MessagesProps> = ({
 						{userRole === "seeker" ? "employers" : "candidates"}.
 					</p>
 					<Button
-						className="bg-[#148F8B] hover:bg-[#148F8B]/90 text-white rounded-2xl px-8 py-4 font-black uppercase tracking-widest"
+						className="bg-[#148F8B] hover:bg-[#A63F8E] text-white rounded-2xl px-8 py-4 font-black uppercase tracking-widest"
 						onClick={() => onShowAuth("login")}
 					>
 						Log In
@@ -872,7 +872,7 @@ export const Messages: React.FC<MessagesProps> = ({
 																				disabled={
 																					savingEdit || !editingBody.trim()
 																				}
-																				className="px-3 py-1.5 rounded-lg bg-[#148F8B] text-white text-xs font-bold hover:bg-[#136068] disabled:opacity-50"
+																				className="px-3 py-1.5 rounded-lg bg-[#148F8B] text-white text-xs font-bold hover:bg-[#A63F8E] disabled:opacity-50"
 																			>
 																				{savingEdit ? "Saving…" : "Save"}
 																			</button>
@@ -1061,7 +1061,7 @@ export const Messages: React.FC<MessagesProps> = ({
 												<Button
 													onClick={handleSend}
 													disabled={!draft.trim() || sending}
-													className="shrink-0 rounded-xl min-h-[52px] max-h-[52px] bg-[#148F8B] hover:bg-[#148F8B]/90 text-white px-4 flex items-center justify-center gap-2"
+													className="shrink-0 rounded-xl min-h-[52px] max-h-[52px] bg-[#148F8B] hover:bg-[#A63F8E] text-white px-4 flex items-center justify-center gap-2"
 													style={{ height: 52 }}
 												>
 													<Send size={18} />

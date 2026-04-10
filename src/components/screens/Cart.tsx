@@ -40,7 +40,7 @@ export const Cart: React.FC<CartProps> = ({
           <FolderOpen size={48} className="sm:w-16 sm:h-16 text-gray-100 mx-auto" />
           <p className="text-gray-400 font-black text-lg sm:text-xl md:text-2xl uppercase tracking-widest">No saved items yet</p>
           <div className="flex justify-center">
-            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
+            <Button className="h-14 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 text-sm sm:text-base md:text-lg bg-[#148F8B] hover:bg-[#A63F8E] text-white hover:scale-105 active:scale-95 transition-all duration-200" onClick={() => onNavigate(role === 'seeker' ? 'jobs' : 'candidates')}>
               Start Browsing
             </Button>
           </div>
@@ -265,7 +265,7 @@ export const Cart: React.FC<CartProps> = ({
                   </div>
                 </div>
                 <Button
-                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#148F8B]/20 bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="w-full h-24 text-2xl rounded-3xl shadow-xl shadow-[#148F8B]/20 bg-[#148F8B] hover:bg-[#A63F8E] text-white hover:scale-105 active:scale-95 transition-all duration-200"
                   onClick={() => onShowPayment({ type: role, items: queue })}
                 >
                   {role === 'seeker' ? 'Apply to All Jobs' : 'Unlock All Profiles'}
@@ -287,7 +287,7 @@ export const Cart: React.FC<CartProps> = ({
                   </div>
                 </div>
                 <Button
-                  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#148F8B]/20 bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="w-full h-16 text-lg rounded-2xl shadow-xl shadow-[#148F8B]/20 bg-[#148F8B] hover:bg-[#A63F8E] text-white hover:scale-105 active:scale-95 transition-all duration-200"
                   onClick={() => onShowPayment({ type: role, items: queue })}
                 >
                   {role === 'seeker' ? 'Apply to All Jobs' : 'Unlock All Profiles'}

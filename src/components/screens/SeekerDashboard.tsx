@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 import {
 	Play,
 	Video,
 	Settings as SettingsIcon,
-	Users,
 	Edit3,
 	LogIn,
 	LogOut,
@@ -19,11 +18,41 @@ import {
 	Trash2,
 	Clock,
 	MessageSquare,
+	Eye,
+	Mail,
+	Phone,
 } from "lucide-react";
 import { Button } from "../ui/Button";
+import { Modal } from "../ui/Modal";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { ViewType } from "../../App";
 import { deleteCandidate } from "../../utils/deleteCandidate";
+
+function formatPayPreview(v: unknown): string {
+	if (v == null) return "—";
+	if (Array.isArray(v)) {
+		const s = v.map((x) => String(x).trim()).filter(Boolean);
+		return s.length ? s.join(", ") : "—";
+	}
+	const t = String(v).trim();
+	return t || "—";
+}
+
+function formatEducationPreview(v: unknown): string {
+	if (v == null) return "—";
+	if (Array.isArray(v)) {
+		const s = v.map((x) => String(x).trim()).filter(Boolean);
+		return s.length ? s.join(", ") : "—";
+	}
+	const t = String(v).trim();
+	return t || "—";
+}
+
+function formatExperiencePreview(v: unknown): string {
+	if (v == null || v === "") return "—";
+	if (typeof v === "number" && !Number.isNaN(v)) return String(v);
+	return String(v).trim() || "—";
+}
 
 interface SeekerDashboardProps {
 	isLoggedIn: boolean;
@@ -80,6 +109,21 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 	const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+	const [showEmployerPreview, setShowEmployerPreview] = useState(false);
+	const [previewModalPlayVideo, setPreviewModalPlayVideo] = useState(false);
+	/** Tailwind sm: breakpoints can fail in some WebViews; drive profile layout from matchMedia. */
+	const [profileSideBySide, setProfileSideBySide] = useState(
+		() =>
+			typeof window !== "undefined" &&
+			window.matchMedia("(min-width: 640px)").matches,
+	);
+	useEffect(() => {
+		const mq = window.matchMedia("(min-width: 640px)");
+		const sync = () => setProfileSideBySide(mq.matches);
+		sync();
+		mq.addEventListener("change", sync);
+		return () => mq.removeEventListener("change", sync);
+	}, []);
 
 	const handleDeleteAccount = async () => {
 		console.log("handleDeleteAccount userProfile:", userProfile);
@@ -251,7 +295,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 							<div className="flex items-center gap-3 flex-wrap">
 								<h3 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2.5">
 									<MessageSquare size={26} className="text-[#148F8B]" />
-									Employer Interest &amp; Messages
+									Employer Messages
 								</h3>
 								{totalSectionUnread > 0 && (
 									<span className="inline-flex items-center px-3 py-1 rounded-full bg-[#148F8B]/10 text-[#148F8B] text-xs font-black uppercase tracking-widest">
@@ -404,7 +448,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 														{hasJobId && !hasApplied && (
 															<Button
 																variant="outline"
-																className="rounded-xl font-black text-xs uppercase tracking-widest"
+																className="rounded-m !px-4 !py-1.5 font-black text-xs uppercase tracking-widest"
 																onClick={() => onSelectJob && onSelectJob(job)}
 															>
 																View Job
@@ -412,7 +456,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 														)}
 														{hasApplied || !hasJobId ? (
 															<Button
-																className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+																className="rounded-m !px-4 !py-1.5 bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black text-xs uppercase tracking-widest"
 																onClick={() => {
 																	const convId =
 																		conv?.id ?? job._conversationId;
@@ -428,7 +472,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 															</Button>
 														) : isUnlocked ? (
 															<Button
-																className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+																className="rounded-m !px-4 !py-1.5 bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black text-xs uppercase tracking-widest"
 																onClick={() =>
 																	onAnswerQuestions && onAnswerQuestions(job)
 																}
@@ -437,7 +481,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 															</Button>
 														) : (
 															<Button
-																className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+																className="rounded-m !px-4 !py-1.5 bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black text-xs uppercase tracking-widest"
 																onClick={() => onSelectJob && onSelectJob(job)}
 															>
 																Unlock &amp; Apply
@@ -454,80 +498,116 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 					);
 				})()}
 
-			{isLoggedIn && (
+			{isLoggedIn && userProfile && (
 				<div className="space-y-8 sm:space-y-10">
-					<div className="space-y-8 sm:space-y-12">
-						<div className="p-6 sm:p-10 md:p-12 bg-white rounded-[2.5rem] sm:rounded-[3.5rem] md:rounded-[4.5rem] border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-16 group relative overflow-hidden">
-							<div className="w-40 sm:w-48 md:w-52 aspect-[9/16] bg-gray-900 rounded-[2.5rem] sm:rounded-[3rem] md:rounded-[3.5rem] overflow-hidden relative shadow-2xl shrink-0">
-								<ImageWithFallback
-									src={
-										userProfile?.videoThumbnailUrl ||
-										userProfile?.video_thumbnail_url ||
-										"https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800"
-									}
-									className="w-full h-full object-cover opacity-70"
-								/>
-								<div className="absolute inset-0 flex items-center justify-center">
-									<button
-										type="button"
-										aria-label="Play intro video"
-										className="w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-2xl flex items-center justify-center text-white border-2 border-white/40 shadow-2xl hover:scale-110 transition-transform"
-										onClick={() =>
-											(userProfile?.videoUrl || userProfile?.video_url) &&
-											setShowVideoPlayer(true)
-										}
-									>
-										<Play
-											aria-hidden="true"
-											fill="white"
-											size={24}
-											className="sm:w-7 sm:h-7 md:w-8 md:h-8"
-										/>
-									</button>
+					<div className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-sm sm:rounded-[2.5rem] sm:p-7 md:p-8">
+						<div className="w-full space-y-1.5 text-center sm:text-left">
+							<h3 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900">
+								{userProfile.name?.trim() ||
+									userProfile.email?.trim() ||
+									"Your profile"}
+							</h3>
+							{String(
+								userProfile.displayTitle || userProfile.display_title || "",
+							).trim() ? (
+								<p className="text-[0.9375rem] font-bold text-[#148F8B] leading-snug sm:text-base">
+									{String(
+										userProfile.displayTitle || userProfile.display_title || "",
+									).trim()}
+								</p>
+							) : null}
+							{userProfile.location?.trim() ? (
+								<p className="text-sm font-medium text-gray-600 flex items-start justify-left gap-1.5 sm:justify-center">
+									<MapPin size={15} className="text-gray-400 shrink-0" />
+									{userProfile.location}
+								</p>
+							) : null}
+						</div>
+
+						<div
+							className={`mt-4 w-full min-w-0 sm:mt-5 ${profileSideBySide ? "flex flex-row items-start gap-6" : "flex flex-col gap-4"}`}
+						>
+							<div
+								className={`min-w-0 ${profileSideBySide ? "shrink-0 basis-1/3" : "flex w-full justify-center"}`}
+							>
+								<div
+									className="relative shrink-0 overflow-hidden rounded-xl bg-gray-900 shadow-sm sm:rounded-2xl"
+									style={{
+										aspectRatio: "9 / 16",
+										width: profileSideBySide ? "100%" : "7rem",
+										maxWidth: profileSideBySide ? "11rem" : "min(7rem, 92vw)",
+									}}
+								>
+									<ImageWithFallback
+										alt=""
+										src={(() => {
+											const u =
+												userProfile.videoThumbnailUrl ||
+												userProfile.video_thumbnail_url;
+											const s = u != null ? String(u).trim() : "";
+											return s ||
+												"https://images.unsplash.com/photo-1758598304204-5bec31342d05?auto=format&fit=crop&q=80&w=800";
+										})()}
+										className="relative z-0 block h-full w-full max-w-full object-cover"
+									/>
+									<div className="absolute inset-0 z-10 flex items-center justify-center bg-black/10">
+										<button
+											type="button"
+											aria-label="Play intro video"
+											className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full border border-white/50 bg-white/35 text-white backdrop-blur-sm transition-transform hover:scale-105 sm:h-9 sm:w-9"
+											onClick={() =>
+												(userProfile.videoUrl || userProfile.video_url) &&
+												setShowVideoPlayer(true)
+											}
+										>
+											<Play aria-hidden fill="white" size={14} className="ml-px" />
+										</button>
+									</div>
 								</div>
 							</div>
-							<div className="space-y-6 sm:space-y-8 text-center md:text-left flex-1">
-								<div className="space-y-2 sm:space-y-3">
-									<h3 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">
-										Your Intro Video
-									</h3>
-									<p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px]">
-										RECORDED IN SECONDS
-									</p>
-								</div>
-								<div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 md:gap-5 justify-center md:justify-start">
+
+							<div className="min-w-0 w-full flex-1">
+								<div className="flex w-full flex-col gap-2 pt-1 sm:gap-2.5 sm:pt-0">
+									<Button
+										type="button"
+										className="seeker-profile-action-btn !flex h-auto min-h-0 w-full min-w-0 max-w-full !whitespace-normal flex-col items-center justify-center gap-1 rounded-2xl bg-[#148F8B] px-2 !py-2 text-center font-black uppercase leading-snug tracking-normal text-white hover:bg-[#A63F8E] sm:px-3 sm:!py-2.5 sm:tracking-wide"
+										onClick={() => {
+											setPreviewModalPlayVideo(false);
+											setShowEmployerPreview(true);
+										}}
+									>
+										<Eye size={16} className="shrink-0 sm:h-[18px] sm:w-[18px]" aria-hidden />
+										<span className="max-w-full text-balance break-words [overflow-wrap:anywhere]">
+											Preview how employers see you
+										</span>
+									</Button>
 									<Button
 										variant="outline"
 										className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200"
 										onClick={onShowMedia}
 									>
-										<Video
-											size={20}
-											className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#148F8B]"
-										/>{" "}
-										Update Video
+										<Video size={16} className="shrink-0 text-[#148F8B] sm:h-[17px] sm:w-[17px]" aria-hidden />
+										<span className="max-w-full text-balance break-words [overflow-wrap:anywhere]">
+											Update video
+										</span>
 									</Button>
 									<Button
 										variant="outline"
-										className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl bg-white border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200"
+										type="button"
+										className="seeker-profile-action-btn !flex h-auto min-h-0 w-full min-w-0 max-w-full !whitespace-normal flex-col items-center justify-center gap-1 rounded-2xl border-gray-200 px-2 !py-2 text-center font-black uppercase leading-snug tracking-normal sm:px-3 sm:!py-2.5 sm:tracking-wide"
 										onClick={() => onNavigate("profile-editor")}
 									>
-										<Edit3
-											size={20}
-											className="sm:w-5 sm:h-5 md:w-6 md:h-6 text-[#148F8B]"
-										/>{" "}
-										Edit Profile
+										<Edit3 size={16} className="shrink-0 text-[#148F8B] sm:h-[17px] sm:w-[17px]" aria-hidden />
+										<span className="max-w-full break-words [overflow-wrap:anywhere]">Edit profile</span>
 									</Button>
 									<Button
-										variant="ghost"
-										className="h-12 sm:h-14 md:h-16 px-6 sm:px-8 md:px-10 rounded-2xl text-gray-400 font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all duration-200"
+										variant="outline"
+										type="button"
+										className="seeker-profile-action-btn !flex h-auto min-h-0 w-full min-w-0 max-w-full !whitespace-normal flex-col items-center justify-center gap-1 rounded-2xl border-gray-200 px-2 !py-2 text-center font-black uppercase leading-snug tracking-normal sm:px-3 sm:!py-2.5 sm:tracking-wide"
 										onClick={onShowVisibility}
 									>
-										<SettingsIcon
-											size={20}
-											className="sm:w-5 sm:h-5 md:w-6 md:h-6"
-										/>{" "}
-										Visibility
+										<SettingsIcon size={16} className="shrink-0 text-gray-600 sm:h-[17px] sm:w-[17px]" aria-hidden />
+										<span className="max-w-full break-words [overflow-wrap:anywhere]">Edit visibility</span>
 									</Button>
 								</div>
 							</div>
@@ -536,7 +616,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 
 					{/* Activity Row */}
 					<aside className="space-y-6 sm:space-y-8">
-						<div className="-mt-6 sm:-mt-8 md:-mt-10 p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden group">
+						<div className="p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden group">
 							<h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
 								<BarChart3 size={24} className="text-[#148F8B]" /> Activity
 							</h3>
@@ -583,43 +663,6 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 								</div>
 							</div>
 						</div>
-
-						{/* Quick Profile Summary */}
-						{userProfile?.name && (
-							<div className="p-6 sm:p-8 bg-white rounded-[2rem] sm:rounded-[3rem] border border-gray-100 shadow-sm space-y-4">
-								<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
-									Your Profile
-								</h4>
-								<div className="space-y-3">
-									<div className="flex items-center gap-3">
-										<Users size={16} className="text-[#148F8B] shrink-0" />
-										<span className="font-bold text-gray-900 text-sm">
-											{userProfile.name}
-										</span>
-									</div>
-									{userProfile.location && (
-										<div className="flex items-center gap-3">
-											<MapPin size={16} className="text-gray-400 shrink-0" />
-											<span className="font-medium text-gray-600 text-sm">
-												{userProfile.location}
-											</span>
-										</div>
-									)}
-									{userProfile.skills && (
-										<div className="flex flex-wrap gap-2 pt-2">
-											{userProfile.skills.slice(0, 4).map((s: string) => (
-												<span
-													key={s}
-													className="mr-2 mb-2 px-2.5 py-1 bg-[#148F8B]/5 text-[#148F8B] rounded-lg text-[10px] font-black uppercase tracking-widest"
-												>
-													{s}
-												</span>
-											))}
-										</div>
-									)}
-								</div>
-							</div>
-						)}
 					</aside>
 				</div>
 			)}
@@ -873,7 +916,7 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 											{onOpenMessageWithEmployer &&
 												job.employer_id != null && (
 													<Button
-														className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white shadow-lg shadow-[#148F8B]/20 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-black uppercase tracking-widest"
+														className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white shadow-lg shadow-[#148F8B]/20 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-black uppercase tracking-widest"
 														onClick={() =>
 															onOpenMessageWithEmployer(Number(job.employer_id))
 														}
@@ -971,6 +1014,287 @@ export const SeekerDashboard: React.FC<SeekerDashboardProps> = ({
 					</motion.div>
 				)}
 			</AnimatePresence>
+
+			<Modal
+				wide
+				isOpen={showEmployerPreview}
+				onClose={() => {
+					setShowEmployerPreview(false);
+					setPreviewModalPlayVideo(false);
+				}}
+				title="How employers see you"
+			>
+				{userProfile && (
+					<div className="space-y-8 -mt-2">
+						<div className="flex flex-col sm:flex-row gap-6 items-center">
+							<div className="w-24 h-24 rounded-[2rem] overflow-hidden bg-gray-100 shrink-0 border-4 border-[#148F8B]/10 shadow-xl">
+								<ImageWithFallback
+									src={
+										userProfile.videoThumbnailUrl ||
+										userProfile.video_thumbnail_url ||
+										""
+									}
+									className="w-full h-full object-cover"
+								/>
+							</div>
+							<div className="space-y-1 flex-1 text-center sm:text-left">
+								<h3 className="text-3xl sm:text-4xl font-black tracking-tighter leading-none text-gray-900">
+									{userProfile.name}
+								</h3>
+								{userProfile.location ? (
+									<p className="text-base font-black text-[#148F8B] uppercase tracking-[0.2em]">
+										{userProfile.location}
+									</p>
+								) : null}
+								{String(
+									userProfile.displayTitle || userProfile.display_title || "",
+								).trim() ? (
+									<p className="text-sm font-bold text-gray-600 pt-1">
+										{String(
+											userProfile.displayTitle || userProfile.display_title || "",
+										).trim()}
+									</p>
+								) : null}
+							</div>
+						</div>
+
+						{(() => {
+							const vUrl = userProfile.videoUrl || userProfile.video_url;
+							const thumb =
+								userProfile.videoThumbnailUrl ||
+								userProfile.video_thumbnail_url ||
+								"";
+							if (previewModalPlayVideo && vUrl) {
+								const videoType = vUrl.includes(".webm")
+									? "video/webm"
+									: "video/mp4";
+								return (
+									<div className="space-y-2">
+										<video
+											controls
+											autoPlay
+											playsInline
+											className="w-full rounded-[1.5rem] bg-black max-h-[50vh]"
+										>
+											<source src={vUrl} type={videoType} />
+										</video>
+										<button
+											type="button"
+											className="text-[10px] font-black uppercase tracking-widest text-[#148F8B] hover:underline"
+											onClick={() => setPreviewModalPlayVideo(false)}
+										>
+											Back to thumbnail
+										</button>
+									</div>
+								);
+							}
+							return (
+								<button
+									type="button"
+									className="relative w-full aspect-video bg-black rounded-[2rem] overflow-hidden shadow-xl text-left group"
+									onClick={() => vUrl && setPreviewModalPlayVideo(true)}
+									disabled={!vUrl}
+								>
+									<ImageWithFallback
+										src={thumb}
+										className="w-full h-full object-cover opacity-85"
+									/>
+									<div className="absolute inset-0 flex items-center justify-center bg-black/20">
+										<div className="w-20 h-20 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center border-2 border-white/50 group-hover:scale-105 transition-transform">
+											<Play size={36} className="text-white fill-white ml-1" />
+										</div>
+									</div>
+									{!vUrl && (
+										<div className="absolute bottom-0 inset-x-0 bg-black/70 py-2 text-center pointer-events-none">
+											<p className="text-[9px] font-black uppercase tracking-widest text-white">
+												Add an intro video to show here
+											</p>
+										</div>
+									)}
+								</button>
+							);
+						})()}
+
+						<div className="space-y-2">
+							<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+								Professional narrative
+							</h4>
+							<p className="text-sm sm:text-base text-gray-600 leading-relaxed font-medium">
+								{userProfile.bio?.trim()
+									? userProfile.bio
+									: "You haven’t added a bio yet — employers will see this section once you write one in Edit profile."}
+							</p>
+						</div>
+
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 border-y border-gray-100 py-6">
+							<div className="flex justify-between gap-2 text-sm">
+								<span className="text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
+									Education
+								</span>
+								<span className="font-bold text-gray-900 text-right uppercase text-xs">
+									{formatEducationPreview(userProfile.education)}
+								</span>
+							</div>
+							<div className="flex justify-between gap-2 text-sm">
+								<span className="text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
+									Availability
+								</span>
+								<span className="font-bold text-[#A63F8E] text-right uppercase text-xs">
+									{userProfile.availability?.trim() || "—"}
+								</span>
+							</div>
+							<div className="flex justify-between gap-2 text-sm">
+								<span className="text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
+									Experience
+								</span>
+								<span className="font-bold text-gray-900 text-right uppercase text-xs">
+									{(() => {
+										const e = formatExperiencePreview(userProfile.experience);
+										if (e === "—") return "—";
+										if (/year/i.test(e)) return e;
+										return `${e} yrs`;
+									})()}
+								</span>
+							</div>
+							<div className="flex justify-between gap-2 text-sm">
+								<span className="text-[10px] font-black text-gray-500 uppercase tracking-widest shrink-0">
+									Expectation
+								</span>
+								<span className="font-bold text-gray-900 text-right text-xs">
+									{formatPayPreview(userProfile.targetPay)}
+								</span>
+							</div>
+						</div>
+
+						{Array.isArray(userProfile.skills) && userProfile.skills.length > 0 && (
+							<div className="space-y-3">
+								<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+									Skills
+								</h4>
+								<div className="flex flex-wrap gap-2">
+									{userProfile.skills.map((s: string, i: number) => (
+										<span
+											key={`${s}-${i}`}
+											className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest"
+										>
+											{s}
+										</span>
+									))}
+								</div>
+							</div>
+						)}
+
+						{Array.isArray(userProfile.workStyles) &&
+							userProfile.workStyles.length > 0 && (
+								<div className="space-y-3">
+									<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+										Work style
+									</h4>
+									<div className="flex flex-wrap gap-2">
+										{userProfile.workStyles.map((s: string, i: number) => (
+											<span
+												key={`${s}-${i}`}
+												className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest"
+											>
+												{s}
+											</span>
+										))}
+									</div>
+								</div>
+							)}
+
+						{Array.isArray(userProfile.industries) &&
+							userProfile.industries.length > 0 && (
+								<div className="space-y-3">
+									<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+										Industries interested
+									</h4>
+									<div className="flex flex-wrap gap-2">
+										{userProfile.industries.map((ind: string, i: number) => (
+											<span
+												key={`${ind}-${i}`}
+												className="px-3 py-1.5 bg-[#148F8B]/10 text-[#148F8B] rounded-xl text-[10px] font-black uppercase tracking-widest"
+											>
+												{ind}
+											</span>
+										))}
+									</div>
+								</div>
+							)}
+
+						{Array.isArray(userProfile.preferredJobCategories) &&
+							userProfile.preferredJobCategories.length > 0 && (
+								<div className="space-y-3">
+									<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+										Preferred job types
+									</h4>
+									<div className="flex flex-wrap gap-2">
+										{userProfile.preferredJobCategories.map(
+											(c: string, i: number) => (
+												<span
+													key={`${c}-${i}`}
+													className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest"
+												>
+													{c}
+												</span>
+											),
+										)}
+									</div>
+								</div>
+							)}
+
+						{Array.isArray(userProfile.jobTypesSeeking) &&
+							userProfile.jobTypesSeeking.length > 0 && (
+								<div className="space-y-3">
+									<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+										Open to
+									</h4>
+									<div className="flex flex-wrap gap-2">
+										{userProfile.jobTypesSeeking.map((jt: string, i: number) => (
+											<span
+												key={`${jt}-${i}`}
+												className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest"
+											>
+												{jt}
+											</span>
+										))}
+									</div>
+								</div>
+							)}
+
+						<div className="grid sm:grid-cols-2 gap-4">
+							<div className="p-6 bg-[#148F8B] rounded-2xl text-white space-y-1">
+								<span className="text-[10px] font-black opacity-70 uppercase tracking-widest flex items-center gap-1.5">
+									<Phone size={12} aria-hidden />
+									Direct phone
+								</span>
+								<p className="text-lg font-black tracking-tight break-all">
+									{userProfile.phone?.trim() || "—"}
+								</p>
+							</div>
+							<div className="p-6 bg-[#A63F8E]/10 border border-[#A63F8E]/20 rounded-2xl space-y-1">
+								<span className="text-[10px] font-black text-[#A63F8E] uppercase tracking-widest flex items-center gap-1.5">
+									<Mail size={12} aria-hidden />
+									Verified email
+								</span>
+								<p className="text-base font-black text-gray-900 tracking-tight break-all">
+									{userProfile.email?.trim() || "—"}
+								</p>
+							</div>
+						</div>
+
+						<Button
+							type="button"
+							variant="outline"
+							className="w-full h-12 rounded-2xl font-black uppercase tracking-widest text-xs"
+							onClick={() => onNavigate("profile-editor")}
+						>
+							<Edit3 size={16} className="inline-block mr-2" />
+							Edit profile
+						</Button>
+					</div>
+				)}
+			</Modal>
 
 			{/* Delete confirmation modal */}
 			<AnimatePresence>

@@ -1043,7 +1043,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 									<button
 										type="button"
 										onClick={openRecordView}
-										className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-[#148F8B] bg-[#148F8B] text-white font-black hover:bg-[#136068] transition-colors shadow-lg shadow-[#148F8B]/20"
+										className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-[#148F8B] bg-[#148F8B] text-white font-black hover:bg-[#A63F8E] transition-colors shadow-lg shadow-[#148F8B]/20"
 									>
 										<Camera aria-hidden="true" size={24} />
 										Record with Camera
@@ -1069,7 +1069,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 											setError(null);
 											setStep("link");
 										}}
-										className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-800 font-bold hover:border-[#148F8B]/40 hover:bg-[#148F8B]/5 transition-colors"
+										className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-800 font-bold hover:bg-[#EBE1E6] transition-colors"
 									>
 										<Link2 size={24} className="text-[#148F8B]" />
 										Use video URL
@@ -1100,7 +1100,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 								<button
 									type="button"
 									onClick={() => void handleLinkContinue()}
-									className="w-full py-4 rounded-2xl bg-[#148F8B] text-white font-black hover:bg-[#136068] transition-colors flex items-center justify-center gap-2"
+									className="w-full py-4 rounded-2xl bg-[#148F8B] text-white font-black hover:bg-[#A63F8E] transition-colors flex items-center justify-center gap-2"
 								>
 									<Link2 size={20} />
 									Continue
@@ -1284,7 +1284,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 									<button
 										type="button"
 										onClick={onClose}
-										className="w-full py-3 rounded-xl bg-[#148F8B] text-white font-bold hover:bg-[#136068] transition-colors"
+										className="w-full py-3 rounded-xl bg-[#148F8B] text-white font-bold hover:bg-[#A63F8E] transition-colors"
 									>
 										{uploadStatus === "error" ? "Close" : "Done"}
 									</button>
@@ -1383,7 +1383,7 @@ export const VideoIntroModal: React.FC<VideoIntroModalProps> = ({
 										<button
 											type="button"
 											onClick={uploadAndComplete}
-											className="flex-1 py-3 rounded-xl bg-[#148F8B] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#136068] disabled:opacity-50 transition-colors"
+											className="flex-1 py-3 rounded-xl bg-[#148F8B] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#A63F8E] disabled:opacity-50 transition-colors"
 										>
 											<>
 												<Save aria-hidden="true" size={20} />

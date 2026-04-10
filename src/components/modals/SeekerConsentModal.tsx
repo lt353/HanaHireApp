@@ -117,7 +117,7 @@ export const SeekerConsentModal: React.FC<SeekerConsentModalProps> = ({
             disabled={!allChecked}
             className={`flex-[2] h-12 rounded-2xl font-black uppercase tracking-widest text-sm transition-all ${
               allChecked
-                ? "bg-[#148F8B] text-white hover:bg-[#0D7377] hover:scale-[1.02] active:scale-95"
+                ? "bg-[#148F8B] text-white hover:bg-[#A63F8E] hover:scale-[1.02] active:scale-95"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >

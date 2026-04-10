@@ -178,6 +178,8 @@ interface SeekerOnboardingProps {
   onNavigate?: (view: ViewType) => void;
   /** Called when the user tries to record/upload video intro but has not accepted profile/video consent yet (parent shows SeekerConsentModal). */
   onRequestVideoProfileConsent?: () => void;
+  /** True while parent's SeekerConsentModal is open — used to cancel "open video after consent" if the user dismisses without agreeing. */
+  isVideoProfileConsentModalOpen?: boolean;
   /** Called after applying resume import draft from sign-up (App clears `pendingSeekerResumeDraft`). */
   onPendingResumeDraftConsumed?: () => void;
 }
@@ -186,6 +188,7 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
   userProfile,
   onComplete,
   onRequestVideoProfileConsent,
+  isVideoProfileConsentModalOpen = false,
   onPendingResumeDraftConsumed,
 }) => {
   const [bio, setBio] = useState("");
@@ -198,8 +201,18 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
   const [selectedWorkStyles, setSelectedWorkStyles] = useState<string[]>([]);
   const [jobTypesSeeking, setJobTypesSeeking] = useState<string[]>([]);
   const [preferredJobCategories, setPreferredJobCategories] = useState<string[]>([]);
-  const [useCustomTitle, setUseCustomTitle] = useState(false);
-  const [customTitle, setCustomTitle] = useState("");
+  const initialProfileTitle = (
+    (userProfile?.displayTitle ??
+      userProfile?.customTitle ??
+      userProfile?.display_title ??
+      "") as string
+  )
+    .trim()
+    .slice(0, 50);
+  const [useCustomTitle, setUseCustomTitle] = useState(() =>
+    Boolean(initialProfileTitle),
+  );
+  const [customTitle, setCustomTitle] = useState(() => initialProfileTitle);
 
   const [location, setLocation] = useState(userProfile?.location || "");
   const [island, setIsland] = useState<string>("");
@@ -229,14 +242,38 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
   const needsProfileVideoConsent =
     userProfile?.profile_consent_accepted !== true;
 
+  /** User tapped intro video but was sent to consent first — open modal once consent is saved. */
+  const pendingOpenVideoAfterConsentRef = useRef(false);
+  const prevVideoConsentModalOpenRef = useRef(false);
+
   const openVideoIntroFlow = React.useCallback(() => {
     setVideoUploadError(null);
     if (needsProfileVideoConsent && onRequestVideoProfileConsent) {
+      pendingOpenVideoAfterConsentRef.current = true;
       onRequestVideoProfileConsent();
       return;
     }
     setShowVideoModal(true);
   }, [needsProfileVideoConsent, onRequestVideoProfileConsent]);
+
+  useEffect(() => {
+    if (needsProfileVideoConsent) return;
+    if (!pendingOpenVideoAfterConsentRef.current) return;
+    pendingOpenVideoAfterConsentRef.current = false;
+    setShowVideoModal(true);
+  }, [needsProfileVideoConsent]);
+
+  useEffect(() => {
+    const open = Boolean(isVideoProfileConsentModalOpen);
+    if (
+      prevVideoConsentModalOpenRef.current &&
+      !open &&
+      needsProfileVideoConsent
+    ) {
+      pendingOpenVideoAfterConsentRef.current = false;
+    }
+    prevVideoConsentModalOpenRef.current = open;
+  }, [isVideoProfileConsentModalOpen, needsProfileVideoConsent]);
 
   const [resumeAiSkippedPrimary, setResumeAiSkippedPrimary] = useState(false);
   const [resumeAiSkippedSecondary, setResumeAiSkippedSecondary] = useState(false);
@@ -540,10 +577,19 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
     } else if (draftLoc) {
       setLocation(draftLoc);
     }
-    const title = (draft.displayTitle || "").trim();
-    if (title) {
+    const title =
+      (draft.displayTitle || (draft as { display_title?: string }).display_title || "")
+        .trim();
+    const fromSuggestions =
+      !title &&
+      Array.isArray(draft.suggestedJobTitles) &&
+      draft.suggestedJobTitles.length
+        ? String(draft.suggestedJobTitles[0] || "").trim()
+        : "";
+    const resolved = (title || fromSuggestions).slice(0, 50);
+    if (resolved) {
       setUseCustomTitle(true);
-      setCustomTitle(title.slice(0, 50));
+      setCustomTitle(resolved);
     }
     const suggestions = (draft.introVideoSuggestions || []).filter(
       (s): s is string => typeof s === "string" && s.trim().length > 0,
@@ -606,7 +652,9 @@ export const SeekerOnboarding: React.FC<SeekerOnboardingProps> = ({
       setPreferredJobCategories(userProfile.preferredJobCategories || []);
       setUseCustomTitle(true);
       setCustomTitle(
-        (userProfile.displayTitle as string | undefined)?.trim() || systemTitle,
+        (userProfile.displayTitle as string | undefined)?.trim() ||
+          (userProfile.display_title as string | undefined)?.trim() ||
+          systemTitle,
       );
       return;
     }

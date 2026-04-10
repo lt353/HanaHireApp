@@ -4217,3 +4217,20 @@ html, body {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
+
+/* Seeker dashboard profile actions: fluid type so labels fit narrow widths (not grid layout). */
+.seeker-profile-action-btn {
+  font-size: clamp(0.5rem, 2.85vw + 0.15rem, 0.6875rem);
+}
+@media (width >= 640px) {
+  .seeker-profile-action-btn {
+    font-size: clamp(0.5625rem, 0.9vw + 0.35rem, 0.75rem);
+  }
+}
+
+/* Outline / white control hovers: utility referenced from TSX but absent from the bundled Tailwind layer. */
+@media (hover: hover) {
+  .hover\:bg-\[\#EBE1E6\]:hover {
+    background-color: #ebe1e6 !important;
+  }
+}

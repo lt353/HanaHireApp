@@ -626,7 +626,7 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
           <div className="pt-4 space-y-4">
             <Button
               onClick={handleSubmit}
-              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 shadow-[#A63F8E]/20 flex items-center justify-center gap-3"
+              className="w-full h-20 rounded-[1.5rem] text-xl shadow-xl bg-[#A63F8E] hover:bg-[#148F8B] shadow-[#A63F8E]/20 flex items-center justify-center gap-3"
             >
               <Sparkles size={22} />
               {isEditing ? "Update Business Profile" : "Launch Business Profile"}

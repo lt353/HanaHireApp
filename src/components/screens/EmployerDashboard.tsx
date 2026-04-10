@@ -264,7 +264,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 								<LogIn size={20} /> Log In
 							</Button>
 							<Button
-								className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
+								className="h-12 sm:h-14 px-6 sm:px-8 rounded-xl bg-[#A63F8E] hover:bg-[#148F8B] whitespace-nowrap hover:scale-105 active:scale-95 transition-all duration-200"
 								onClick={() => onShowAuth("signup")}
 							>
 								Get Started
@@ -287,14 +287,14 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 						</div>
 						<div className="flex flex-col md:flex-row md:flex-wrap gap-3 md:gap-3 w-full">
 							<Button
-								className="h-10 sm:h-12 md:h-11 px-4 sm:px-6 md:px-5 rounded-[1.25rem] sm:rounded-[1.5rem] shadow-xl shadow-[#148F8B]/20 text-sm sm:text-base md:text-sm whitespace-nowrap bg-[#148F8B] hover:bg-[#148F8B]/90 hover:scale-105 active:scale-95 transition-all duration-200"
+								className="h-10 sm:h-12 md:h-11 px-4 sm:px-6 md:px-5 rounded-[1.25rem] sm:rounded-[1.5rem] shadow-xl shadow-[#148F8B]/20 text-sm sm:text-base md:text-sm whitespace-nowrap bg-[#148F8B] hover:bg-[#A63F8E] hover:scale-105 active:scale-95 transition-all duration-200"
 								onClick={onShowPostJob}
 							>
 								<Plus size={18} className="sm:w-5 sm:h-5 md:w-4 md:h-4" /> Post
 								a Job
 							</Button>
 							<Button
-								className="h-10 sm:h-12 md:h-11 px-4 sm:px-6 md:px-5 rounded-[1.25rem] sm:rounded-[1.5rem] shadow-xl shadow-[#A63F8E]/20 text-sm sm:text-base md:text-sm whitespace-nowrap bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+								className="h-10 sm:h-12 md:h-11 px-4 sm:px-6 md:px-5 rounded-[1.25rem] sm:rounded-[1.5rem] shadow-xl shadow-[#A63F8E]/20 text-sm sm:text-base md:text-sm whitespace-nowrap bg-[#A63F8E] hover:bg-[#148F8B] text-white hover:scale-105 active:scale-95 transition-all duration-200"
 								onClick={() => onNavigate("candidates")}
 							>
 								<Users size={18} className="sm:w-5 sm:h-5 md:w-4 md:h-4" />{" "}
@@ -821,7 +821,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																				Number(cand.id),
 																			)
 																		}
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#148F8B]/90 transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#A63F8E] transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
 																	>
 																		<MessageSquare
 																			aria-hidden="true"
@@ -837,7 +837,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																		onClick={() =>
 																			onOrganizeCandidateJobs(Number(cand.id))
 																		}
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:border-[#A63F8E] hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest"
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:bg-[#EBE1E6] hover:text-gray-700 transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest"
 																	>
 																		<Pencil
 																			aria-hidden="true"
@@ -851,7 +851,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																	<a
 																		href={`tel:${cand.phone}`}
 																		onClick={(e) => e.stopPropagation()}
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200"
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200"
 																	>
 																		<Phone
 																			aria-hidden="true"
@@ -882,7 +882,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																	<a
 																		href={`mailto:${cand.email}`}
 																		onClick={(e) => e.stopPropagation()}
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200"
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200"
 																	>
 																		<Mail
 																			aria-hidden="true"
@@ -1357,7 +1357,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 															e.stopPropagation();
 															onOpenMessageWithCandidate(applicant.id);
 														}}
-														className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#148F8B]/90 transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
+														className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#A63F8E] transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
 													>
 														<MessageSquare aria-hidden="true" size={16} />
 														Message
@@ -1372,7 +1372,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 															if (appId && onMarkContacted)
 																onMarkContacted(Number(appId), "phone");
 														}}
-														className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+														className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
 													>
 														<Phone aria-hidden="true" size={16} />
 														Call
@@ -1396,7 +1396,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 															if (appId && onMarkContacted)
 																onMarkContacted(Number(appId), "email");
 														}}
-														className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+														className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
 													>
 														<Mail aria-hidden="true" size={16} />
 														Email
@@ -1629,7 +1629,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 														onClick={() =>
 															onOpenMessageWithCandidate(Number(cand.id))
 														}
-														className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#148F8B]/90 transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
+														className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#A63F8E] transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
 													>
 														<MessageSquare aria-hidden="true" size={16} />{" "}
 														Message
@@ -1641,7 +1641,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 														onClick={() =>
 															onOrganizeCandidateJobs(Number(cand.id))
 														}
-														className="px-8 h-12 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:border-[#A63F8E] hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+														className="px-8 h-12 rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:bg-[#EBE1E6] hover:text-gray-700 transition-all font-black text-sm uppercase tracking-wide"
 													>
 														<Pencil aria-hidden="true" size={16} /> Organize
 													</button>
@@ -1650,7 +1650,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 													<a
 														href={`tel:${cand.phone}`}
 														onClick={(e) => e.stopPropagation()}
-														className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+														className="px-8 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
 													>
 														<Phone aria-hidden="true" size={16} /> Call
 													</a>
@@ -1667,7 +1667,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 													<a
 														href={`mailto:${cand.email}`}
 														onClick={(e) => e.stopPropagation()}
-														className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
+														className="px-8 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-sm uppercase tracking-wide"
 													>
 														<Mail aria-hidden="true" size={16} /> Email
 													</a>

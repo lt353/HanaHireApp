@@ -1157,7 +1157,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 															>
 																<Button
 																	type="button"
-																	className="w-full h-12 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white shadow-lg shadow-[#148F8B]/20 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
+																	className="w-full h-12 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white shadow-lg shadow-[#148F8B]/20 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2"
 																	onClick={() => {
 																		setSelectedBusiness(null);
 																		onOpenMessageWithEmployer(Number(emp.id));
@@ -1514,7 +1514,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 											handleToggleBookmark(currentJob);
 											resetCard();
 										}}
-										className="h-9 rounded-lg bg-[#148F8B] text-white font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 hover:bg-[#006aa8] transition-all active:scale-95"
+										className="h-9 rounded-lg bg-[#148F8B] text-white font-bold uppercase text-[11px] flex items-center justify-center gap-1.5 hover:bg-[#A63F8E] transition-all active:scale-95"
 									>
 										<svg
 											className="w-4 h-4"
@@ -1571,7 +1571,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 							<button
 								type="button"
 								onClick={() => onShowPayment({ type: "seeker", items: queue })}
-								className="flex items-center gap-2 px-6 py-4 bg-[#148F8B] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#148F8B]/40 hover:bg-[#006aa8] transition-all hover:scale-105 active:scale-95 duration-200"
+								className="flex items-center gap-2 px-6 py-4 bg-[#148F8B] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#148F8B]/40 hover:bg-[#A63F8E] transition-all hover:scale-105 active:scale-95 duration-200"
 							>
 								<svg
 									className="w-4 h-4"
@@ -1849,7 +1849,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 											<button
 												type="button"
 												onClick={() => handleRecover(job)}
-												className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#148F8B] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
+												className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#148F8B] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#A63F8E] transition-colors hover:scale-105 active:scale-95 transition-all duration-200"
 											>
 												<RotateCcw size={12} />
 												Recover

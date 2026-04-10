@@ -2566,6 +2566,10 @@ export default function App() {
 						<SeekerOnboarding
 							key={`seeker-onb-${userProfile?.candidateId ?? userProfile?.id ?? "na"}`}
 							userProfile={userProfile}
+							isVideoProfileConsentModalOpen={
+								!userProfile?.profile_consent_accepted &&
+								showSeekerConsentModal
+							}
 							onRequestVideoProfileConsent={() =>
 								setShowSeekerConsentModal(true)
 							}
@@ -2650,6 +2654,7 @@ export default function App() {
 											preferredJobCategories:
 												existingCandidate.preferred_job_categories || [],
 											displayTitle: existingCandidate.display_title,
+											display_title: existingCandidate.display_title,
 											candidateId: existingCandidate.id,
 											id: existingCandidate.id,
 										});
@@ -3222,6 +3227,8 @@ export default function App() {
 												jobTypesSeeking: candidate.job_types_seeking || [],
 												workStyles: candidate.work_style?.split(", ") || [],
 												visibility_preference: candidate.visibility_preference,
+												displayTitle: candidate.display_title,
+												display_title: candidate.display_title,
 												videoThumbnailUrl: candidate.video_thumbnail_url,
 												videoUrl: candidate.video_url,
 												candidateId: candidate.id,
@@ -3418,7 +3425,7 @@ export default function App() {
 											setSignupRole("seeker");
 											setSignupStep("form");
 										}}
-										className="w-full p-6 rounded-[2rem] border-2 border-[#148F8B]/20 hover:border-[#148F8B] bg-white hover:bg-[#148F8B]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
+										className="w-full p-6 rounded-[2rem] border-2 border-[#148F8B]/20 hover:border-[#148F8B] bg-white hover:bg-[#EBE1E6] hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
 									>
 										<div className="flex items-center gap-4">
 											<div className="w-14 h-14 rounded-2xl bg-[#148F8B]/10 flex items-center justify-center shrink-0">
@@ -3464,7 +3471,7 @@ export default function App() {
 											setSignupRole("employer");
 											setSignupStep("form");
 										}}
-										className="w-full p-6 rounded-[2rem] border-2 border-[#A63F8E]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#A63F8E]/5 hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
+										className="w-full p-6 rounded-[2rem] border-2 border-[#A63F8E]/20 hover:border-[#1a7a3e] hover:border-4 bg-white hover:bg-[#EBE1E6] hover:scale-105 active:scale-95 transition-all duration-200 text-left space-y-3 group"
 									>
 										<div className="flex items-center gap-4">
 											<div className="w-14 h-14 rounded-2xl bg-[#A63F8E]/10 flex items-center justify-center shrink-0">
@@ -3895,6 +3902,7 @@ export default function App() {
 																jobTypesSeeking:
 																	candidate.job_types_seeking || [],
 																displayTitle: candidate.display_title,
+																display_title: candidate.display_title,
 																candidateId: candidate.id,
 																id: candidate.id,
 																isDemoAccount: true,
@@ -3970,6 +3978,7 @@ export default function App() {
 														visibility_preference:
 															existingCandidate.visibility_preference,
 														displayTitle: existingCandidate.display_title,
+														display_title: existingCandidate.display_title,
 														candidateId: existingCandidate.id,
 														id: existingCandidate.id,
 														profile_consent_accepted:
@@ -4487,7 +4496,7 @@ export default function App() {
 									<Button
 										type="submit"
 										disabled={isSignupLoading}
-										className={`w-full h-16 rounded-[1.5rem] text-lg font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === "employer" ? "bg-[#A63F8E] hover:bg-[#A63F8E]/90 shadow-[#A63F8E]/20" : "bg-[#148F8B] hover:bg-[#148F8B]/90 shadow-[#148F8B]/20"}`}
+										className={`w-full h-16 rounded-[1.5rem] text-lg font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 ${signupRole === "employer" ? "bg-[#A63F8E] hover:bg-[#148F8B] shadow-[#A63F8E]/20" : "bg-[#148F8B] hover:bg-[#A63F8E] shadow-[#148F8B]/20"}`}
 									>
 										{isSignupLoading
 											? "Creating Account..."
@@ -4906,7 +4915,7 @@ export default function App() {
 						{/* Pay Button */}
 						{paymentItems.length > 0 && (
 							<Button
-								className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#148F8B]/30 tracking-tight group bg-[#148F8B] hover:bg-[#148F8B]/90 text-white hover:scale-105 active:scale-95 transition-all duration-200"
+								className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] shadow-2xl shadow-[#148F8B]/30 tracking-tight group bg-[#148F8B] hover:bg-[#A63F8E] text-white hover:scale-105 active:scale-95 transition-all duration-200"
 								onClick={processPayment}
 							>
 								<Lock size={18} className="mr-2" />
@@ -5324,7 +5333,7 @@ export default function App() {
 										</div>
 									</div>
 									<Button
-										className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black uppercase tracking-widest"
+										className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black uppercase tracking-widest"
 										onClick={async () => {
 											const eid = Number(userProfile?.employerId);
 											const cid = messageJobPickerCandidateId;
@@ -5513,7 +5522,7 @@ export default function App() {
 							);
 						})()}
 						<Button
-							className="w-full h-14 rounded-2xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-white font-black uppercase tracking-widest"
+							className="w-full h-14 rounded-2xl bg-[#A63F8E] hover:bg-[#148F8B] text-white font-black uppercase tracking-widest"
 							onClick={async () => {
 								const employerId = Number(userProfile?.employerId);
 								const candidateId = organizeCandidateId;
@@ -5953,7 +5962,7 @@ export default function App() {
 										Edit Job
 									</Button>
 									<Button
-										className="h-16 rounded-2xl bg-[#A63F8E] hover:bg-[#A63F8E]/90 text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
+										className="h-16 rounded-2xl bg-[#A63F8E] hover:bg-[#148F8B] text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
 										onClick={() => {
 											setSelectedJob(null);
 											handleNavigate("employer");
@@ -6160,7 +6169,7 @@ export default function App() {
 							{/* CTA - Seeker actions */}
 							{userRole !== "employer" && (
 								<Button
-									className="w-full h-20 text-xl rounded-3xl bg-[#148F8B] hover:bg-[#136068] text-white shadow-2xl shadow-[#148F8B]/25 hover:scale-105 active:scale-95 transition-all duration-200"
+									className="w-full h-20 text-xl rounded-3xl bg-[#148F8B] hover:bg-[#A63F8E] text-white shadow-2xl shadow-[#148F8B]/25 hover:scale-105 active:scale-95 transition-all duration-200"
 									disabled={applications.some(
 										(a: any) => a.job_id === selectedJob.id,
 									)}
@@ -6452,7 +6461,7 @@ export default function App() {
 										</div>
 
 										<Button
-											className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#136068] text-white text-sm font-black uppercase tracking-widest"
+											className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white text-sm font-black uppercase tracking-widest"
 											onClick={saveEmployerApplicationReview}
 											disabled={isSavingApplicationReview}
 										>
@@ -6764,7 +6773,7 @@ export default function App() {
 								userRole === "employer" &&
 								userProfile?.employerId && (
 									<Button
-										className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
+										className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
 										onClick={() => {
 											const cid = Number(selectedCandidate.id);
 											if (!cid) return;
@@ -6781,7 +6790,7 @@ export default function App() {
 								(id: any) => Number(id) === Number(selectedCandidate.id),
 							) && (
 								<Button
-									className="w-full h-20 text-xl rounded-3xl bg-[#A63F8E] hover:bg-[#5C014A] text-white font-black uppercase tracking-widest shadow-2xl shadow-[#A63F8E]/25 hover:scale-105 active:scale-95 transition-all duration-200"
+									className="w-full h-20 text-xl rounded-3xl bg-[#A63F8E] hover:bg-[#148F8B] text-white font-black uppercase tracking-widest shadow-2xl shadow-[#A63F8E]/25 hover:scale-105 active:scale-95 transition-all duration-200"
 									onClick={() => {
 										setPaymentTarget({
 											type: "employer",

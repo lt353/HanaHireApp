@@ -140,6 +140,7 @@ function seekerResumeExtractionAppendix(): string {
     '- preferredJobCategories: 2-10 job categories they fit — each MUST be an EXACT string from allowedJobCategories.',
     '- education: every degree, diploma, certification, or program mentioned — map to allowedEducation when possible (e.g. BS/BA → Bachelor\'s Degree).',
     '- suggestedJobTitles: 4-12 concrete titles from their jobs (e.g. "Shift Supervisor", "Line Cook") — freeform.',
+    '- displayTitle: 3-10 word professional headline for the profile card (no person name, no email/phone). Prefer a resume headline or summary line; otherwise derive from the strongest job title + domain (e.g. "Experienced Line Cook & Kitchen Lead").',
     '- introVideoSuggestions: 6-8 strings; each is ONE bullet idea (5-15 words), actionable for a 30-60s video.',
     '- workStyles: up to 10 traits that fit — each MUST be an EXACT string from allowedWorkStyles when applicable.',
     '- targetPay: if pay expectations appear, map to closest allowed pay range strings when possible.',
@@ -1233,7 +1234,23 @@ base.post('/seeker-resume-import', async (c) => {
     preferredJobCategories: safeList(extracted.preferredJobCategories, 14),
     targetPay: safeList(extracted.targetPay, 10),
     location: safeStr(extracted.location),
-    displayTitle: safeStr(extracted.displayTitle),
+    displayTitle: (() => {
+      const firstSuggestion =
+        Array.isArray(extracted.suggestedJobTitles) &&
+        extracted.suggestedJobTitles.length
+          ? safeStr(extracted.suggestedJobTitles[0])
+          : '';
+      const raw =
+        safeStr(extracted.displayTitle) ||
+        safeStr(extracted.display_title) ||
+        safeStr(extracted.headline) ||
+        safeStr(extracted.professionalTitle) ||
+        safeStr(extracted.professional_title) ||
+        safeStr(extracted.jobTitle) ||
+        safeStr(extracted.job_title) ||
+        firstSuggestion;
+      return raw.slice(0, 120);
+    })(),
     introVideoSuggestions: safeList(extracted.introVideoSuggestions, 10),
     suggestedJobTitles: safeList(extracted.suggestedJobTitles, 12),
   };

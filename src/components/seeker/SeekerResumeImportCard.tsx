@@ -135,7 +135,7 @@ export const SeekerResumeImportCard: React.FC<Props> = ({
 					type="button"
 					disabled={loading}
 					onClick={() => inputRef.current?.click()}
-					className="rounded-xl bg-[#148F8B] hover:bg-[#148F8B]/90 text-white font-black text-xs uppercase tracking-widest"
+					className="rounded-xl bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black text-xs uppercase tracking-widest"
 				>
 					{loading ? (
 						<>

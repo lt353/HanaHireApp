@@ -7,9 +7,17 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  /** Wider panel for dense content (e.g. full profile preview). */
+  wide?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  wide = false,
+}) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -47,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
       }}
     >
       <div
-        className="bg-white rounded-[2rem] sm:rounded-[3rem] w-full max-w-lg overflow-hidden shadow-2xl max-h-[90vh] flex flex-col relative"
+        className={`bg-white rounded-[2rem] sm:rounded-[3rem] w-full overflow-hidden shadow-2xl max-h-[90vh] flex flex-col relative ${wide ? "max-w-3xl" : "max-w-lg"}`}
         onClick={(e) => e.stopPropagation()}
         style={{ zIndex: 1000000 }}
       >

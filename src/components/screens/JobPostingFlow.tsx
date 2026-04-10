@@ -674,7 +674,7 @@ export function JobPostingFlow({
             </div>
           </div>
 
-          <Button className="w-full h-16 rounded-2xl bg-[#A63F8E] text-white hover:bg-[#5C014A] border-0 text-sm shadow-lg shadow-[#A63F8E]/20">
+          <Button className="w-full h-16 rounded-2xl bg-[#A63F8E] text-white hover:bg-[#148F8B] border-0 text-sm shadow-lg shadow-[#A63F8E]/20">
             Apply with Video
           </Button>
         </div>

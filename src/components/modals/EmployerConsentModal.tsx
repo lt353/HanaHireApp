@@ -175,7 +175,7 @@ export const EmployerConsentModal: React.FC<EmployerConsentModalProps> = ({
             disabled={!canAgree}
             className={`flex-[2] h-12 rounded-2xl font-black uppercase tracking-widest text-sm transition-all ${
               canAgree
-                ? "bg-[#A63F8E] text-white hover:bg-[#8B3378] hover:scale-[1.02] active:scale-95"
+                ? "bg-[#A63F8E] text-white hover:bg-[#148F8B] hover:scale-[1.02] active:scale-95"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >

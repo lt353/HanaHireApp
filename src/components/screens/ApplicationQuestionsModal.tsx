@@ -411,7 +411,7 @@ export const ApplicationQuestionsModal: React.FC<ApplicationQuestionsModalProps>
 
           <div className="space-y-3">
             <Button
-              className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] bg-[#148F8B] hover:bg-[#136068] text-white shadow-2xl shadow-[#148F8B]/30 hover:scale-105 active:scale-95 transition-all duration-200 tracking-tight"
+              className="w-full h-16 sm:h-20 text-lg sm:text-xl rounded-[1.5rem] bg-[#148F8B] hover:bg-[#A63F8E] text-white shadow-2xl shadow-[#148F8B]/30 hover:scale-105 active:scale-95 transition-all duration-200 tracking-tight"
               onClick={handleSubmit}
               disabled={uploading}
             >

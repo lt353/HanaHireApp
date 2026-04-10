@@ -583,7 +583,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   <button
                     type="button"
                     onClick={() => { handleToggleBookmark(currentCandidate); resetCard(); }}
-                    className="h-14 rounded-xl bg-[#148F8B] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#006aa8] transition-all shadow-lg shadow-[#148F8B]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
+                    className="h-14 rounded-xl bg-[#148F8B] text-white font-bold uppercase tracking-wide text-sm hover:bg-[#A63F8E] transition-all shadow-lg shadow-[#148F8B]/20 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200"
                   >
                     <svg
                       className="w-5 h-5 transition-all"
@@ -641,7 +641,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
               <button
                 type="button"
                 onClick={() => onShowPayment({ type: 'employer', items: queue })}
-                className="flex items-center gap-2 px-6 py-4 bg-[#A63F8E] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#A63F8E]/40 hover:bg-[#e55a5a] transition-all hover:scale-105 active:scale-95 duration-200"
+                className="flex items-center gap-2 px-6 py-4 bg-[#A63F8E] text-white rounded-2xl font-black uppercase tracking-wide text-sm shadow-2xl shadow-[#A63F8E]/40 hover:bg-[#148F8B] transition-all hover:scale-105 active:scale-95 duration-200"
               >
                 <Lock size={16} />
                 Unlock Applicants ({queue.length})
@@ -743,7 +743,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     <button
                       type="button"
                       onClick={() => onOpenMessageWithCandidate(Number(c.id))}
-                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-[#148F8B] text-white hover:bg-[#148F8B]/90 transition-all font-black text-xs uppercase tracking-wide"
+                      className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-[#148F8B] text-white hover:bg-[#A63F8E] transition-all font-black text-xs uppercase tracking-wide"
                     >
                       <MessageSquare size={20} />
                       <span>Message</span>
@@ -876,7 +876,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRecover(candidate)}
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#148F8B] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#006aa8] transition-colors"
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#148F8B] text-white text-[10px] font-black uppercase tracking-wide hover:bg-[#A63F8E] transition-colors"
                     >
                       <RotateCcw size={12} />
                       Recover
