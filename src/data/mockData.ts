@@ -275,7 +275,7 @@ export const CANDIDATE_CATEGORIES = {
 export const DEMO_PROFILES = {
   /** Candidate id 128 — Kyle Malone */
   seeker: {
-    email: "kyle.malone808@gmail.com",
+    email: "kyle.malone@gmail.com",
     password: "demo123",
     name: "Kyle Malone",
     phone: "(808) 635-2222",

@@ -118,7 +118,7 @@ const DEMO_ACCOUNTS = {
 	/** DB employer id 134 — DaKine Handyman */
 	employer: "dakinehandyman@gmail.com",
 	/** DB candidate id 128 — Kyle Malone */
-	candidate: "kyle.malone808@gmail.com",
+	candidate: "kyle.malone@gmail.com",
 };
 
 const RESUME_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
