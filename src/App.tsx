@@ -5636,6 +5636,7 @@ export default function App() {
 					isOpen={showVideoUpdateModal}
 					onClose={() => setShowVideoUpdateModal(false)}
 					candidateId={userProfile?.candidateId ?? userProfile?.id}
+					backgroundUpload={false}
 					onComplete={async (videoUrl, videoThumbnailUrl, _durationSeconds) => {
 						// Immediately update local state so thumbnail refreshes in the dashboard
 						setUserProfile((prev: any) =>
