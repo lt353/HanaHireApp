@@ -5114,7 +5114,8 @@ export default function App() {
 																		.replace(/[^a-z0-9]+/g, ".")
 																		.replace(/\.+/g, ".")
 																		.replace(/^\.+|\.+$/g, "");
-																	return `${base || "business"}.name@gmail.com`;
+																	const local = (base || "business").slice(0, 48);
+																	return `${local}@gmail.com`;
 																};
 
 																setSignupFormData((prev) => {

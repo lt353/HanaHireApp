@@ -413,6 +413,26 @@ base.post('/employer-ai-import', async (c) => {
     return extractPhoneFromText(html);
   };
 
+  const extractEmailFromHtml = (html: string, preferredHost: string) => {
+    // Prefer explicit mailto first.
+    const mailto = html.match(/href=["']mailto:([^"'>\s?]+)["']/i)?.[1];
+    const normalize = (e: string) => e.trim().replace(/^[^A-Z0-9._%+-]+/i, '').replace(/[^A-Z0-9._%+-]+$/i, '');
+    const isEmail = (e: string) => /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(e);
+    if (mailto) {
+      const e = normalize(mailto);
+      if (isEmail(e)) return e;
+    }
+
+    // Then scan the page for any email address.
+    const matches = Array.from(html.matchAll(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)).map((m) => m[0]);
+    const uniq = Array.from(new Set(matches.map((m) => normalize(m)))).filter((m) => isEmail(m));
+    if (!uniq.length) return '';
+
+    const pref = preferredHost.replace(/^www\./i, '').toLowerCase();
+    const byDomain = uniq.find((e) => e.toLowerCase().endsWith(`@${pref}`) || e.toLowerCase().includes(`@${pref}.`));
+    return byDomain || uniq[0];
+  };
+
   // Try to fetch homepage HTML for logo + phone (no deep scraping).
   const fetchHomepageSignals = async () => {
     try {
@@ -427,9 +447,13 @@ base.post('/employer-ai-import', async (c) => {
       });
       if (!res.ok) return { logo: '', phone: '' };
       const html = await res.text();
-      return { logo: extractLogoFromHtml(html, url), phone: extractPhoneFromHtml(html) };
+      return {
+        logo: extractLogoFromHtml(html, url),
+        phone: extractPhoneFromHtml(html),
+        email: extractEmailFromHtml(html, url.hostname),
+      };
     } catch {
-      return { logo: '', phone: '' };
+      return { logo: '', phone: '', email: '' };
     }
   };
 
@@ -466,7 +490,7 @@ base.post('/employer-ai-import', async (c) => {
 
   let tavilyRes: Response;
   let logoRes: Response;
-  let homepageSignals = { logo: '', phone: '' };
+  let homepageSignals = { logo: '', phone: '', email: '' };
   try {
     [tavilyRes, logoRes, homepageSignals] = await Promise.all([tavilyReq, logoReq, homepageSignalsReq]);
   } catch (err: any) {
@@ -528,7 +552,8 @@ base.post('/employer-ai-import', async (c) => {
     extractPhoneFromText(tavilyAnswer) ||
     extractPhoneFromText(rawContentJoined) ||
     extractPhoneFromText(snippets);
-  const fallbackEmail = extractEmailFromText(tavilyAnswer) || extractEmailFromText(snippets);
+  const fallbackEmail =
+    homepageSignals.email || extractEmailFromText(tavilyAnswer) || extractEmailFromText(snippets);
 
   // Tavily logo images - from parallel logo search.
   let tavilyLogoImages: string[] = [];
@@ -560,7 +585,8 @@ base.post('/employer-ai-import', async (c) => {
       try {
         const host = new URL(u).hostname.replace(/^www\./i, '');
         const pref = preferredHost.replace(/^www\./i, '');
-        if (host === pref) s += 50;
+        if (host === pref) s += 60;
+        else s -= 40;
       } catch {
         // ignore
       }
@@ -590,6 +616,8 @@ base.post('/employer-ai-import', async (c) => {
     'You extract employer onboarding fields from web search snippets.',
     'Return ONLY valid JSON. No markdown. No extra keys.',
     'If a field is unknown, return an empty string.',
+    'Do NOT invent an email address. Only return an email if it appears in the provided website/snippets.',
+    'Prefer an email that matches the business website domain when multiple are present.',
     'industry MUST be exactly one of the allowedIndustries strings.',
     'location should be a short human-friendly Hawaii location suitable for a job post (e.g., "Poʻipū, Kauaʻi" or "Waikīkī, Oʻahu").',
     'Do not output a full street address unless that is the only available option.',
@@ -603,6 +631,11 @@ base.post('/employer-ai-import', async (c) => {
     `Business website: ${url.toString()}`,
     `Business name guess: ${businessNameGuess}`,
     `allowedIndustries: ${JSON.stringify(allowedIndustries)}`,
+    '',
+    `Homepage signals (best-effort):`,
+    `- email: ${homepageSignals.email || ''}`,
+    `- phone: ${homepageSignals.phone || ''}`,
+    `- logoUrl: ${homepageSignals.logo || ''}`,
     '',
     'Tavily answer (may include phone/location):',
     tavilyAnswer,
