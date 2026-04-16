@@ -611,12 +611,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 													)}
 											</div>
 											<Button
-												variant="outline"
-												className="h-9 sm:h-10 border-none bg-[#F3EAF5]/30 text-[10px] px-3 sm:px-4 font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-1.5"
+												className="h-10 sm:h-12 px-4 sm:px-5 rounded-xl bg-[#A63F8E] hover:bg-[#148F8B] text-white text-[10px] sm:text-xs font-black uppercase tracking-widest shrink-0 hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-[#A63F8E]/20"
 												onClick={() => onSelectJob(j)}
 											>
 												<Pencil aria-hidden="true" size={11} />
-												Manage
+												Job Details
 											</Button>
 										</div>
 										<div className="flex flex-col md:flex-row gap-3 md:gap-4">
@@ -954,22 +953,35 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-50 flex flex-wrap gap-2 sm:gap-3"
 																onClick={(e) => e.stopPropagation()}
 															>
-																{onOpenMessageWithCandidate && (
-																	<button
-																		type="button"
-																		onClick={() =>
-																			onOpenMessageWithCandidate(
-																				Number(cand.id),
-																			)
-																		}
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#A63F8E] transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
+																{cand.email ? (
+																	<a
+																		href={`mailto:${cand.email}`}
+																		onClick={(e) => e.stopPropagation()}
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200"
 																	>
-																		<MessageSquare
+																		<Mail
 																			aria-hidden="true"
 																			size={16}
 																			className="sm:w-[18px] sm:h-[18px]"
 																		/>
-																		Message
+																		<span className="font-black text-[10px] uppercase tracking-widest">
+																			Email
+																		</span>
+																	</a>
+																) : (
+																	<button
+																		type="button"
+																		disabled
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 cursor-not-allowed"
+																	>
+																		<Mail
+																			aria-hidden="true"
+																			size={16}
+																			className="sm:w-[18px] sm:h-[18px]"
+																		/>
+																		<span className="font-black text-[10px] uppercase tracking-widest">
+																			Email
+																		</span>
 																	</button>
 																)}
 																{onOrganizeCandidateJobs && (
@@ -978,7 +990,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																		onClick={() =>
 																			onOrganizeCandidateJobs(Number(cand.id))
 																		}
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:bg-[#EBE1E6] hover:text-gray-700 transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest"
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center gap-2 hover:bg-[#EBE1E6] hover:text-gray-700 transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest whitespace-nowrap"
 																	>
 																		<Pencil
 																			aria-hidden="true"
@@ -1019,35 +1031,22 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																		</span>
 																	</button>
 																)}
-																{cand.email ? (
-																	<a
-																		href={`mailto:${cand.email}`}
-																		onClick={(e) => e.stopPropagation()}
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all hover:scale-105 active:scale-95 duration-200"
-																	>
-																		<Mail
-																			aria-hidden="true"
-																			size={16}
-																			className="sm:w-[18px] sm:h-[18px]"
-																		/>
-																		<span className="font-black text-[10px] uppercase tracking-widest">
-																			Email
-																		</span>
-																	</a>
-																) : (
+																{onOpenMessageWithCandidate && (
 																	<button
 																		type="button"
-																		disabled
-																		className="flex-1 min-w-[100px] h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 cursor-not-allowed"
+																		onClick={() =>
+																			onOpenMessageWithCandidate(
+																				Number(cand.id),
+																			)
+																		}
+																		className="flex-1 min-w-[100px] h-12 sm:h-14 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#A63F8E] transition-all hover:scale-105 active:scale-95 duration-200 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#148F8B]/20 whitespace-nowrap"
 																	>
-																		<Mail
+																		<MessageSquare
 																			aria-hidden="true"
 																			size={16}
 																			className="sm:w-[18px] sm:h-[18px]"
 																		/>
-																		<span className="font-black text-[10px] uppercase tracking-widest">
-																			Email
-																		</span>
+																		Message
 																	</button>
 																)}
 															</div>
@@ -1889,18 +1888,6 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 														{isPoolShortlisted ? "Unshortlist" : "Shortlist"}
 													</button>
 												)}
-												{onOpenMessageWithCandidate && (
-													<button
-														type="button"
-														onClick={() =>
-															onOpenMessageWithCandidate(Number(cand.id))
-														}
-														className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#A63F8E] transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
-													>
-														<MessageSquare aria-hidden="true" size={16} />{" "}
-														Message
-													</button>
-												)}
 												{onOrganizeCandidateJobs && (
 													<button
 														type="button"
@@ -1944,6 +1931,18 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 														className="px-8 h-12 rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 cursor-not-allowed font-black text-sm uppercase tracking-wide"
 													>
 														<Mail aria-hidden="true" size={16} /> Email
+													</button>
+												)}
+												{onOpenMessageWithCandidate && (
+													<button
+														type="button"
+														onClick={() =>
+															onOpenMessageWithCandidate(Number(cand.id))
+														}
+														className="px-8 h-12 rounded-2xl bg-[#148F8B] text-white flex items-center justify-center gap-2 hover:bg-[#A63F8E] transition-all font-black text-sm uppercase tracking-wide shadow-lg shadow-[#148F8B]/20"
+													>
+														<MessageSquare aria-hidden="true" size={16} />{" "}
+														Message
 													</button>
 												)}
 											</div>

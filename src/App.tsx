@@ -6,7 +6,6 @@ import {
 	Mic,
 	FileText,
 	Camera,
-	Eye,
 	Briefcase,
 	User,
 	Lock,
@@ -332,54 +331,21 @@ export default function App() {
 		if (!Number.isFinite(jobId) || jobId <= 0) return;
 
 		void (async () => {
-			let nextCount: number | null = null;
-			try {
-				const res = await fetch(`${API_BASE}/jobs/${jobId}/listing-view`, {
-					method: "POST",
-					headers: {
-						Authorization: `Bearer ${publicAnonKey}`,
-						"Content-Type": "application/json",
-					},
-				});
-				const payload = await res.json().catch(() => ({}));
-				if (res.ok && payload && typeof payload.listing_view_count === "number") {
-					nextCount = payload.listing_view_count;
-				} else if (!res.ok) {
-					console.warn(
-						"Job listing view increment:",
-						(payload as any)?.error ?? res.status,
-						(payload as any)?.hint ?? "",
-					);
-				}
-			} catch (e) {
-				console.warn("Job listing view increment (fetch):", e);
-			}
-
-			if (nextCount == null) {
-				const { error } = await supabase.rpc("increment_job_listing_views", {
-					p_job_id: jobId,
-				});
-				if (error) {
-					console.warn("increment_job_listing_views (rpc fallback):", error);
-					return;
-				}
-				setJobs((prev) =>
-					prev.map((j: any) =>
-						Number(j.id) === jobId
-							? {
-									...j,
-									listing_view_count: Number(j.listing_view_count ?? 0) + 1,
-								}
-							: j,
-					),
-				);
+			// Prefer direct RPC: the Edge Function may not be deployed in every environment.
+			const { error } = await supabase.rpc("increment_job_listing_views", {
+				p_job_id: jobId,
+			});
+			if (error) {
+				console.warn("increment_job_listing_views:", error);
 				return;
 			}
-
 			setJobs((prev) =>
 				prev.map((j: any) =>
 					Number(j.id) === jobId
-						? { ...j, listing_view_count: nextCount }
+						? {
+								...j,
+								listing_view_count: Number(j.listing_view_count ?? 0) + 1,
+							}
 						: j,
 				),
 			);
@@ -3968,7 +3934,7 @@ export default function App() {
 					totalUnreadMessages={totalUnreadMessages}
 				/>
 
-				<main className="pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
+				<main className="hanahire-main-mobile-pad">
 					<AnimatePresence mode="wait">{renderScreen()}</AnimatePresence>
 				</main>
 
@@ -5140,27 +5106,50 @@ export default function App() {
 																	return;
 																}
 
-																setSignupFormData((prev) => ({
-																	...prev,
-																	businessName:
+																const makeFallbackEmail = (name: string): string => {
+																	const base = (name || "")
+																		.toLowerCase()
+																		.trim()
+																		.replace(/&/g, " and ")
+																		.replace(/[^a-z0-9]+/g, ".")
+																		.replace(/\.+/g, ".")
+																		.replace(/^\.+|\.+$/g, "");
+																	return `${base || "business"}.name@gmail.com`;
+																};
+
+																setSignupFormData((prev) => {
+																	const nextBusinessName =
 																		json.businessName ||
 																		prev.businessName ||
-																		"",
-																	phone: json.phone || prev.phone || "",
-																	industry:
-																		json.industry || prev.industry || "",
-																	location:
-																		json.location || prev.location || "",
-																	website:
-																		json.websiteUrl || prev.website || websiteUrl,
-																	bio: json.bio || prev.bio || "",
-																	companySize:
-																		json.companySize || prev.companySize || "",
-																	companyLogoUrl:
-																		json.companyLogoUrl ||
-																		prev.companyLogoUrl ||
-																		"",
-																}));
+																		"";
+																	const nextEmail =
+																		(json.email as string | undefined) ||
+																		prev.email ||
+																		makeFallbackEmail(nextBusinessName);
+																	return {
+																		...prev,
+																		businessName: nextBusinessName,
+																		email: nextEmail,
+																		phone: json.phone || prev.phone || "",
+																		industry:
+																			json.industry || prev.industry || "",
+																		location:
+																			json.location || prev.location || "",
+																		website:
+																			json.websiteUrl ||
+																			prev.website ||
+																			websiteUrl,
+																		bio: json.bio || prev.bio || "",
+																		companySize:
+																			json.companySize ||
+																			prev.companySize ||
+																			"",
+																		companyLogoUrl:
+																			json.companyLogoUrl ||
+																			prev.companyLogoUrl ||
+																			"",
+																	};
+																});
 																toast.success(
 																	"Imported! Review and edit anything you want.",
 																);
@@ -6768,15 +6757,27 @@ export default function App() {
 					onAgree={async (employeeCountRange) => {
 						const ts = new Date().toISOString();
 						const employerId = userProfile?.employerId ?? userProfile?.id;
-						if (employerId) {
-							await supabase
-								.from("employers")
-								.update({
-									eeoc_consent_accepted: true,
-									eeoc_consent_timestamp: ts,
-									employee_count_range: employeeCountRange,
-								})
-								.eq("id", employerId);
+						if (!employerId) {
+							toast.error(
+								"We could not find your employer profile. Please try signing in again.",
+							);
+							return;
+						}
+						const { error } = await supabase
+							.from("employers")
+							.update({
+								eeoc_consent_accepted: true,
+								eeoc_consent_timestamp: ts,
+								employee_count_range: employeeCountRange,
+							})
+							.eq("id", employerId);
+						if (error) {
+							console.error("EEOC consent save failed:", error);
+							toast.error(
+								error.message ||
+									"Could not save your agreement. Please try again.",
+							);
+							return;
 						}
 						setUserProfile((prev: any) => ({
 							...prev,
@@ -6870,18 +6871,17 @@ export default function App() {
 							{userRole === "employer" && (
 								<div className="grid grid-cols-3 gap-3 pt-2">
 									<Button
-										variant="outline"
-										className="h-16 rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
+										className="h-16 rounded-2xl bg-[#A63F8E] hover:bg-[#148F8B] text-white text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
 										onClick={() => {
 											setEditingJob(selectedJob);
 											setSelectedJob(null);
 											handleNavigate("job-posting");
 										}}
 									>
-										Edit Job
+										Edit Job Listing
 									</Button>
 									<Button
-										className="h-16 rounded-2xl bg-[#A63F8E] hover:bg-[#148F8B] text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
+										className="h-16 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all duration-200"
 										onClick={() => {
 											setSelectedJob(null);
 											handleNavigate("employer");

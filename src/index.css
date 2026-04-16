@@ -4235,3 +4235,17 @@ html, body {
     background-color: #ebe1e6 !important;
   }
 }
+
+/*
+ * Fixed mobile tab bar clearance — `pb-[calc(7rem+env(safe-area-inset-bottom))]` and many
+ * `md:*` arbitrary utilities are not emitted in the precompiled Tailwind layer, so they must
+ * be defined here to actually apply.
+ */
+.hanahire-main-mobile-pad {
+  padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+}
+@media (width >= 48rem) {
+  .hanahire-main-mobile-pad {
+    padding-bottom: 0;
+  }
+}

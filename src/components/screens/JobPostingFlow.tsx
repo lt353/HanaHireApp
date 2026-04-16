@@ -701,7 +701,7 @@ export function JobPostingFlow({
     );
 
     return (
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-12 pb-[calc(8rem+env(safe-area-inset-bottom))] flex flex-col lg:grid lg:grid-cols-[1fr_450px] gap-8 lg:gap-16 items-start">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-12 pb-6 sm:pb-12 flex flex-col lg:grid lg:grid-cols-[1fr_450px] gap-8 lg:gap-16 items-start">
         <div className="w-full space-y-8 sm:space-y-12 order-2 lg:order-1">
           <div className="flex items-center gap-3 sm:gap-4">
             <button onClick={() => existingJob ? onBack() : setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
@@ -1526,7 +1526,7 @@ export function JobPostingFlow({
             </section>
           </div>
 
-          <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pb-28">
+          <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pb-8">
             <button onClick={() => existingJob ? onBack() : setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left">← Back</button>
             <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#148F8B]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto" onClick={handlePostJob}>
               {isSubmitting ? <Loader2 className="animate-spin" /> : <>{existingJob ? 'Update Listing' : 'Publish Listing'} <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
@@ -1586,7 +1586,7 @@ export function JobPostingFlow({
   );
 
   const renderConfirmation = () => (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20 text-center space-y-8 sm:space-y-10 md:space-y-12 pb-28">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20 text-center space-y-8 sm:space-y-10 md:space-y-12">
       <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-[#A63F8E]/10 rounded-full flex items-center justify-center text-[#A63F8E] mx-auto">
         <CheckCircle2 size={40} className="sm:w-12 sm:h-12 md:w-16 md:h-16" />
       </div>
