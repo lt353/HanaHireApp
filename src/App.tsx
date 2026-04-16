@@ -23,6 +23,10 @@ import {
 	X,
 	FolderOpen,
 	MessageSquare,
+	LogOut,
+	Star,
+	Phone,
+	Pencil,
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { toast } from "sonner@2.0.3";
@@ -31,6 +35,13 @@ import { projectId, publicAnonKey } from "./utils/supabase/info";
 import { supabase } from "./utils/supabase/client";
 import { formatPhoneInput } from "./utils/formatters";
 import { removeStorageFilesFromUrls } from "./utils/deleteCandidate";
+import {
+	employerModalReviewJobId,
+	employerModalShowShortlistedChip,
+	employerModalTalentPoolPipelineChip,
+	employerScopeKey,
+	employerShortlistActiveForContext,
+} from "./utils/employerTalentPool";
 
 // Components
 import { Header } from "./components/layout/Header";
@@ -209,6 +220,20 @@ export default function App() {
 	const [employerQueue, setEmployerQueue] = useState<any[]>([]);
 	const [unlockedJobIds, setUnlockedJobIds] = useState<any[]>([]);
 	const [unlockedCandidateIds, setUnlockedCandidateIds] = useState<any[]>([]);
+	const [employerShortlistedCandidateIds, setEmployerShortlistedCandidateIds] =
+		useState<number[]>([]);
+	const [employerShortlistJobKeys, setEmployerShortlistJobKeys] = useState<
+		Record<string, boolean>
+	>({});
+	const [talentPoolReviewsByKey, setTalentPoolReviewsByKey] = useState<
+		Record<string, any>
+	>({});
+	const [employerViewedCandidateIds, setEmployerViewedCandidateIds] = useState<
+		number[]
+	>([]);
+	/** Set when PostgREST returns PGRST205 (table not in DB / migration not applied). */
+	const employerCandidateViewsTableMissingRef = useRef(false);
+	const employerCandidateReviewsTableMissingRef = useRef(false);
 	const [appliedJobIds, setAppliedJobIds] = useState<any[]>([]);
 	const [applications, setApplications] = useState<any[]>([]); // full application records (seeker's own)
 	const [employerApplications, setEmployerApplications] = useState<any[]>([]); // applications for employer's jobs
@@ -300,6 +325,67 @@ export default function App() {
 		fetchInitialData();
 	}, []);
 
+	/** Every job detail open counts (same user repeats included). No cancellation on Strict Mode remount so updates are not dropped. */
+	useEffect(() => {
+		if (!selectedJob?.id) return;
+		const jobId = Number(selectedJob.id);
+		if (!Number.isFinite(jobId) || jobId <= 0) return;
+
+		void (async () => {
+			let nextCount: number | null = null;
+			try {
+				const res = await fetch(`${API_BASE}/jobs/${jobId}/listing-view`, {
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${publicAnonKey}`,
+						"Content-Type": "application/json",
+					},
+				});
+				const payload = await res.json().catch(() => ({}));
+				if (res.ok && payload && typeof payload.listing_view_count === "number") {
+					nextCount = payload.listing_view_count;
+				} else if (!res.ok) {
+					console.warn(
+						"Job listing view increment:",
+						(payload as any)?.error ?? res.status,
+						(payload as any)?.hint ?? "",
+					);
+				}
+			} catch (e) {
+				console.warn("Job listing view increment (fetch):", e);
+			}
+
+			if (nextCount == null) {
+				const { error } = await supabase.rpc("increment_job_listing_views", {
+					p_job_id: jobId,
+				});
+				if (error) {
+					console.warn("increment_job_listing_views (rpc fallback):", error);
+					return;
+				}
+				setJobs((prev) =>
+					prev.map((j: any) =>
+						Number(j.id) === jobId
+							? {
+									...j,
+									listing_view_count: Number(j.listing_view_count ?? 0) + 1,
+								}
+							: j,
+					),
+				);
+				return;
+			}
+
+			setJobs((prev) =>
+				prev.map((j: any) =>
+					Number(j.id) === jobId
+						? { ...j, listing_view_count: nextCount }
+						: j,
+				),
+			);
+		})();
+	}, [selectedJob?.id]);
+
 	// Always keep a ref to the latest fetchConversations so the polling interval
 	// never calls a stale closure. Initialized with a no-op; the update effect
 	// below wires in the real function after every render.
@@ -341,6 +427,15 @@ export default function App() {
 		if (!isLoggedIn || !userProfile?.email) return;
 		if (currentView !== "seeker" && currentView !== "employer") return;
 		fetchUnlocks(userProfile.email);
+		if (currentView === "employer") {
+			const eid = userProfile?.employerId ?? userProfile?.id;
+			const idNum = eid != null ? Number(eid) : NaN;
+			if (Number.isFinite(idNum)) {
+				fetchEmployerShortlists(idNum);
+				fetchEmployerTalentPoolReviews(idNum);
+				fetchEmployerCandidateViews(idNum);
+			}
+		}
 	}, [currentView, isLoggedIn, userProfile?.email]);
 
 	// Lightweight unread-count query — runs independently of fetchConversations so
@@ -732,6 +827,141 @@ export default function App() {
 		}
 	};
 
+	const isEmployerCandidateReviewsTableMissing = (err: unknown) => {
+		if (!err || typeof err !== "object") return false;
+		const e = err as { code?: string; message?: string };
+		if (e.code === "PGRST205") return true;
+		const msg = String(e.message ?? "");
+		return (
+			msg.includes("employer_candidate_reviews") &&
+			(msg.includes("Could not find") || msg.includes("schema cache"))
+		);
+	};
+
+	const fetchEmployerTalentPoolReviews = async (employerId: number) => {
+		if (!employerId || employerCandidateReviewsTableMissingRef.current) return;
+		try {
+			const { data, error } = await supabase
+				.from("employer_candidate_reviews")
+				.select("*")
+				.eq("employer_id", employerId);
+			if (error) {
+				if (isEmployerCandidateReviewsTableMissing(error)) {
+					employerCandidateReviewsTableMissingRef.current = true;
+					return;
+				}
+				console.error("Error fetching employer talent pool reviews:", error);
+				return;
+			}
+			const map: Record<string, any> = {};
+			for (const r of data || []) {
+				map[employerScopeKey(Number(r.candidate_id), r.job_id)] = r;
+			}
+			setTalentPoolReviewsByKey(map);
+		} catch (err) {
+			console.error("Unexpected error fetching talent pool reviews:", err);
+		}
+	};
+
+	const fetchEmployerShortlists = async (employerId: number) => {
+		if (!employerId) return;
+		try {
+			const { data, error } = await supabase
+				.from("employer_shortlists")
+				.select("candidate_id, job_id")
+				.eq("employer_id", employerId);
+			if (error) {
+				console.error("Error fetching employer shortlists:", error);
+				return;
+			}
+			const keyMap: Record<string, boolean> = {};
+			const cidSet = new Set<number>();
+			for (const r of data || []) {
+				const cid = Number(r.candidate_id);
+				if (!Number.isNaN(cid)) cidSet.add(cid);
+				keyMap[employerScopeKey(cid, r.job_id)] = true;
+			}
+
+			let fromReviews: { candidate_id: number; job_id: number | null }[] = [];
+			if (!employerCandidateReviewsTableMissingRef.current) {
+				const { data: revData, error: revError } = await supabase
+					.from("employer_candidate_reviews")
+					.select("candidate_id, job_id")
+					.eq("employer_id", employerId)
+					.eq("status", "shortlisted");
+				if (revError) {
+					if (isEmployerCandidateReviewsTableMissing(revError)) {
+						employerCandidateReviewsTableMissingRef.current = true;
+					} else {
+						console.error(
+							"Error fetching shortlisted reviews for employer:",
+							revError,
+						);
+					}
+				} else {
+					fromReviews = (revData || []).map((r: any) => ({
+						candidate_id: Number(r.candidate_id),
+						job_id: r.job_id != null ? Number(r.job_id) : null,
+					}));
+				}
+			}
+
+			for (const r of fromReviews) {
+				if (!Number.isNaN(r.candidate_id)) cidSet.add(r.candidate_id);
+				keyMap[employerScopeKey(r.candidate_id, r.job_id)] = true;
+			}
+
+			setEmployerShortlistJobKeys(keyMap);
+			setEmployerShortlistedCandidateIds([...cidSet]);
+		} catch (err) {
+			console.error("Unexpected error fetching employer shortlists:", err);
+		}
+	};
+
+	const isEmployerCandidateViewsTableMissing = (err: unknown) => {
+		if (!err || typeof err !== "object") return false;
+		const e = err as { code?: string; message?: string };
+		if (e.code === "PGRST205") return true;
+		const msg = String(e.message ?? "");
+		return (
+			msg.includes("employer_candidate_views") &&
+			(msg.includes("Could not find") || msg.includes("schema cache"))
+		);
+	};
+
+	const fetchEmployerCandidateViews = async (employerId: number) => {
+		if (!employerId || employerCandidateViewsTableMissingRef.current) return;
+		try {
+			const { data, error } = await supabase
+				.from("employer_candidate_views")
+				.select("candidate_id")
+				.eq("employer_id", employerId)
+				.gt("view_count", 0);
+			if (error) {
+				if (isEmployerCandidateViewsTableMissing(error)) {
+					employerCandidateViewsTableMissingRef.current = true;
+					return;
+				}
+				console.error("Error fetching employer candidate views:", error);
+				return;
+			}
+			const ids = [
+				...new Set(
+					(data || [])
+						.map((r: any) => Number(r.candidate_id))
+						.filter((n: number) => !Number.isNaN(n)),
+				),
+			];
+			setEmployerViewedCandidateIds(ids);
+		} catch (err) {
+			if (isEmployerCandidateViewsTableMissing(err)) {
+				employerCandidateViewsTableMissingRef.current = true;
+				return;
+			}
+			console.error("Unexpected error fetching employer candidate views:", err);
+		}
+	};
+
 	const fetchSavedItems = async (
 		email: string,
 		role: "seeker" | "employer",
@@ -797,6 +1027,193 @@ export default function App() {
 			}
 		} catch (err) {
 			console.error("Unexpected error fetching saved items:", err);
+		}
+	};
+
+	const toggleEmployerShortlist = async (
+		candidateId: number,
+		jobId?: number | null,
+	) => {
+		if (userRole !== "employer") return;
+		const employerId = userProfile?.employerId ?? userProfile?.id;
+		const eid = employerId != null ? Number(employerId) : NaN;
+		const cid = candidateId != null ? Number(candidateId) : NaN;
+		if (!Number.isFinite(eid) || !Number.isFinite(cid)) return;
+
+		const j =
+			jobId !== undefined &&
+			jobId !== null &&
+			Number.isFinite(Number(jobId))
+				? Number(jobId)
+				: null;
+		const scopeKey = employerScopeKey(cid, j);
+		const isShortlisted = employerShortlistActiveForContext(
+			employerShortlistJobKeys,
+			cid,
+			j,
+		);
+
+		const prevKeys = { ...employerShortlistJobKeys };
+		const prevIds = [...employerShortlistedCandidateIds];
+
+		const recomputeIds = (keys: Record<string, boolean>) => {
+			const nextIds = new Set<number>();
+			for (const k of Object.keys(keys)) {
+				if (!keys[k]) continue;
+				const pid = Number(k.split(":")[0]);
+				if (Number.isFinite(pid)) nextIds.add(pid);
+			}
+			return [...nextIds];
+		};
+
+		const applyOptimisticKeys = (nextKeys: Record<string, boolean>) => {
+			setEmployerShortlistJobKeys(nextKeys);
+			setEmployerShortlistedCandidateIds(recomputeIds(nextKeys));
+		};
+
+		if (isShortlisted) {
+			const next = { ...employerShortlistJobKeys };
+			if (next[scopeKey]) delete next[scopeKey];
+			else if (j != null && next[employerScopeKey(cid, null)])
+				delete next[employerScopeKey(cid, null)];
+			applyOptimisticKeys(next);
+		} else {
+			applyOptimisticKeys({ ...employerShortlistJobKeys, [scopeKey]: true });
+		}
+
+		const employerJobIds = (jobs || [])
+			.filter((jo: any) => Number(jo?.employer_id) === eid)
+			.map((jo: any) => Number(jo?.id))
+			.filter((n: number) => Number.isFinite(n));
+
+		try {
+			if (isShortlisted) {
+				let del = supabase
+					.from("employer_shortlists")
+					.delete()
+					.eq("employer_id", eid)
+					.eq("candidate_id", cid);
+				if (prevKeys[scopeKey]) {
+					if (j == null) del = del.is("job_id", null);
+					else del = del.eq("job_id", j);
+					const { error } = await del;
+					if (error) throw error;
+				} else if (j != null && prevKeys[employerScopeKey(cid, null)]) {
+					const { error } = await supabase
+						.from("employer_shortlists")
+						.delete()
+						.eq("employer_id", eid)
+						.eq("candidate_id", cid)
+						.is("job_id", null);
+					if (error) throw error;
+				}
+
+				const appJobFilter =
+					j != null ? [j] : employerJobIds.length > 0 ? employerJobIds : [];
+				if (appJobFilter.length > 0) {
+					await supabase
+						.from("applications")
+						.update({
+							status: "reviewed",
+							updated_at: new Date().toISOString(),
+						})
+						.eq("candidate_id", cid)
+						.eq("status", "shortlisted")
+						.in("job_id", appJobFilter);
+				}
+				toast.success("Unshortlisted");
+			} else {
+				const { error } = await supabase.from("employer_shortlists").insert([
+					{
+						employer_id: eid,
+						candidate_id: cid,
+						job_id: j,
+					},
+				]);
+				if (error) throw error;
+
+				const appJobFilter =
+					j != null ? [j] : employerJobIds.length > 0 ? employerJobIds : [];
+				if (appJobFilter.length > 0) {
+					await supabase
+						.from("applications")
+						.update({
+							status: "shortlisted",
+							updated_at: new Date().toISOString(),
+						})
+						.eq("candidate_id", cid)
+						.in("job_id", appJobFilter);
+				}
+				toast.success("Shortlisted");
+			}
+		} catch (err) {
+			console.error("Shortlist toggle failed:", err);
+			setEmployerShortlistJobKeys(prevKeys);
+			setEmployerShortlistedCandidateIds(prevIds);
+			toast.error("Could not update shortlist");
+		}
+	};
+
+	const recordEmployerCandidateView = async (candidateId: number) => {
+		if (userRole !== "employer") return;
+		if (employerCandidateViewsTableMissingRef.current) return;
+		const employerId = userProfile?.employerId ?? userProfile?.id;
+		const eid = employerId != null ? Number(employerId) : NaN;
+		const cid = candidateId != null ? Number(candidateId) : NaN;
+		if (!Number.isFinite(eid) || !Number.isFinite(cid)) return;
+
+		// Optimistic: mark as viewed locally
+		setEmployerViewedCandidateIds((prev) =>
+			prev.includes(cid) ? prev : [...prev, cid],
+		);
+
+		try {
+			const now = new Date().toISOString();
+			const { data: existing, error: selectErr } = await supabase
+				.from("employer_candidate_views")
+				.select("view_count")
+				.eq("employer_id", eid)
+				.eq("candidate_id", cid)
+				.maybeSingle();
+			if (selectErr) {
+				if (isEmployerCandidateViewsTableMissing(selectErr)) {
+					employerCandidateViewsTableMissingRef.current = true;
+					return;
+				}
+				console.warn("Employer candidate view select failed:", selectErr);
+				return;
+			}
+			const nextCount =
+				existing && Number.isFinite(Number((existing as any).view_count))
+					? Number((existing as any).view_count) + 1
+					: 1;
+			const { error: upsertErr } = await supabase
+				.from("employer_candidate_views")
+				.upsert(
+					[
+						{
+							employer_id: eid,
+							candidate_id: cid,
+							view_count: nextCount,
+							last_viewed_at: now,
+							updated_at: now,
+						},
+					],
+					{ onConflict: "employer_id,candidate_id" },
+				);
+			if (upsertErr) {
+				if (isEmployerCandidateViewsTableMissing(upsertErr)) {
+					employerCandidateViewsTableMissingRef.current = true;
+					return;
+				}
+				console.warn("Employer candidate view upsert failed:", upsertErr);
+			}
+		} catch (err) {
+			if (isEmployerCandidateViewsTableMissing(err)) {
+				employerCandidateViewsTableMissingRef.current = true;
+				return;
+			}
+			console.warn("Employer candidate view tracking failed:", err);
 		}
 	};
 
@@ -1482,9 +1899,10 @@ export default function App() {
 							.update({ reviewed_at: reviewedAt, updated_at: reviewedAt })
 							.eq("id", applicationId);
 						if (!error) {
+							const aid = Number(applicationId);
 							setEmployerApplications((prev) =>
 								prev.map((application: any) =>
-									application.id === applicationId
+									Number(application.id) === aid
 										? {
 												...application,
 												reviewed_at: reviewedAt,
@@ -1494,7 +1912,7 @@ export default function App() {
 								),
 							);
 							setSelectedCandidate((prev: any) =>
-								prev && prev.application?.id === applicationId
+								prev && Number(prev.application?.id) === aid
 									? {
 											...prev,
 											application: {
@@ -1523,6 +1941,103 @@ export default function App() {
 		conversations,
 	]);
 
+	// Load saved pipeline review for talent-pool candidates (no application row).
+	useEffect(() => {
+		if (userRole !== "employer" || !selectedCandidate?.id) return;
+		if (selectedCandidate.application) return;
+		const eid = Number(userProfile?.employerId ?? userProfile?.id);
+		const cid = Number(selectedCandidate.id);
+		if (!Number.isFinite(eid) || !Number.isFinite(cid)) return;
+
+		const hasMessaged = conversations.some(
+			(c: any) =>
+				Number(c.employer_id) === Number(userProfile?.employerId) &&
+				Number(c.candidate_id) === cid,
+		);
+		const jobCtx =
+			(selectedCandidate as any)?._employerReviewJobId != null &&
+			Number.isFinite(Number((selectedCandidate as any)._employerReviewJobId))
+				? Number((selectedCandidate as any)._employerReviewJobId)
+				: null;
+		const shortlistActive =
+			employerShortlistActiveForContext(employerShortlistJobKeys, cid, jobCtx) ||
+			(jobCtx == null &&
+				Object.keys(employerShortlistJobKeys).length === 0 &&
+				employerShortlistedCandidateIds.includes(cid));
+
+		// Table not deployed: avoid repeated 404s; align status with shortlist + messages.
+		if (employerCandidateReviewsTableMissingRef.current) {
+			setApplicationStatusDraft(shortlistActive ? "shortlisted" : "pending");
+			setContactMethodDraft((prev) =>
+				prev || (hasMessaged ? "messaged" : ""),
+			);
+			return;
+		}
+
+		let cancelled = false;
+		(async () => {
+			let q = supabase
+				.from("employer_candidate_reviews")
+				.select("*")
+				.eq("employer_id", eid)
+				.eq("candidate_id", cid);
+			if (jobCtx != null) q = q.eq("job_id", jobCtx);
+			else q = q.is("job_id", null);
+			const { data, error } = await q.maybeSingle();
+			if (cancelled) return;
+			if (error) {
+				if (isEmployerCandidateReviewsTableMissing(error)) {
+					employerCandidateReviewsTableMissingRef.current = true;
+					setApplicationStatusDraft(shortlistActive ? "shortlisted" : "pending");
+					setContactMethodDraft((prev) =>
+						prev || (hasMessaged ? "messaged" : ""),
+					);
+					return;
+				}
+				console.error("Error loading employer candidate review:", error);
+				return;
+			}
+			if (data) {
+				setApplicationStatusDraft(data.status || "pending");
+				setEmployerNotesDraft(data.employer_notes || "");
+				setContactNotesDraft(data.contact_notes || "");
+				setContactMethodDraft(
+					data.contact_method || (hasMessaged ? "messaged" : ""),
+				);
+				setSelectedCandidate((prev: any) =>
+					prev && Number(prev.id) === cid
+						? { ...prev, employer_candidate_review: data }
+						: prev,
+				);
+			} else {
+				setApplicationStatusDraft(
+					shortlistActive ? "shortlisted" : "pending",
+				);
+				setEmployerNotesDraft("");
+				setContactNotesDraft("");
+				setContactMethodDraft(hasMessaged ? "messaged" : "");
+				setSelectedCandidate((prev: any) =>
+					prev && Number(prev.id) === cid
+						? { ...prev, employer_candidate_review: null }
+						: prev,
+				);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	}, [
+		userRole,
+		selectedCandidate?.id,
+		selectedCandidate?.application?.id,
+		(selectedCandidate as any)?._employerReviewJobId,
+		userProfile?.employerId,
+		userProfile?.id,
+		conversations,
+		employerShortlistedCandidateIds,
+		employerShortlistJobKeys,
+	]);
+
 	const handleNavigate = (
 		view: ViewType,
 		options?: {
@@ -1531,19 +2046,6 @@ export default function App() {
 			skipEmployerConsentGate?: boolean;
 		},
 	) => {
-		// Employer consent gate — intercept navigation to protected employer views
-		if (
-			!options?.skipEmployerConsentGate &&
-			(view === "candidates" || view === "employer-onboarding") &&
-			userRole === "employer" &&
-			!userProfile?.eeoc_consent_accepted
-		) {
-			setPendingEmployerAction(
-				view === "candidates" ? "browse-candidates" : "employer-onboarding",
-			);
-			setShowEmployerConsentModal(true);
-			return;
-		}
 		if (view === "messages" && !options?.selectConversation) {
 			setSelectedConversationId(null);
 		} else if (options?.selectConversation) {
@@ -1560,14 +2062,6 @@ export default function App() {
 			handleNavigate(isLoggedIn ? "seeker" : "jobs");
 		}
 		setUserRole(selectedRole);
-	};
-
-	const toggleRole = () => {
-		const newRole = userRole === "seeker" ? "employer" : "seeker";
-		selectRole(newRole);
-		toast.success(
-			`Switched to ${newRole === "seeker" ? "Job Seeker" : "Employer"} view`,
-		);
 	};
 
 	// Hydrate seeker queue from localStorage when anonymous and jobs are available
@@ -1835,15 +2329,16 @@ export default function App() {
 
 			if (error) throw error;
 
+			const aid = Number(applicationId);
 			setEmployerApplications((prev) =>
 				prev.map((application: any) =>
-					application.id === applicationId
+					Number(application.id) === aid
 						? { ...application, ...payload }
 						: application,
 				),
 			);
 			setSelectedCandidate((prev: any) =>
-				prev && prev.application?.id === applicationId
+				prev && Number(prev.application?.id) === aid
 					? {
 							...prev,
 							status: payload.status,
@@ -1852,12 +2347,263 @@ export default function App() {
 					: prev,
 			);
 
+			const eid = Number(userProfile?.employerId ?? userProfile?.id);
+			const cid = Number(selectedCandidate.id);
+			const appJobId =
+				selectedCandidate.application?.job_id != null
+					? Number(selectedCandidate.application.job_id)
+					: null;
+			if (Number.isFinite(eid) && Number.isFinite(cid)) {
+				await syncTalentPoolShortlistWithStatus(
+					eid,
+					cid,
+					payload.status,
+					appJobId,
+				);
+			}
+
 			toast.success("Application updated");
 		} catch (err) {
 			console.error("Error updating application:", err);
 			toast.error("Failed to update application");
 		} finally {
 			setIsSavingApplicationReview(false);
+		}
+	};
+
+	const syncTalentPoolShortlistWithStatus = async (
+		eid: number,
+		cid: number,
+		status: string,
+		jobId?: number | null,
+	) => {
+		const j =
+			jobId !== undefined &&
+			jobId !== null &&
+			Number.isFinite(Number(jobId))
+				? Number(jobId)
+				: null;
+
+		if (status === "shortlisted") {
+			const { error } = await supabase.from("employer_shortlists").insert([
+				{ employer_id: eid, candidate_id: cid, job_id: j },
+			]);
+			const ok =
+				!error || String((error as { code?: string })?.code) === "23505";
+			if (ok) await fetchEmployerShortlists(eid);
+			return ok;
+		}
+		let del = supabase
+			.from("employer_shortlists")
+			.delete()
+			.eq("employer_id", eid)
+			.eq("candidate_id", cid);
+		if (j == null) del = del.is("job_id", null);
+		else del = del.eq("job_id", j);
+		const { error } = await del;
+		if (!error) await fetchEmployerShortlists(eid);
+		return !error;
+	};
+
+	const saveEmployerTalentPoolReview = async () => {
+		if (userRole !== "employer" || !selectedCandidate?.id) return;
+		if (selectedCandidate.application?.id) return;
+		setIsSavingApplicationReview(true);
+		try {
+			const eid = Number(userProfile?.employerId ?? userProfile?.id);
+			const cid = Number(selectedCandidate.id);
+			if (!Number.isFinite(eid) || !Number.isFinite(cid)) {
+				return;
+			}
+
+			const rawJob = (selectedCandidate as any)?._employerReviewJobId;
+			const jobIdForReview =
+				rawJob != null && Number.isFinite(Number(rawJob))
+					? Number(rawJob)
+					: null;
+
+			const patchTalentPoolReviewMap = (row: Record<string, unknown> | null) => {
+				if (!row) return;
+				setTalentPoolReviewsByKey((prev) => ({
+					...prev,
+					[employerScopeKey(cid, (row as any).job_id ?? null)]: row,
+				}));
+				setCandidates((prev) => {
+					const idx = prev.findIndex((c: any) => Number(c.id) === cid);
+					if (idx === -1) return prev;
+					const next = [...prev];
+					next[idx] = { ...next[idx], employer_candidate_review: row };
+					return next;
+				});
+			};
+
+			// Shortlist row works even when employer_candidate_reviews is not migrated yet.
+			const shortlistOk = await syncTalentPoolShortlistWithStatus(
+				eid,
+				cid,
+				applicationStatusDraft,
+				jobIdForReview,
+			);
+
+			const updatedAt = new Date().toISOString();
+			const reviewedAt =
+				(selectedCandidate as any).employer_candidate_review?.reviewed_at ||
+				updatedAt;
+			const payload = {
+				employer_id: eid,
+				candidate_id: cid,
+				job_id: jobIdForReview,
+				status: applicationStatusDraft,
+				employer_notes: employerNotesDraft.trim() || null,
+				contact_method: contactMethodDraft.trim() || null,
+				contact_notes: contactNotesDraft.trim() || null,
+				reviewed_at: reviewedAt,
+				updated_at: updatedAt,
+			};
+
+			const mergeLocalReview = () => {
+				const row = {
+					...payload,
+					id: (selectedCandidate as any).employer_candidate_review?.id,
+				};
+				setSelectedCandidate((prev: any) =>
+					prev && Number(prev.id) === cid
+						? {
+								...prev,
+								employer_candidate_review: row,
+							}
+						: prev,
+				);
+				patchTalentPoolReviewMap(row);
+			};
+
+			if (employerCandidateReviewsTableMissingRef.current) {
+				mergeLocalReview();
+				toast.success(
+					shortlistOk
+						? "Shortlist updated. Run supabase/migrations/20260415130000_employer_candidate_reviews.sql on your project to save notes and status in the database."
+						: "Could not update shortlist. Check employer_shortlists in Supabase.",
+				);
+				return;
+			}
+
+			let sel = supabase
+				.from("employer_candidate_reviews")
+				.select("id")
+				.eq("employer_id", eid)
+				.eq("candidate_id", cid);
+			if (jobIdForReview != null) sel = sel.eq("job_id", jobIdForReview);
+			else sel = sel.is("job_id", null);
+			const { data: existing, error: selErr } = await sel.maybeSingle();
+			if (selErr) throw selErr;
+
+			let row: any;
+			if (existing?.id) {
+				const { data, error } = await supabase
+					.from("employer_candidate_reviews")
+					.update(payload)
+					.eq("id", existing.id)
+					.select()
+					.maybeSingle();
+				if (error) throw error;
+				row = data || { ...payload, id: existing.id };
+			} else {
+				const { data, error } = await supabase
+					.from("employer_candidate_reviews")
+					.insert([payload])
+					.select()
+					.maybeSingle();
+				if (error) {
+					if (isEmployerCandidateReviewsTableMissing(error)) {
+						employerCandidateReviewsTableMissingRef.current = true;
+						mergeLocalReview();
+						toast.success(
+							shortlistOk
+								? "Shortlist saved. Apply the employer_candidate_reviews migration to persist notes and pipeline status."
+								: "Could not save review to the database.",
+						);
+						return;
+					}
+					throw error;
+				}
+				row = data || { ...payload, id: undefined };
+			}
+
+			setSelectedCandidate((prev: any) =>
+				prev && Number(prev.id) === cid
+					? { ...prev, employer_candidate_review: row }
+					: prev,
+			);
+			patchTalentPoolReviewMap(row as Record<string, unknown>);
+			void fetchEmployerTalentPoolReviews(eid);
+			toast.success("Review saved");
+		} catch (err) {
+			console.error("Error saving talent pool review:", err);
+			toast.error("Failed to save review");
+		} finally {
+			setIsSavingApplicationReview(false);
+		}
+	};
+
+	const saveEmployerCandidateReview = async () => {
+		if (userRole !== "employer" || !selectedCandidate) return;
+		if (selectedCandidate.application?.id) {
+			await saveEmployerApplicationReview();
+			return;
+		}
+		await saveEmployerTalentPoolReview();
+	};
+
+	const updateEmployerApplicationStatus = async (
+		applicationId: number,
+		nextStatus: string,
+	) => {
+		if (userRole !== "employer" || !applicationId) return;
+		try {
+			const aid = Number(applicationId);
+			const appRow = employerApplications.find(
+				(a: any) => Number(a.id) === aid,
+			);
+			const updatedAt = new Date().toISOString();
+			const reviewedAt = updatedAt;
+			const payload = {
+				status: nextStatus,
+				reviewed_at: reviewedAt,
+				updated_at: updatedAt,
+			};
+			const { error } = await supabase
+				.from("applications")
+				.update(payload)
+				.eq("id", applicationId);
+			if (error) throw error;
+			setEmployerApplications((prev) =>
+				prev.map((a: any) =>
+					Number(a.id) === aid ? { ...a, ...payload } : a,
+				),
+			);
+			setSelectedCandidate((prev: any) =>
+				prev && Number(prev.application?.id) === aid
+					? { ...prev, status: nextStatus, application: { ...prev.application, ...payload } }
+					: prev,
+			);
+			const eid = Number(userProfile?.employerId ?? userProfile?.id);
+			const cid = Number(
+				appRow?.candidate_id ?? selectedCandidate?.application?.candidate_id,
+			);
+			const appJobId =
+				appRow?.job_id != null ? Number(appRow.job_id) : null;
+			if (Number.isFinite(eid) && Number.isFinite(cid)) {
+				await syncTalentPoolShortlistWithStatus(
+					eid,
+					cid,
+					nextStatus,
+					appJobId,
+				);
+			}
+			toast.success(nextStatus === "shortlisted" ? "Shortlisted" : "Updated");
+		} catch (err) {
+			console.error("Error updating application status:", err);
+			toast.error("Failed to update status");
 		}
 	};
 
@@ -1939,6 +2685,53 @@ export default function App() {
 		() => new Set(employers.map((e: { id?: unknown }) => Number(e.id))),
 		[employers],
 	);
+
+	const employerBusinessProfileViewCount = useMemo(() => {
+		const id = Number(userProfile?.employerId);
+		if (!Number.isFinite(id) || id <= 0) return 0;
+		const row = employers.find((e: any) => Number(e?.id) === id);
+		return Math.max(0, Number(row?.business_profile_view_count ?? 0));
+	}, [employers, userProfile?.employerId]);
+
+	const recordBusinessProfileView = useCallback(async (employerId: number) => {
+		const eid = Number(employerId);
+		if (!Number.isFinite(eid) || eid <= 0) return;
+		try {
+			const res = await fetch(
+				`${API_BASE}/employers/${eid}/business-profile-view`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${publicAnonKey}`,
+						"Content-Type": "application/json",
+					},
+				},
+			);
+			const payload = await res.json().catch(() => ({}));
+			if (
+				res.ok &&
+				payload &&
+				typeof payload.business_profile_view_count === "number"
+			) {
+				const next = payload.business_profile_view_count;
+				setEmployers((prev) =>
+					prev.map((e: any) =>
+						Number(e.id) === eid ? { ...e, business_profile_view_count: next } : e,
+					),
+				);
+				return;
+			}
+			if (!res.ok) {
+				console.warn(
+					"business profile view:",
+					(payload as any)?.error ?? res.status,
+					(payload as any)?.hint ?? "",
+				);
+			}
+		} catch (e) {
+			console.warn("business profile view:", e);
+		}
+	}, []);
 
 	const filteredJobs = jobs.filter(
 		(j) =>
@@ -2082,6 +2875,7 @@ export default function App() {
 						}}
 						onShowFilters={() => setShowFilterModal(true)}
 						onSelectJob={(job) => setSelectedJob(job)}
+						onBusinessProfileOpen={recordBusinessProfileView}
 						interactionFee={INTERACTION_FEE}
 						viewerLocation={userProfile?.location}
 						employers={employers}
@@ -2116,6 +2910,9 @@ export default function App() {
 						filteredCandidates={filteredCandidates}
 						unlockedCandidateIds={unlockedCandidateIds}
 						employerQueue={employerQueue}
+						shortlistedCandidateIds={employerShortlistedCandidateIds}
+						onToggleShortlist={toggleEmployerShortlist}
+						viewedCandidateIds={employerViewedCandidateIds}
 						onAddToQueue={async (c) => {
 							if (employerQueue.find((q) => q.id === c.id)) return;
 
@@ -2163,8 +2960,12 @@ export default function App() {
 						}}
 						onShowFilters={() => setShowFilterModal(true)}
 						onSelectCandidate={(c) => {
-							setSelectedCandidate(c);
+							setSelectedCandidate({
+								...c,
+								_employerReviewJobId: null,
+							});
 							setCandidateVideoPlayerUrl(null);
+							void recordEmployerCandidateView(Number(c?.id));
 						}}
 						interactionFee={INTERACTION_FEE}
 						viewerLocation={userProfile?.location}
@@ -2189,6 +2990,9 @@ export default function App() {
 					<Cart
 						role={userRole}
 						queue={userRole === "seeker" ? seekerQueue : employerQueue}
+						shortlistedCandidateIds={employerShortlistedCandidateIds}
+						onToggleShortlist={toggleEmployerShortlist}
+						viewedCandidateIds={employerViewedCandidateIds}
 						onRemoveFromQueue={async (id) => {
 							// Remove from database
 							if (userProfile?.email) {
@@ -2279,18 +3083,19 @@ export default function App() {
 						applications={employerApplications}
 						onNavigate={handleNavigate}
 						onShowPostJob={() => {
-							if (!userProfile?.eeoc_consent_accepted) {
-								setPendingEmployerAction("post-job");
-								setShowEmployerConsentModal(true);
-							} else {
-								handleNavigate("job-posting");
-							}
+							handleNavigate("job-posting");
 						}}
 						onSelectJob={setSelectedJob}
-						onSelectCandidate={(c) => {
-							setSelectedCandidate(c);
+						onSelectCandidate={(c, ctx) => {
+							setSelectedCandidate({
+								...c,
+								_employerReviewJobId: ctx?.reviewJobId ?? null,
+							});
 							setCandidateVideoPlayerUrl(null);
+							void recordEmployerCandidateView(Number(c?.id));
 						}}
+						talentPoolReviewsByKey={talentPoolReviewsByKey}
+						employerShortlistJobKeys={employerShortlistJobKeys}
 						onShowPayment={(t) => {
 							setPaymentTarget(t);
 							setShowPaymentModal(true);
@@ -2298,6 +3103,11 @@ export default function App() {
 						onShowAuth={handleShowAuth}
 						onLogout={handleLogout}
 						interactionFee={INTERACTION_FEE}
+						onUpdateApplicationStatus={updateEmployerApplicationStatus}
+						shortlistedCandidateIds={employerShortlistedCandidateIds}
+						onToggleShortlist={toggleEmployerShortlist}
+						viewedCandidateIds={employerViewedCandidateIds}
+						businessProfileViewCount={employerBusinessProfileViewCount}
 						onOpenMessageWithCandidate={(candidateId) => {
 							const candidateIdNum =
 								typeof candidateId === "number"
@@ -2785,6 +3595,8 @@ export default function App() {
 									await Promise.all([
 										fetchUnlocks(existingEmployer.email),
 										fetchSavedItems(existingEmployer.email, "employer"),
+										fetchEmployerShortlists(existingEmployer.id),
+										fetchEmployerCandidateViews(existingEmployer.id),
 									]);
 									setUserProfile({
 										role: "employer",
@@ -2862,10 +3674,24 @@ export default function App() {
 							const hasBusinessLicense =
 								typeof profileData.businessLicense === "string" &&
 								profileData.businessLicense.trim().length > 0;
-							setUserProfile({
+							setUserProfile((prev: any) => ({
+								...(prev || {}),
 								...profileData,
+								// Preserve consent fields if onboarding payload omitted them.
+								eeoc_consent_accepted:
+									profileData.eeoc_consent_accepted ??
+									prev?.eeoc_consent_accepted ??
+									false,
+								eeoc_consent_timestamp:
+									profileData.eeoc_consent_timestamp ??
+									prev?.eeoc_consent_timestamp ??
+									undefined,
+								employee_count_range:
+									profileData.employee_count_range ??
+									prev?.employee_count_range ??
+									undefined,
 								businessVerified: hasBusinessLicense,
-							});
+							}));
 							handleNavigate("employer");
 							toast.success(
 								"Business profile saved! Welcome to your dashboard.",
@@ -2926,10 +3752,24 @@ export default function App() {
 							const hasBusinessLicense =
 								typeof profileData.businessLicense === "string" &&
 								profileData.businessLicense.trim().length > 0;
-							setUserProfile({
+							setUserProfile((prev: any) => ({
+								...(prev || {}),
 								...profileData,
+								// Preserve consent fields if edit payload omitted them.
+								eeoc_consent_accepted:
+									profileData.eeoc_consent_accepted ??
+									prev?.eeoc_consent_accepted ??
+									false,
+								eeoc_consent_timestamp:
+									profileData.eeoc_consent_timestamp ??
+									prev?.eeoc_consent_timestamp ??
+									undefined,
+								employee_count_range:
+									profileData.employee_count_range ??
+									prev?.employee_count_range ??
+									undefined,
 								businessVerified: hasBusinessLicense,
-							});
+							}));
 							handleNavigate("employer");
 							toast.success("Business profile updated.");
 						}}
@@ -3118,7 +3958,6 @@ export default function App() {
 					employerQueueCount={employerQueue.length}
 					onNavigate={handleNavigate}
 					onSelectRole={selectRole}
-					onToggleRole={toggleRole}
 					onLogout={handleLogout}
 					onShowAuth={handleShowAuth}
 					onReset={() => {
@@ -3129,7 +3968,7 @@ export default function App() {
 					totalUnreadMessages={totalUnreadMessages}
 				/>
 
-				<main>
+				<main className="pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
 					<AnimatePresence mode="wait">{renderScreen()}</AnimatePresence>
 				</main>
 
@@ -3251,6 +4090,8 @@ export default function App() {
 												await Promise.all([
 													fetchUnlocks(email),
 													fetchSavedItems(email, "employer"),
+														fetchEmployerShortlists(employer.id),
+													fetchEmployerCandidateViews(employer.id),
 												]);
 												fullProfile = {
 													role: "employer",
@@ -3743,6 +4584,8 @@ export default function App() {
 													await Promise.all([
 														fetchUnlocks(signupFormData.email),
 														fetchSavedItems(signupFormData.email, "employer"),
+														fetchEmployerShortlists(existingEmployer.id),
+														fetchEmployerCandidateViews(existingEmployer.id),
 													]);
 													// Treat this like an onboarding entry point so they can review/edit info.
 													// Also preserve any values already in signupFormData (e.g., AI Import results).
@@ -4272,6 +5115,9 @@ export default function App() {
 														onClick={async () => {
 															const raw = employerImportWebsite.trim();
 															if (!raw) return;
+															const websiteUrl = /^https?:\/\//i.test(raw)
+																? raw
+																: `https://${raw}`;
 															setIsEmployerImporting(true);
 															try {
 																const res = await fetch(
@@ -4283,7 +5129,7 @@ export default function App() {
 																			apikey: publicAnonKey,
 																			Authorization: `Bearer ${publicAnonKey}`,
 																		},
-																		body: JSON.stringify({ websiteUrl: raw }),
+																		body: JSON.stringify({ websiteUrl }),
 																	},
 																);
 																const json = await res.json().catch(() => ({}));
@@ -4306,7 +5152,7 @@ export default function App() {
 																	location:
 																		json.location || prev.location || "",
 																	website:
-																		json.websiteUrl || prev.website || raw,
+																		json.websiteUrl || prev.website || websiteUrl,
 																	bio: json.bio || prev.bio || "",
 																	companySize:
 																		json.companySize || prev.companySize || "",
@@ -4343,12 +5189,17 @@ export default function App() {
 														Business Website
 													</label>
 													<input
-														type="url"
+														// Use text instead of type=url so bare domains like "kukuiit.com" don't block form submit.
+														type="text"
+														inputMode="url"
+														autoCapitalize="none"
+														autoCorrect="off"
+														spellCheck={false}
 														value={employerImportWebsite}
 														onChange={(e) =>
 															setEmployerImportWebsite(e.target.value)
 														}
-														placeholder="https://yourwebsite.com"
+														placeholder="yourwebsite.com"
 														className="w-full p-4 rounded-2xl bg-white/80 border border-white/60 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base tracking-tight"
 													/>
 													<p className="text-[11px] text-gray-600 font-medium leading-relaxed">
@@ -4463,25 +5314,85 @@ export default function App() {
 													Business License #{" "}
 													<span className="text-gray-300">(optional)</span>
 												</label>
-												<input
-													type="text"
-													value={signupFormData.businessLicense || ""}
-													onChange={(e) =>
-														setSignupFormData((prev) => ({
-															...prev,
-															businessLicense: e.target.value,
-														}))
+												{(() => {
+													const raw = String(
+														signupFormData.businessLicense || "",
+													).trim();
+													const isLegacy =
+														raw.length > 0 && !/^GE-/i.test(raw);
+
+													if (isLegacy) {
+														// Preserve historical IDs (e.g. HI-BIZ-…, HI-FB-…) without reformatting.
+														return (
+															<input
+																type="text"
+																value={raw}
+																onChange={(e) =>
+																	setSignupFormData((prev) => ({
+																		...prev,
+																		businessLicense: e.target.value,
+																	}))
+																}
+																placeholder="GE-XXX-XXX-XXXX-XX"
+																className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base tracking-widest"
+															/>
+														);
 													}
-													placeholder="HI-BIZ-XXXX-XXXXX"
-													className="w-full p-5 rounded-2xl bg-gray-50 border border-gray-100 focus:ring-4 ring-[#2ECC71]/10 outline-none font-bold text-base tracking-widest"
-												/>
+
+													const digits = raw.replace(/^GE-/i, "").replace(/\D/g, "");
+													const capped = digits.slice(0, 12);
+													const formatted =
+														capped.length > 10
+															? `${capped.slice(0, 3)}-${capped.slice(3, 6)}-${capped.slice(6, 10)}-${capped.slice(10)}`
+															: capped.length > 6
+																? `${capped.slice(0, 3)}-${capped.slice(3, 6)}-${capped.slice(6)}`
+																: capped.length > 3
+																	? `${capped.slice(0, 3)}-${capped.slice(3)}`
+																	: capped;
+
+													return (
+														<div className="flex w-full overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 focus-within:ring-4 focus-within:ring-[#2ECC71]/10">
+															<span className="shrink-0 px-5 py-5 font-black text-base tracking-widest text-gray-400 select-none">
+																GE-
+															</span>
+															<input
+																type="text"
+																inputMode="numeric"
+																autoComplete="off"
+																autoCapitalize="none"
+																autoCorrect="off"
+																spellCheck={false}
+																placeholder="XXX-XXX-XXXX-XX"
+																value={formatted}
+																onChange={(e) => {
+																	const d = e.target.value
+																		.replace(/\D/g, "")
+																		.slice(0, 12);
+																	const f =
+																		d.length > 10
+																			? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6, 10)}-${d.slice(10)}`
+																			: d.length > 6
+																				? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`
+																				: d.length > 3
+																					? `${d.slice(0, 3)}-${d.slice(3)}`
+																					: d;
+																	setSignupFormData((prev) => ({
+																		...prev,
+																		businessLicense: d ? `GE-${f}` : "",
+																	}));
+																}}
+																className="min-w-0 flex-1 bg-transparent px-0 py-5 pr-5 outline-none font-black text-base tracking-widest text-gray-900"
+															/>
+														</div>
+													);
+												})()}
 												<div className="p-4 bg-[#2ECC71]/5 rounded-2xl border border-[#2ECC71]/10 flex items-start gap-3">
 													<Shield
 														size={20}
 														className="text-[#2ECC71] shrink-0 mt-0.5"
 													/>
 													<p className="text-xs text-gray-600 font-medium">
-														Optional: add your license to show a{" "}
+														Optional: add your Hawaii GET tax ID to show a{" "}
 														<span className="font-black text-[#2ECC71]">
 															Verified Business
 														</span>{" "}
@@ -5729,96 +6640,34 @@ export default function App() {
 				{currentView !== "landing" &&
 					!showPaymentModal &&
 					!showVideoUpdateModal && (
-						<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 md:hidden flex flex-row items-center justify-center gap-10 z-50 shadow-2xl">
-							<button
-								onClick={() => handleNavigate("landing")}
-								className="flex flex-col items-center justify-center gap-1 text-gray-300 hover:scale-105 active:scale-95 transition-all duration-200"
-							>
-								<Eye size={20} />
-								<span className="text-[10px] font-black uppercase tracking-widest">
-									EXPLORE
-								</span>
-							</button>
-							<button
-								onClick={() =>
-									handleNavigate(userRole === "seeker" ? "jobs" : "candidates")
-								}
-								className={`flex flex-col items-center justify-center gap-1 ${currentView === "jobs" || currentView === "candidates" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
-							>
-								<Briefcase size={20} />
-								<span className="text-[10px] font-black uppercase tracking-widest">
-									{userRole === "seeker" ? "JOBS" : "TALENT"}
-								</span>
-							</button>
-							<button
-								onClick={() => handleNavigate("cart")}
-								className={`flex flex-col items-center justify-center gap-1 px-2 ${currentView === "cart" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
-							>
-								<span style={{ position: "relative", display: "inline-flex" }}>
-									<FolderOpen size={20} />
-									{(userRole === "seeker"
-										? seekerQueue.length
-										: employerQueue.length) > 0 && (
-										<span
-											style={{
-												position: "absolute",
-												top: "-6px",
-												right: "-6px",
-												background: "#148F8B",
-												color: "#ffffff",
-												fontSize: "9px",
-												fontWeight: 900,
-												borderRadius: "999px",
-												minWidth: "1rem",
-												height: "1rem",
-												padding: "0 3px",
-												display: "inline-flex",
-												alignItems: "center",
-												justifyContent: "center",
-												lineHeight: 1,
-											}}
-										>
-											{userRole === "seeker"
-												? seekerQueue.length
-												: employerQueue.length}
-										</span>
-									)}
-								</span>
-								<span className="text-[10px] font-black uppercase tracking-widest">
-									APPLY
-								</span>
-							</button>
-							<button
-								onClick={() =>
-									isLoggedIn
-										? handleNavigate(
-												userRole === "seeker" ? "seeker" : "employer",
-											)
-										: handleShowAuth("login")
-								}
-								className={`flex flex-col items-center justify-center gap-1 ${currentView === "seeker" || currentView === "employer" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
-							>
-								<User size={20} />
-								<span className="text-[10px] font-black uppercase tracking-widest">
-									HUB
-								</span>
-							</button>
-							{isLoggedIn && (
+						<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 md:hidden flex flex-row items-center justify-between gap-3 z-50 shadow-2xl">
+							<div className="flex flex-1 flex-row items-center justify-center gap-10">
 								<button
-									onClick={() => handleNavigate("messages")}
-									className={`flex flex-col items-center justify-center gap-1 px-2 ${currentView === "messages" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
+									onClick={() =>
+										handleNavigate(userRole === "seeker" ? "jobs" : "candidates")
+									}
+									className={`flex flex-col items-center justify-center gap-1 ${currentView === "jobs" || currentView === "candidates" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
 								>
-									<span
-										style={{ position: "relative", display: "inline-flex" }}
-									>
-										<Mail size={20} />
-										{totalUnreadMessages > 0 && (
+									<Briefcase size={20} />
+									<span className="text-[10px] font-black uppercase tracking-widest">
+										{userRole === "seeker" ? "JOBS" : "TALENT"}
+									</span>
+								</button>
+								<button
+									onClick={() => handleNavigate("cart")}
+									className={`flex flex-col items-center justify-center gap-1 px-2 ${currentView === "cart" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
+								>
+									<span style={{ position: "relative", display: "inline-flex" }}>
+										<FolderOpen size={20} />
+										{(userRole === "seeker"
+											? seekerQueue.length
+											: employerQueue.length) > 0 && (
 											<span
 												style={{
 													position: "absolute",
 													top: "-6px",
 													right: "-6px",
-													background: "#ef4444",
+													background: "#148F8B",
 													color: "#ffffff",
 													fontSize: "9px",
 													fontWeight: 900,
@@ -5832,12 +6681,81 @@ export default function App() {
 													lineHeight: 1,
 												}}
 											>
-												{totalUnreadMessages > 9 ? "9+" : totalUnreadMessages}
+												{userRole === "seeker"
+													? seekerQueue.length
+													: employerQueue.length}
 											</span>
 										)}
 									</span>
 									<span className="text-[10px] font-black uppercase tracking-widest">
-										CHAT
+										{userRole === "seeker" ? "APPLY" : "SAVED"}
+									</span>
+								</button>
+								<button
+									onClick={() =>
+										isLoggedIn
+											? handleNavigate(
+													userRole === "seeker" ? "seeker" : "employer",
+												)
+											: handleShowAuth("login")
+									}
+									className={`flex flex-col items-center justify-center gap-1 ${currentView === "seeker" || currentView === "employer" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
+								>
+									<User size={20} />
+									<span className="text-[10px] font-black uppercase tracking-widest">
+										HUB
+									</span>
+								</button>
+								{isLoggedIn && (
+									<button
+										onClick={() => handleNavigate("messages")}
+										className={`flex flex-col items-center justify-center gap-1 px-2 ${currentView === "messages" ? "text-[#148F8B]" : "text-gray-600"} hover:scale-105 active:scale-95 transition-all duration-200`}
+									>
+										<span
+											style={{ position: "relative", display: "inline-flex" }}
+										>
+											<Mail size={20} />
+											{totalUnreadMessages > 0 && (
+												<span
+													style={{
+														position: "absolute",
+														top: "-6px",
+														right: "-6px",
+														background: "#ef4444",
+														color: "#ffffff",
+														fontSize: "9px",
+														fontWeight: 900,
+														borderRadius: "999px",
+														minWidth: "1rem",
+														height: "1rem",
+														padding: "0 3px",
+														display: "inline-flex",
+														alignItems: "center",
+														justifyContent: "center",
+														lineHeight: 1,
+													}}
+												>
+													{totalUnreadMessages > 9
+														? "9+"
+														: totalUnreadMessages}
+												</span>
+											)}
+										</span>
+										<span className="text-[10px] font-black uppercase tracking-widest">
+											CHAT
+										</span>
+									</button>
+								)}
+							</div>
+
+							{isLoggedIn && (
+								<button
+									onClick={handleLogout}
+									className="flex flex-col items-center justify-center gap-1 px-2 text-[#A63F8E] hover:scale-105 active:scale-95 transition-all duration-200"
+								>
+									<LogOut size={20} />
+									<span className="text-[9px] font-black uppercase tracking-wider whitespace-nowrap">
+										SIGN OUT
 									</span>
 								</button>
 							)}
@@ -6209,6 +7127,80 @@ export default function App() {
 				>
 					{selectedCandidate && (
 						<div className="space-y-10">
+							{userRole === "employer" && userProfile?.employerId && (
+								<div
+									className="flex flex-wrap gap-2 justify-center sm:justify-start"
+									onClick={(e) => e.stopPropagation()}
+								>
+									<span
+										className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+											selectedCandidate.application
+												? "bg-[#A63F8E]/15 text-[#A63F8E] border border-[#A63F8E]/25"
+												: "bg-[#148F8B]/10 text-[#148F8B] border border-[#148F8B]/20"
+										}`}
+									>
+										{selectedCandidate.application
+											? "Applicant"
+											: "Discovered · Talent pool"}
+									</span>
+									{employerModalShowShortlistedChip(
+										selectedCandidate,
+										employerShortlistJobKeys,
+										employerShortlistedCandidateIds,
+										talentPoolReviewsByKey,
+									) && (
+										<span className="px-3 py-1.5 rounded-full bg-[#A63F8E] text-white text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5">
+											<Star size={12} className="fill-white shrink-0" />
+											Shortlisted
+										</span>
+									)}
+									{(() => {
+										const pipe = employerModalTalentPoolPipelineChip(
+											selectedCandidate,
+											talentPoolReviewsByKey,
+										);
+										if (!pipe) return null;
+										return (
+											<span
+												className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest capitalize ${pipe.className}`}
+											>
+												{pipe.label}
+											</span>
+										);
+									})()}
+									{employerViewedCandidateIds.includes(
+										Number(selectedCandidate.id),
+									) && (
+										<span className="px-3 py-1.5 rounded-full bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest border border-[#148F8B]/20">
+											Viewed
+										</span>
+									)}
+									{conversations.some(
+										(c: any) =>
+											Number(c.candidate_id) === Number(selectedCandidate.id),
+									) && (
+										<span className="px-3 py-1.5 rounded-full bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest">
+											Messaged
+										</span>
+									)}
+									{employerQueue.some(
+										(q: any) => Number(q.id) === Number(selectedCandidate.id),
+									) && (
+										<span className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-black uppercase tracking-widest border border-gray-200">
+											Saved
+										</span>
+									)}
+									{unlockedCandidateIds.includes(selectedCandidate.id) ? (
+										<span className="px-3 py-1.5 rounded-full bg-[#780262] text-white text-[10px] font-black uppercase tracking-widest">
+											Unlocked
+										</span>
+									) : (
+										<span className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-black uppercase tracking-widest border border-amber-200">
+											Profile locked
+										</span>
+									)}
+								</div>
+							)}
 							{unlockedCandidateIds.includes(selectedCandidate.id) ? (
 								<div className="space-y-8">
 									{/* Header for Unlocked State */}
@@ -6226,6 +7218,11 @@ export default function App() {
 											<p className="text-lg font-black text-[#148F8B] uppercase tracking-[0.2em]">
 												{selectedCandidate.location}
 											</p>
+											{selectedCandidate.display_title && (
+												<span className="inline-flex mt-2 px-3 py-1.5 rounded-full bg-emerald-50 text-[#A63F8E] text-[10px] sm:text-xs font-black uppercase tracking-widest border border-emerald-100">
+													{selectedCandidate.display_title}
+												</span>
+											)}
 											{userRole === "employer" &&
 												(() => {
 													const taggedJobIds =
@@ -6372,23 +7369,72 @@ export default function App() {
 							)}
 
 							<div className="space-y-6 sm:space-y-8">
-								{userRole === "employer" && selectedCandidate.application && (
+								{userRole === "employer" &&
+									userProfile?.employerId &&
+									selectedCandidate && (
 									<div className="space-y-6 border-b border-gray-100 pb-6">
 										<div className="space-y-2">
 											<h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
 												Application Review
 											</h4>
 											<div className="flex flex-wrap gap-2">
-												<span className="px-3 py-1.5 rounded-xl bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest">
-													{selectedCandidate.application.appliedToJob?.title ||
-														selectedCandidate.appliedToJob?.title ||
-														"Applied Job"}
-												</span>
-												<span className="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest">
-													{selectedCandidate.application.reviewed_at
-														? "Reviewed"
-														: "Not reviewed yet"}
-												</span>
+												{selectedCandidate.application ? (
+													<>
+														<span className="px-3 py-1.5 rounded-xl bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest">
+															{selectedCandidate.application.appliedToJob
+																?.title ||
+																selectedCandidate.appliedToJob?.title ||
+																"Applied Job"}
+														</span>
+														<span className="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest">
+															{selectedCandidate.application.reviewed_at
+																? "Reviewed"
+																: "Not reviewed yet"}
+														</span>
+													</>
+												) : (
+													<>
+														{(() => {
+															const taggedJobIds =
+																candidateJobLinks[
+																	String(selectedCandidate.id)
+																] || [];
+															const myJobs = (jobs || []).filter(
+																(j: any) =>
+																	Number(j.employer_id) ===
+																	Number(userProfile?.employerId),
+															);
+															const taggedTitles = taggedJobIds
+																.map(
+																	(jid: number) =>
+																		myJobs.find(
+																			(j: any) =>
+																				Number(j.id) === Number(jid),
+																		)?.title,
+																)
+																.filter(Boolean) as string[];
+															return taggedTitles
+																.slice(0, 3)
+																.map((t) => (
+																	<span
+																		key={t}
+																		className="px-3 py-1.5 rounded-xl bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest"
+																	>
+																		{t}
+																	</span>
+																));
+														})()}
+														<span className="px-3 py-1.5 rounded-xl bg-[#148F8B]/10 text-[#148F8B] text-[10px] font-black uppercase tracking-widest">
+															Talent pool
+														</span>
+														<span className="px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest">
+															{(selectedCandidate as any)
+																.employer_candidate_review?.reviewed_at
+																? "Reviewed"
+																: "Not reviewed yet"}
+														</span>
+													</>
+												)}
 											</div>
 										</div>
 
@@ -6463,7 +7509,7 @@ export default function App() {
 
 										<Button
 											className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white text-sm font-black uppercase tracking-widest"
-											onClick={saveEmployerApplicationReview}
+											onClick={saveEmployerCandidateReview}
 											disabled={isSavingApplicationReview}
 										>
 											{isSavingApplicationReview
@@ -6495,12 +7541,12 @@ export default function App() {
 															</p>
 														</button>
 													)}
-													{selectedCandidate.application.video_url && (
+													{selectedCandidate.application?.video_url && (
 														<button
 															type="button"
 															onClick={() =>
 																setCandidateVideoPlayerUrl(
-																	selectedCandidate.application.video_url,
+																	selectedCandidate.application!.video_url,
 																)
 															}
 															className="p-4 rounded-2xl border border-[#A63F8E]/20 bg-[#A63F8E]/5 text-left hover:bg-[#A63F8E]/10 transition-colors"
@@ -6526,9 +7572,10 @@ export default function App() {
 											)}
 										</div>
 
-										{Array.isArray(
-											selectedCandidate.application.question_answers,
-										) &&
+										{selectedCandidate.application &&
+											Array.isArray(
+												selectedCandidate.application.question_answers,
+											) &&
 											selectedCandidate.application.question_answers.length >
 												0 && (
 												<div className="space-y-3">
@@ -6773,36 +7820,181 @@ export default function App() {
 							) &&
 								userRole === "employer" &&
 								userProfile?.employerId && (
-									<Button
-										className="w-full h-14 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
-										onClick={() => {
-											const cid = Number(selectedCandidate.id);
-											if (!cid) return;
-											setMessageJobPickerCandidateId(cid);
-											setMessageJobPickerSelectedJobId(null);
-											setSelectedCandidate(null);
-										}}
+									<div
+										className="flex flex-col gap-3"
+										onClick={(e) => e.stopPropagation()}
 									>
-										<MessageSquare size={20} className="inline-block mr-2" />{" "}
-										Message Candidate
-									</Button>
+										<div className="flex flex-wrap gap-3 justify-stretch sm:justify-center">
+											<button
+												type="button"
+												onClick={() =>
+													void toggleEmployerShortlist(
+														Number(selectedCandidate.id),
+														employerModalReviewJobId(selectedCandidate),
+													)
+												}
+												className={`flex-1 min-w-[140px] px-6 h-12 rounded-2xl font-black text-xs uppercase tracking-wide border transition-all inline-flex items-center justify-center gap-2 ${
+													employerModalShowShortlistedChip(
+														selectedCandidate,
+														employerShortlistJobKeys,
+														employerShortlistedCandidateIds,
+														talentPoolReviewsByKey,
+													)
+														? "bg-[#A63F8E] text-white border-[#A63F8E]"
+														: "bg-white text-gray-700 border-gray-200 hover:border-[#A63F8E]/30 hover:bg-[#A63F8E]/5"
+												}`}
+											>
+												<Star
+													size={16}
+													className={
+														employerModalShowShortlistedChip(
+															selectedCandidate,
+															employerShortlistJobKeys,
+															employerShortlistedCandidateIds,
+															talentPoolReviewsByKey,
+														)
+															? "fill-white"
+															: ""
+													}
+												/>
+												{employerModalShowShortlistedChip(
+													selectedCandidate,
+													employerShortlistJobKeys,
+													employerShortlistedCandidateIds,
+													talentPoolReviewsByKey,
+												)
+													? "Unshortlist"
+													: "Shortlist"}
+											</button>
+											<Button
+												type="button"
+												className="flex-1 min-w-[140px] h-12 rounded-2xl bg-[#148F8B] hover:bg-[#A63F8E] text-white font-black uppercase tracking-widest shadow-lg shadow-[#148F8B]/20"
+												onClick={() => {
+													const cid = Number(selectedCandidate.id);
+													if (!cid) return;
+													setMessageJobPickerCandidateId(cid);
+													setMessageJobPickerSelectedJobId(null);
+													setSelectedCandidate(null);
+												}}
+											>
+												<MessageSquare size={18} className="inline-block mr-2" />
+												Message
+											</Button>
+											<Button
+												type="button"
+												variant="outline"
+												className="flex-1 min-w-[140px] h-12 rounded-2xl font-black uppercase tracking-widest border-gray-200"
+												onClick={() => {
+													const cid = Number(selectedCandidate.id);
+													if (!cid) return;
+													const linked =
+														candidateJobLinks[String(cid)] || [];
+													setOrganizeCandidateId(cid);
+													setOrganizeSelectedJobIds(linked.slice());
+													setSelectedCandidate(null);
+												}}
+											>
+												<Pencil size={16} className="inline-block mr-2" />
+												Organize
+											</Button>
+										</div>
+										<div className="flex flex-wrap gap-3 justify-stretch sm:justify-center">
+											{selectedCandidate.phone ? (
+												<a
+													href={`tel:${selectedCandidate.phone}`}
+													className="flex-1 min-w-[140px] px-6 h-12 rounded-2xl bg-[#148F8B]/5 text-[#148F8B] flex items-center justify-center gap-2 hover:bg-[#A63F8E] hover:text-white transition-all font-black text-xs uppercase tracking-wide"
+												>
+													<Phone size={16} /> Call
+												</a>
+											) : (
+												<button
+													type="button"
+													disabled
+													className="flex-1 min-w-[140px] px-6 h-12 rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wide cursor-not-allowed"
+												>
+													<Phone size={16} /> Call
+												</button>
+											)}
+											{selectedCandidate.email ? (
+												<a
+													href={`mailto:${selectedCandidate.email}`}
+													className="flex-1 min-w-[140px] px-6 h-12 rounded-2xl bg-[#A63F8E]/5 text-[#A63F8E] flex items-center justify-center gap-2 hover:bg-[#148F8B] hover:text-white transition-all font-black text-xs uppercase tracking-wide"
+												>
+													<Mail size={16} /> Email
+												</a>
+											) : (
+												<button
+													type="button"
+													disabled
+													className="flex-1 min-w-[140px] px-6 h-12 rounded-2xl bg-gray-100 text-gray-300 flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wide cursor-not-allowed"
+												>
+													<Mail size={16} /> Email
+												</button>
+											)}
+										</div>
+									</div>
 								)}
 							{!unlockedCandidateIds.some(
 								(id: any) => Number(id) === Number(selectedCandidate.id),
 							) && (
-								<Button
-									className="w-full h-20 text-xl rounded-3xl bg-[#A63F8E] hover:bg-[#148F8B] text-white font-black uppercase tracking-widest shadow-2xl shadow-[#A63F8E]/25 hover:scale-105 active:scale-95 transition-all duration-200"
-									onClick={() => {
-										setPaymentTarget({
-											type: "employer",
-											items: [selectedCandidate],
-										});
-										setShowPaymentModal(true);
-										setSelectedCandidate(null);
-									}}
-								>
-									Unlock Full Video & Contact
-								</Button>
+								<div className="space-y-3">
+									{userRole === "employer" && userProfile?.employerId && (
+										<button
+											type="button"
+											onClick={() =>
+												void toggleEmployerShortlist(
+													Number(selectedCandidate.id),
+													employerModalReviewJobId(selectedCandidate),
+												)
+											}
+											className={`w-full h-12 rounded-2xl font-black text-sm uppercase tracking-wide border transition-all inline-flex items-center justify-center gap-2 ${
+												employerModalShowShortlistedChip(
+													selectedCandidate,
+													employerShortlistJobKeys,
+													employerShortlistedCandidateIds,
+													talentPoolReviewsByKey,
+												)
+													? "bg-[#A63F8E] text-white border-[#A63F8E]"
+													: "bg-white text-gray-700 border-gray-200 hover:border-[#A63F8E]/30"
+											}`}
+										>
+											<Star
+												size={18}
+												className={
+													employerModalShowShortlistedChip(
+														selectedCandidate,
+														employerShortlistJobKeys,
+														employerShortlistedCandidateIds,
+														talentPoolReviewsByKey,
+													)
+														? "fill-white"
+														: ""
+												}
+											/>
+											{employerModalShowShortlistedChip(
+												selectedCandidate,
+												employerShortlistJobKeys,
+												employerShortlistedCandidateIds,
+												talentPoolReviewsByKey,
+											)
+												? "Unshortlist"
+												: "Shortlist"}
+										</button>
+									)}
+									<Button
+										className="w-full h-20 text-xl rounded-3xl bg-[#A63F8E] hover:bg-[#148F8B] text-white font-black uppercase tracking-widest shadow-2xl shadow-[#A63F8E]/25 hover:scale-105 active:scale-95 transition-all duration-200"
+										onClick={() => {
+											setPaymentTarget({
+												type: "employer",
+												items: [selectedCandidate],
+											});
+											setShowPaymentModal(true);
+											setSelectedCandidate(null);
+										}}
+									>
+										Unlock Full Video & Contact
+									</Button>
+								</div>
 							)}
 							<a
 								href={`mailto:support@hanahire.com?subject=Report%20Discrimination%20or%20Abuse&body=Candidate%20ID%3A%20${selectedCandidate.id}%0A%0APlease%20describe%20what%20happened%3A`}

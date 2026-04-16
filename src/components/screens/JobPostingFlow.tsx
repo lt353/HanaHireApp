@@ -317,6 +317,20 @@ export function JobPostingFlow({
       if (!draft || typeof draft !== "object") {
         throw new Error("AI response did not include a usable draft.");
       }
+      const normalizeStartDateForDateInput = (raw: unknown): string => {
+        const s = typeof raw === "string" ? raw.trim() : "";
+        if (!s) return "";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const lower = s.toLowerCase();
+        const today = new Date();
+        const asYmd = (d: Date) => d.toISOString().slice(0, 10);
+        if (lower === "today" || lower === "asap") return asYmd(today);
+        if (lower === "tomorrow")
+          return asYmd(new Date(today.getTime() + 24 * 60 * 60 * 1000));
+        const parsed = Date.parse(s);
+        if (Number.isFinite(parsed)) return asYmd(new Date(parsed));
+        return "";
+      };
       const generatedData = {
         ...formData,
         ...draft,
@@ -324,6 +338,9 @@ export function JobPostingFlow({
         requirements: Array.isArray(draft.requirements) && draft.requirements.length ? draft.requirements : formData.requirements,
         benefits: Array.isArray(draft.benefits) ? draft.benefits : formData.benefits,
         application_questions: Array.isArray(draft.application_questions) ? draft.application_questions : formData.application_questions,
+        start_date:
+          normalizeStartDateForDateInput((draft as any).start_date) ||
+          formData.start_date,
       };
       console.log("🟢 Generated data from AI:", generatedData);
       setStep('review');
@@ -474,6 +491,8 @@ export function JobPostingFlow({
         data = insertedData;
         setPostedJob(data);
         setStep('confirmation');
+        // If user is scrolled low (common on mobile), ensure they see the next screen.
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         toast.success("Listing published successfully!");
       }
     } catch (err: any) {
@@ -547,7 +566,7 @@ export function JobPostingFlow({
              <div className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</p>
-                  <p className="text-sm text-gray-600 font-medium leading-relaxed italic border-l-2 border-gray-100 pl-4">"{formData.description || "Listing description..."}"</p>
+                  <p className="text-sm text-gray-600 font-medium leading-relaxed italic border-l-2 border-gray-100 pl-4 whitespace-pre-line">{formData.description || "Listing description..."}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -623,8 +642,8 @@ export function JobPostingFlow({
             <div className="space-y-4">
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Job Description</p>
-                <p className="text-sm text-gray-600 font-medium leading-relaxed italic border-l-2 border-gray-100 pl-4">
-                  "{formData.description || "Listing description..."}"
+                <p className="text-sm text-gray-600 font-medium leading-relaxed italic border-l-2 border-gray-100 pl-4 whitespace-pre-line">
+                  {formData.description || "Listing description..."}
                 </p>
               </div>
 
@@ -682,7 +701,7 @@ export function JobPostingFlow({
     );
 
     return (
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-12 flex flex-col lg:grid lg:grid-cols-[1fr_450px] gap-8 lg:gap-16 items-start">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-12 pb-[calc(8rem+env(safe-area-inset-bottom))] flex flex-col lg:grid lg:grid-cols-[1fr_450px] gap-8 lg:gap-16 items-start">
         <div className="w-full space-y-8 sm:space-y-12 order-2 lg:order-1">
           <div className="flex items-center gap-3 sm:gap-4">
             <button onClick={() => existingJob ? onBack() : setStep('selection')} className="p-2 sm:p-3 md:p-4 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-colors">
@@ -1507,7 +1526,7 @@ export function JobPostingFlow({
             </section>
           </div>
 
-          <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pb-28">
             <button onClick={() => existingJob ? onBack() : setStep('selection')} className="text-gray-400 font-black text-[10px] sm:text-xs uppercase tracking-widest hover:text-gray-600 text-left">← Back</button>
             <Button disabled={isSubmitting} className="px-8 sm:px-12 md:px-16 h-14 sm:h-16 md:h-20 rounded-xl sm:rounded-2xl shadow-2xl shadow-[#148F8B]/20 text-base sm:text-lg md:text-xl w-full sm:w-auto" onClick={handlePostJob}>
               {isSubmitting ? <Loader2 className="animate-spin" /> : <>{existingJob ? 'Update Listing' : 'Publish Listing'} <ArrowRight size={20} className="ml-2 sm:w-6 sm:h-6" /></>}
@@ -1567,7 +1586,7 @@ export function JobPostingFlow({
   );
 
   const renderConfirmation = () => (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20 text-center space-y-8 sm:space-y-10 md:space-y-12">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20 text-center space-y-8 sm:space-y-10 md:space-y-12 pb-28">
       <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-[#A63F8E]/10 rounded-full flex items-center justify-center text-[#A63F8E] mx-auto">
         <CheckCircle2 size={40} className="sm:w-12 sm:h-12 md:w-16 md:h-16" />
       </div>

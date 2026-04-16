@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings as SettingsIcon, Menu, X, MessageSquare, LayoutDashboard, Briefcase, Users, PlusSquare, Info, LogOut, ToggleLeft } from "lucide-react";
+import { Settings as SettingsIcon, Menu, X, MessageSquare, LayoutDashboard, Briefcase, Users, PlusSquare, Info, LogOut } from "lucide-react";
 import hanaHireLogo from '../../assets/hanahire-logo.png';
 
 import { ViewType } from '../../App';
@@ -13,7 +13,6 @@ interface HeaderProps {
   employerQueueCount: number;
   onNavigate: (view: ViewType) => void;
   onSelectRole: (role: 'seeker' | 'employer') => void;
-  onToggleRole: () => void;
   onLogout: () => void;
   onShowAuth: (mode: "login" | "signup") => void;
   onReset: () => void;
@@ -28,7 +27,6 @@ export const Header = ({
   currentTab,
   isLoggedIn,
   onNavigate,
-  onToggleRole,
   onLogout,
   onShowAuth,
   onReset,
@@ -199,28 +197,6 @@ export const Header = ({
 
         {/* Right */}
         <div className="flex items-center gap-4 md:gap-5 lg:gap-6 shrink-0">
-          {isRoleSelected && (
-            <>
-              {isDemoAccount ? (
-                <span className="hidden md:block text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 py-1.5 lg:px-3 lg:py-2 select-none shrink-0">
-                  Switch roles unavailable in demo
-                </span>
-              ) : (
-                <button
-                  onClick={onToggleRole}
-                  className={`hidden md:flex flex-col items-center justify-center leading-tight gap-0 px-2 py-1.5 lg:px-3 lg:py-2 rounded-xl border border-gray-100 transition-all text-[11px] md:text-xs lg:text-sm xl:text-base font-black uppercase tracking-widest text-gray-600 hover:scale-105 active:scale-95 duration-200 shrink-0 ${
-                    role === "seeker"
-                      ? "hover:border-[#148F8B] hover:bg-[#148F8B]/5 hover:text-[#148F8B]"
-                      : "hover:border-[#A63F8E] hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
-                  }`}
-                >
-                  <span>Switch to</span>
-                  <span>{role === "seeker" ? "Employer" : "Job Seeker"}</span>
-                </button>
-              )}
-            </>
-          )}
-
           {isLoggedIn ? (
             <button
               onClick={onLogout}
@@ -416,16 +392,6 @@ export const Header = ({
 
             {/* Bottom actions */}
             <div className="px-3 pb-20 pt-2 border-t border-gray-100 space-y-2">
-              {isLoggedIn && isRoleSelected && !isDemoAccount && (
-                <button
-                  onClick={() => { onToggleRole(); closeMobile(); }}
-                  className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all"
-                >
-                  <ToggleLeft size={18} />
-                  Switch to {role === "seeker" ? "Employer" : "Job Seeker"}
-                </button>
-              )}
-
               {isLoggedIn ? (
                 <button
                   onClick={() => { onLogout(); closeMobile(); }}

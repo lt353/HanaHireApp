@@ -197,6 +197,8 @@ interface JobsListProps {
 	employers?: any[];
 	/** Logged-in seeker: open/create DM with this employer (from business profile modal). */
 	onOpenMessageWithEmployer?: (employerId: number) => void;
+	/** Fires when a business profile modal opens (directory). */
+	onBusinessProfileOpen?: (employerId: number) => void;
 }
 
 function useIsMobile(breakpointPx = 768) {
@@ -309,6 +311,7 @@ export const JobsList: React.FC<JobsListProps> = ({
 	viewerLocation,
 	employers = [],
 	onOpenMessageWithEmployer,
+	onBusinessProfileOpen,
 }) => {
 	const isMobile = useIsMobile(768);
 	const [browseMode, setBrowseMode] = React.useState<"jobs" | "businesses">(
@@ -317,6 +320,13 @@ export const JobsList: React.FC<JobsListProps> = ({
 	const [selectedBusiness, setSelectedBusiness] = React.useState<any | null>(
 		null,
 	);
+
+	React.useEffect(() => {
+		if (!selectedBusiness?.id) return;
+		const id = Number(selectedBusiness.id);
+		if (!Number.isFinite(id) || id <= 0) return;
+		onBusinessProfileOpen?.(id);
+	}, [selectedBusiness?.id, onBusinessProfileOpen]);
 	const [showBizFilterModal, setShowBizFilterModal] = React.useState(false);
 	const [bizIndustryFilter, setBizIndustryFilter] = React.useState<string[]>(
 		[],

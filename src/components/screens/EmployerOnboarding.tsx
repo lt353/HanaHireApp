@@ -562,19 +562,68 @@ export const EmployerOnboarding: React.FC<EmployerOnboardingProps> = ({
                 <span className="ml-2 normal-case font-medium tracking-normal text-gray-600">(optional)</span>
               </h2>
             </div>
-            <input
-              type="text"
-              value={businessLicense}
-              onChange={(e) => {
-                setBusinessLicense(e.target.value);
-              }}
-              placeholder="HI-BIZ-XXXX-XXXXX"
-              className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base tracking-widest"
-            />
+            {(() => {
+              const raw = String(businessLicense || "").trim();
+              const isLegacy = raw.length > 0 && !/^GE-/i.test(raw);
+
+              if (isLegacy) {
+                return (
+                  <input
+                    type="text"
+                    value={raw}
+                    onChange={(e) => setBusinessLicense(e.target.value)}
+                    placeholder="GE-XXX-XXX-XXXX-XX"
+                    className="w-full p-4 rounded-xl bg-[#F3EAF5]/30 border border-gray-100 focus:ring-4 ring-[#A63F8E]/10 outline-none font-bold text-base tracking-widest"
+                  />
+                );
+              }
+
+              const digits = raw.replace(/^GE-/i, "").replace(/\D/g, "");
+              const capped = digits.slice(0, 12);
+              const formatted =
+                capped.length > 10
+                  ? `${capped.slice(0, 3)}-${capped.slice(3, 6)}-${capped.slice(6, 10)}-${capped.slice(10)}`
+                  : capped.length > 6
+                    ? `${capped.slice(0, 3)}-${capped.slice(3, 6)}-${capped.slice(6)}`
+                    : capped.length > 3
+                      ? `${capped.slice(0, 3)}-${capped.slice(3)}`
+                      : capped;
+
+              return (
+                <div className="flex w-full overflow-hidden rounded-xl border border-gray-100 bg-[#F3EAF5]/30 focus-within:ring-4 focus-within:ring-[#A63F8E]/10">
+                  <span className="shrink-0 px-4 py-4 font-black text-base tracking-widest text-gray-400 select-none">
+                    GE-
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="XXX-XXX-XXXX-XX"
+                    value={formatted}
+                    onChange={(e) => {
+                      const d = e.target.value.replace(/\D/g, "").slice(0, 12);
+                      const f =
+                        d.length > 10
+                          ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6, 10)}-${d.slice(10)}`
+                          : d.length > 6
+                            ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`
+                            : d.length > 3
+                              ? `${d.slice(0, 3)}-${d.slice(3)}`
+                              : d;
+                      setBusinessLicense(d ? `GE-${f}` : "");
+                    }}
+                    className="min-w-0 flex-1 bg-transparent px-0 py-4 pr-4 outline-none font-black text-base tracking-widest text-gray-900"
+                  />
+                </div>
+              );
+            })()}
             <div className="p-4 bg-[#A63F8E]/5 rounded-xl border border-[#A63F8E]/10 flex items-start gap-3">
               <Shield size={18} className="text-[#A63F8E] shrink-0 mt-0.5" />
               <p className="text-xs text-gray-600 font-medium">
-                Optional: add your Hawaii business license number to show a{" "}
+                Optional: add your Hawaii GET tax ID to show a{" "}
                 <span className="font-black text-[#A63F8E]">Verified Business</span> badge on your job
                 posts — no extra charge. Helps candidates trust your listing.
               </p>

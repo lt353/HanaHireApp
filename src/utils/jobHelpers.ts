@@ -19,6 +19,8 @@ export interface Job {
   benefits: string[];
   status: string;
   applicant_count: number;
+  /** Seeker/guest job detail opens (see increment_job_listing_views). */
+  listing_view_count?: number;
   is_anonymous: boolean;
   posted_at?: string;
   start_date?: string;
@@ -43,6 +45,7 @@ export interface Employer {
   website?: string | null;
   /** When true, business and its jobs appear in public job / employer pools. */
   profile_complete?: boolean;
+  business_profile_view_count?: number;
 }
 
 export interface JobWithEmployer extends Job {

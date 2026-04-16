@@ -1,5 +1,14 @@
 import React from "react";
-import { Briefcase, User, Trash2, ChevronDown, ChevronUp, FolderOpen, Lock } from "lucide-react";
+import {
+  Briefcase,
+  User,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  FolderOpen,
+  Lock,
+  Star,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "../ui/Button";
 import { formatCandidateTitle } from "../../utils/formatters";
@@ -8,6 +17,9 @@ import { ViewType } from "../../App";
 interface CartProps {
   role: 'seeker' | 'employer';
   queue: any[];
+  shortlistedCandidateIds?: number[];
+  onToggleShortlist?: (candidateId: number) => void;
+  viewedCandidateIds?: number[];
   onRemoveFromQueue: (id: number) => void;
   onNavigate: (tab: ViewType) => void;
   onShowPayment: (target: any) => void;
@@ -18,6 +30,9 @@ interface CartProps {
 export const Cart: React.FC<CartProps> = ({
   role,
   queue,
+  shortlistedCandidateIds = [],
+  onToggleShortlist,
+  viewedCandidateIds = [],
   onRemoveFromQueue,
   onNavigate,
   onShowPayment,
@@ -26,6 +41,10 @@ export const Cart: React.FC<CartProps> = ({
 }) => {
   const [expandedId, setExpandedId] = React.useState<number | null>(null);
   const total = queue.length * interactionFee;
+  const isShortlisted = (id: any) =>
+    shortlistedCandidateIds.some((sid) => Number(sid) === Number(id));
+  const isViewed = (id: any) =>
+    viewedCandidateIds.some((vid) => Number(vid) === Number(id));
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-16 sm:py-24 space-y-12 sm:space-y-16 pb-48 sm:pb-16">
@@ -89,6 +108,21 @@ export const Cart: React.FC<CartProps> = ({
                         <h3 className="font-black text-base sm:text-xl lg:text-2xl tracking-tight truncate">
                           {role === 'seeker' ? item.title : formatCandidateTitle(item)}
                         </h3>
+                        {role === "employer" && isShortlisted(item.id) && (
+                          <div className="flex">
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A63F8E]/10 text-[#A63F8E] text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-[#A63F8E]/20">
+                              <Star size={12} className="fill-[#A63F8E]" aria-hidden />
+                              Shortlisted
+                            </span>
+                          </div>
+                        )}
+                        {role === "employer" && isViewed(item.id) && (
+                          <div className="flex">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#148F8B]/10 text-[#148F8B] text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-[#148F8B]/20">
+                              Viewed
+                            </span>
+                          </div>
+                        )}
                         <p className="text-xs font-black uppercase tracking-widest text-gray-400 truncate">
                           {role === 'seeker' ? item.location : item.location}
                         </p>
@@ -97,6 +131,26 @@ export const Cart: React.FC<CartProps> = ({
 
                     <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                       {/* Removed price - now only shown at checkout */}
+                      {role === "employer" && onToggleShortlist && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleShortlist(Number(item.id));
+                          }}
+                          className={`px-3 sm:px-4 py-2 rounded-xl sm:rounded-2xl border transition-all shrink-0 hover:scale-105 active:scale-95 duration-200 inline-flex items-center gap-2 ${
+                            isShortlisted(item.id)
+                              ? "bg-[#A63F8E] text-white border-[#A63F8E]"
+                              : "bg-white text-gray-700 border-gray-200 hover:border-[#A63F8E]/30 hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
+                          }`}
+                          aria-pressed={isShortlisted(item.id)}
+                          aria-label={isShortlisted(item.id) ? "Remove from shortlist" : "Add to shortlist"}
+                        >
+                          <Star size={16} className={isShortlisted(item.id) ? "fill-white" : ""} />
+                          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest">
+                            {isShortlisted(item.id) ? "Unshortlist" : "Shortlist"}
+                          </span>
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

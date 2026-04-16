@@ -4196,14 +4196,15 @@ html, body {
   animation: indeterminate-slide 1.4s ease-in-out infinite;
 }
 
+/* Employer Activity: 8 stats → 2 rows × 4 columns on sm+; 2 cols × 4 rows on narrow phones */
 .activity-stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-@media (width >= 64rem) {
+@media (width >= 640px) {
   .activity-stats-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

@@ -30,6 +30,10 @@ import {
 import { Button } from "../ui/Button";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { ViewType } from "../../App";
+import {
+	employerShortlistActiveForContext,
+	resolveTalentPoolReview,
+} from "../../utils/employerTalentPool";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 	pending: { bg: "bg-[#A63F8E]/10", text: "text-[#A63F8E]" },
@@ -49,7 +53,10 @@ interface EmployerDashboardProps {
 	onNavigate: (view: ViewType) => void;
 	onShowPostJob: () => void;
 	onSelectJob: (job: any) => void;
-	onSelectCandidate: (candidate: any) => void;
+	onSelectCandidate: (
+		candidate: any,
+		context?: { reviewJobId: number | null },
+	) => void;
 	onShowPayment: (target: { type: string; items: any[] }) => void;
 	onShowAuth: (mode: "login" | "signup") => void;
 	onLogout: () => void;
@@ -58,6 +65,14 @@ interface EmployerDashboardProps {
 	onOrganizeCandidateJobs?: (candidateId: number) => void;
 	candidateJobLinks?: Record<string, number[]>;
 	onMarkContacted?: (applicationId: number, method: "phone" | "email") => void;
+	onUpdateApplicationStatus?: (applicationId: number, nextStatus: string) => void;
+	shortlistedCandidateIds?: number[];
+	employerShortlistJobKeys?: Record<string, boolean>;
+	talentPoolReviewsByKey?: Record<string, any>;
+	onToggleShortlist?: (candidateId: number, jobId?: number | null) => void;
+	viewedCandidateIds?: number[];
+	/** Business directory profile opens (seeker/guest); summed into Job views. */
+	businessProfileViewCount?: number;
 	conversations?: any[];
 }
 
@@ -79,6 +94,12 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 	onOrganizeCandidateJobs,
 	candidateJobLinks = {},
 	onMarkContacted,
+	shortlistedCandidateIds = [],
+	employerShortlistJobKeys = {},
+	talentPoolReviewsByKey = {},
+	onToggleShortlist,
+	viewedCandidateIds = [],
+	businessProfileViewCount = 0,
 	conversations = [],
 }) => {
 	const parseAppTimestamp = (value: string | null | undefined) => {
@@ -220,21 +241,67 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 	const filledJobsCount = myJobs.filter(
 		(job) => job.status === "filled",
 	).length;
-	const reviewedCount = applications.filter(
-		(application) => !!application.reviewed_at,
-	).length;
-	const shortlistedCount = applications.filter(
-		(application) => application.status === "shortlisted",
-	).length;
-	// contacted = has contact_method set OR has an existing conversation (message sent via app).
+
+	const normPipelineStatus = (v: unknown) =>
+		String(v ?? "")
+			.toLowerCase()
+			.trim();
+
+	// Reviewed = candidate cards you've opened (includes shortlisted).
+	const reviewedCount = new Set(
+		viewedCandidateIds
+			.map((id) => Number(id))
+			.filter((n) => Number.isFinite(n) && n > 0),
+	).size;
+
+	const poolReviewRows = Object.values(talentPoolReviewsByKey || {});
+	const shortlistedPipelineIds = new Set<number>();
+	for (const application of applications) {
+		if (normPipelineStatus(application?.status) === "shortlisted") {
+			const cid = Number(application?.candidate_id);
+			if (Number.isFinite(cid) && cid > 0) shortlistedPipelineIds.add(cid);
+		}
+	}
+	for (const row of poolReviewRows as any[]) {
+		if (normPipelineStatus(row?.status) === "shortlisted") {
+			const cid = Number(row?.candidate_id);
+			if (Number.isFinite(cid) && cid > 0) shortlistedPipelineIds.add(cid);
+		}
+	}
+	const shortlistedCount = shortlistedPipelineIds.size;
+
+	// Job post detail opens + business profile opens (every view counts).
+	const jobListingViewsCount = useMemo(() => {
+		const jobSum = myJobs.reduce((sum, j: any) => {
+			const raw =
+				j?.listing_view_count ??
+				j?.view_count ??
+				j?.views ??
+				j?.job_view_count ??
+				j?.listing_views ??
+				0;
+			const n = Number(raw);
+			return sum + (Number.isFinite(n) ? Math.max(0, n) : 0);
+		}, 0);
+		const biz = Number(businessProfileViewCount);
+		return jobSum + (Number.isFinite(biz) ? Math.max(0, biz) : 0);
+	}, [myJobs, businessProfileViewCount]);
+
+	const unlockedCount = unlockedCandidateIds.length;
+
+	const messagedCount = useMemo(() => {
+		const ids = new Set<number>();
+		(conversations || []).forEach((c: any) => {
+			const cid = Number(c?.candidate_id);
+			if (Number.isFinite(cid)) ids.add(cid);
+		});
+		return ids.size;
+	}, [conversations]);
+
+	// "Contacted" tracking for cards still uses conversations elsewhere; Activity uses Unlocked instead.
 	const contactedCandidateIds = new Set(
 		conversations.map((c: any) => c.candidate_id),
 	);
-	const contactedCount = applications.filter(
-		(application) =>
-			!!application.contact_method ||
-			contactedCandidateIds.has(application.candidate_id),
-	).length;
 
 	return (
 		<>
@@ -408,7 +475,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 
 				{/* Stats Row - Only when logged in */}
 				{isLoggedIn && (
-					<div className="-mt-8 sm:-mt-10 md:-mt-12 p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden group">
+					<div className="-mt-8 sm:-mt-10 md:-mt-12 p-5 sm:p-6 md:p-7 bg-gray-900 text-white rounded-[2rem] sm:rounded-[2.5rem] space-y-4 shadow-2xl relative overflow-hidden">
 						<h3 className="text-lg sm:text-xl font-black tracking-tighter leading-none flex items-center gap-2.5">
 							<BarChart3 size={24} className="text-[#148F8B]" /> Activity
 						</h3>
@@ -417,19 +484,12 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
 									Open Jobs
 								</span>
-								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white">
 									{openJobsCount}
 								</span>
 							</div>
-							<div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
-								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
-									Filled Jobs
-								</span>
-								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-emerald-400">
-									{filledJobsCount}
-								</span>
-							</div>
 							<button
+								type="button"
 								onClick={() => {
 									setFilterByJobId(null);
 									setTimeout(
@@ -441,20 +501,28 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 										100,
 									);
 								}}
-								className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200 w-full"
+								className="group rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left hover:ring-2 ring-[#A63F8E]/40 transition-all hover:scale-105 active:scale-95 duration-200 w-full"
 							>
 								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
 									Applicants
 								</span>
-								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-[#A63F8E] transition-colors">
 									{actualApplicants.length}
 								</span>
 							</button>
 							<div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
 								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
+									Unlocked
+								</span>
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white">
+									{unlockedCount}
+								</span>
+							</div>
+							<div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
+								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
 									Reviewed
 								</span>
-								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-yellow-400">
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white">
 									{reviewedCount}
 								</span>
 							</div>
@@ -462,16 +530,32 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
 									Shortlisted
 								</span>
-								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#A63F8E]">
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white">
 									{shortlistedCount}
 								</span>
 							</div>
 							<div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
 								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
-									Contacted
+									Job views
 								</span>
-								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight transition-all group-hover:text-[#148F8B]">
-									{contactedCount}
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white">
+									{jobListingViewsCount}
+								</span>
+							</div>
+							<div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
+								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
+									Messaged
+								</span>
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white">
+									{messagedCount}
+								</span>
+							</div>
+							<div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 w-full">
+								<span className="block text-white/70 font-black uppercase tracking-[0.18em] text-[11px] leading-tight">
+									Filled Jobs
+								</span>
+								<span className="mt-1 block text-xl sm:text-2xl font-black tracking-tight text-white">
+									{filledJobsCount}
 								</span>
 							</div>
 						</div>
@@ -712,14 +796,49 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 											</div>
 											<div className="grid gap-4 sm:gap-6">
 												{section.items.map((cand: any) => {
-													const candApplicant = actualApplicants.find(
-														(a) => a.id === cand.id,
-													);
-													const candStatus = candApplicant?.status || null;
+													const jobCtx = section.jobId ?? null;
+													const candApplicantThisJob = section.jobId
+														? actualApplicants.find(
+																(a: any) =>
+																	Number(a.id) === Number(cand.id) &&
+																	Number(a.appliedToJob?.id) ===
+																		Number(section.jobId),
+															)
+														: null;
+													const candStatus =
+														candApplicantThisJob?.status || null;
 													const candStatusStyle = candStatus
 														? STATUS_COLORS[candStatus] ||
 															STATUS_COLORS["pending"]
 														: null;
+													const poolRow = resolveTalentPoolReview(
+														talentPoolReviewsByKey,
+														Number(cand.id),
+														jobCtx,
+													);
+													const poolReviewStatus =
+														(poolRow?.status as string | undefined) || null;
+													const isPoolShortlisted =
+														poolReviewStatus === "shortlisted" ||
+														((poolReviewStatus == null ||
+															poolReviewStatus === "pending") &&
+															(employerShortlistActiveForContext(
+																employerShortlistJobKeys,
+																Number(cand.id),
+																jobCtx,
+															) ||
+																(jobCtx == null &&
+																	Object.keys(employerShortlistJobKeys)
+																		.length === 0 &&
+																	shortlistedCandidateIds.includes(
+																		Number(cand.id),
+																	))));
+													const poolStatusStyle =
+														!candStatus &&
+														poolReviewStatus &&
+														poolReviewStatus !== "pending" &&
+														(STATUS_COLORS[poolReviewStatus] ||
+															STATUS_COLORS["pending"]);
 													const taggedJobIds =
 														candidateJobLinks[String(cand.id)] || [];
 													const taggedTitles = taggedJobIds
@@ -734,7 +853,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 														<div
 															key={cand.id}
 															className="p-6 sm:p-8 bg-white border border-gray-100 rounded-[2.5rem] sm:rounded-[3rem] shadow-sm hover:shadow-xl transition-all group cursor-pointer"
-															onClick={() => onSelectCandidate(cand)}
+															onClick={() =>
+																onSelectCandidate(cand, {
+																	reviewJobId: section.jobId ?? null,
+																})
+															}
 														>
 															<div className="flex items-center gap-4 sm:gap-6">
 																<div className="w-16 sm:w-20 h-16 sm:h-20 rounded-xl sm:rounded-2xl bg-gray-100 overflow-hidden relative shrink-0">
@@ -757,12 +880,30 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																		<h4 className="text-lg sm:text-xl font-black tracking-tight truncate">
 																			{cand.name || cand.display_title}
 																		</h4>
-																		<div className="flex items-center gap-1.5 shrink-0">
+																		<div className="flex flex-wrap items-center gap-1.5 shrink-0 justify-end">
+																			{!candStatus &&
+																				isPoolShortlisted && (
+																					<span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap bg-[#A63F8E] text-white inline-flex items-center gap-1">
+																						<Star
+																							size={10}
+																							className="fill-white"
+																							aria-hidden
+																						/>
+																						Shortlisted
+																					</span>
+																				)}
 																			{candStatusStyle && (
 																				<span
 																					className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap ${candStatusStyle.bg} ${candStatusStyle.text}`}
 																				>
 																					{candStatus}
+																				</span>
+																			)}
+																			{poolStatusStyle && (
+																				<span
+																					className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap ${poolStatusStyle.bg} ${poolStatusStyle.text}`}
+																				>
+																					{poolReviewStatus}
 																				</span>
 																			)}
 																			{contactedCandidateIds.has(cand.id) && (
@@ -944,7 +1085,9 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 								<button
 									key={c.id}
 									type="button"
-									onClick={() => onSelectCandidate(c)}
+									onClick={() =>
+										onSelectCandidate(c, { reviewJobId: null })
+									}
 									className="flex items-center gap-4 p-4 sm:p-5 text-left bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md hover:border-[#148F8B]/30 transition-all group"
 								>
 									<div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shrink-0 ring-2 ring-transparent group-hover:ring-[#148F8B]/20">
@@ -1084,6 +1227,19 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 								{dashboardApplicants.map((applicant, i) => {
 									const statusStyle =
 										STATUS_COLORS[applicant.status] || STATUS_COLORS["pending"];
+									const appJobId = applicant.appliedToJob?.id ?? null;
+									const isShortlisted =
+										applicant.status === "shortlisted" ||
+										employerShortlistActiveForContext(
+											employerShortlistJobKeys,
+											Number(applicant.id),
+											appJobId,
+										) ||
+										(appJobId == null &&
+											Object.keys(employerShortlistJobKeys).length === 0 &&
+											shortlistedCandidateIds.includes(
+												Number(applicant.id),
+											));
 									return (
 										<motion.div
 											key={
@@ -1094,7 +1250,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 											animate={{ opacity: 1, y: 0 }}
 											transition={{ delay: i * 0.03 }}
 											className="bg-white border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-lg transition-all overflow-hidden"
-											onClick={() => onSelectCandidate(applicant)}
+											onClick={() =>
+												onSelectCandidate(applicant, {
+													reviewJobId: appJobId,
+												})
+											}
 										>
 											{/* Header Row */}
 											<div className="p-5 sm:p-6 flex items-start gap-4">
@@ -1129,6 +1289,32 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 															>
 																{applicant.status}
 															</span>
+															<button
+																type="button"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	if (!onToggleShortlist) return;
+																	onToggleShortlist(
+																		Number(applicant.id),
+																		appJobId,
+																	);
+																}}
+																className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap border transition-all ${
+																	isShortlisted
+																		? "border-[#A63F8E]/30 bg-[#A63F8E] text-white"
+																		: "border-gray-200 bg-white text-gray-600 hover:border-[#A63F8E]/30 hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
+																}`}
+																aria-pressed={isShortlisted}
+															>
+																<Star
+																	size={12}
+																	className={
+																		isShortlisted ? "fill-white" : ""
+																	}
+																	aria-hidden
+																/>
+																{isShortlisted ? "Unshortlist" : "Shortlist"}
+															</button>
 															{(!!applicant.application?.contact_method ||
 																contactedCandidateIds.has(applicant.id)) && (
 																<span
@@ -1436,20 +1622,46 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 											(jid: any) => Number(jid) === Number(j.id),
 										),
 									);
-									// Pull any application this employer has for this candidate (may be for a different job)
-									const candAnyApp = actualApplicants.find(
-										(a: any) => Number(a.id) === Number(cand.id),
+									const jobCtx = filterByJobId;
+									const poolRow = resolveTalentPoolReview(
+										talentPoolReviewsByKey,
+										Number(cand.id),
+										jobCtx,
 									);
-									const appStatus = candAnyApp?.status || null;
-									const appStatusStyle = appStatus
-										? STATUS_COLORS[appStatus] || STATUS_COLORS["pending"]
-										: null;
-									const contactMethod =
-										candAnyApp?.application?.contact_method || null;
-									const employerNotes =
-										candAnyApp?.application?.employer_notes || null;
-									const contactNotes =
-										candAnyApp?.application?.contact_notes || null;
+									const poolReviewStatus =
+										(poolRow?.status as string | undefined) || null;
+									const appStatus = null;
+									const appStatusStyle = null;
+									const contactMethod = poolRow?.contact_method || null;
+									const employerNotes = poolRow?.employer_notes || null;
+									const contactNotes = poolRow?.contact_notes || null;
+									const isPoolShortlisted =
+										poolReviewStatus === "shortlisted" ||
+										((poolReviewStatus == null ||
+											poolReviewStatus === "pending") &&
+											(employerShortlistActiveForContext(
+												employerShortlistJobKeys,
+												Number(cand.id),
+												jobCtx,
+											) ||
+												(jobCtx == null &&
+													Object.keys(employerShortlistJobKeys).length ===
+														0 &&
+													shortlistedCandidateIds.includes(
+														Number(cand.id),
+													))));
+									const poolStatusStyle =
+										poolReviewStatus &&
+										poolReviewStatus !== "pending" &&
+										(STATUS_COLORS[poolReviewStatus] ||
+											STATUS_COLORS["pending"]);
+									const isPoolViewed = viewedCandidateIds.includes(
+										Number(cand.id),
+									);
+									const isPoolMessaged = conversations.some(
+										(conv: any) =>
+											Number(conv.candidate_id) === Number(cand.id),
+									);
 									return (
 										<motion.div
 											key={cand.id}
@@ -1457,7 +1669,11 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 											animate={{ opacity: 1, y: 0 }}
 											transition={{ delay: i * 0.03 }}
 											className="bg-white border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm hover:shadow-lg transition-all overflow-hidden"
-											onClick={() => onSelectCandidate(cand)}
+											onClick={() =>
+												onSelectCandidate(cand, {
+													reviewJobId: filterByJobId,
+												})
+											}
 										>
 											{/* Header Row */}
 											<div className="p-5 sm:p-6 flex items-start gap-4">
@@ -1479,10 +1695,37 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 														<h4 className="text-base sm:text-lg font-black tracking-tight break-words leading-tight">
 															{cand.name || cand.display_title}
 														</h4>
-														<div className="flex items-center gap-1.5 shrink-0">
+														<div className="flex flex-wrap items-center gap-1.5 justify-end shrink-0 max-w-[58%] sm:max-w-none">
 															<span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal bg-[#148F8B]/10 text-[#148F8B] whitespace-nowrap">
 																Talent Pool
 															</span>
+															{isPoolShortlisted && (
+																<span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap bg-[#A63F8E] text-white inline-flex items-center gap-1">
+																	<Star
+																		size={10}
+																		className="fill-white"
+																		aria-hidden
+																	/>
+																	Shortlisted
+																</span>
+															)}
+															{isPoolViewed && (
+																<span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap bg-[#148F8B]/15 text-[#148F8B] border border-[#148F8B]/25">
+																	Viewed
+																</span>
+															)}
+															{isPoolMessaged && (
+																<span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap bg-gray-900 text-white">
+																	Messaged
+																</span>
+															)}
+															{poolStatusStyle && (
+																<span
+																	className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap ${poolStatusStyle.bg} ${poolStatusStyle.text}`}
+																>
+																	{poolReviewStatus}
+																</span>
+															)}
 															{appStatusStyle && (
 																<span
 																	className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-normal whitespace-nowrap ${appStatusStyle.bg} ${appStatusStyle.text}`}
@@ -1582,15 +1825,15 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 																</p>
 															</div>
 														)}
-														{appStatus && (
+														{poolReviewStatus && (
 															<div className="space-y-1">
 																<span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-																	Application Status
+																	Pipeline (this job)
 																</span>
 																<p
-																	className={`text-sm font-bold capitalize ${appStatusStyle?.text}`}
+																	className={`text-sm font-bold capitalize ${poolStatusStyle?.text ?? "text-gray-700"}`}
 																>
-																	{appStatus}
+																	{poolReviewStatus}
 																</p>
 															</div>
 														)}
@@ -1623,6 +1866,29 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
 												className="px-5 sm:px-6 pt-2 pb-10 flex flex-wrap gap-3 justify-center"
 												onClick={(e) => e.stopPropagation()}
 											>
+												{onToggleShortlist && (
+													<button
+														type="button"
+														onClick={() =>
+															onToggleShortlist(
+																Number(cand.id),
+																filterByJobId,
+															)
+														}
+														className={`px-8 h-12 rounded-2xl flex items-center justify-center gap-2 transition-all font-black text-sm uppercase tracking-wide border ${
+															isPoolShortlisted
+																? "bg-[#A63F8E] text-white border-[#A63F8E]"
+																: "bg-white text-gray-700 border-gray-200 hover:bg-[#EBE1E6]"
+														}`}
+													>
+														<Star
+															size={16}
+															className={isPoolShortlisted ? "fill-white" : ""}
+															aria-hidden
+														/>
+														{isPoolShortlisted ? "Unshortlist" : "Shortlist"}
+													</button>
+												)}
 												{onOpenMessageWithCandidate && (
 													<button
 														type="button"

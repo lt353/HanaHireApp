@@ -11,6 +11,7 @@ import {
   RotateCcw,
   X,
   MessageSquare,
+  Star,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 
@@ -32,6 +33,9 @@ interface CandidatesListProps {
   filteredCandidates: any;
   unlockedCandidateIds: any;
   employerQueue: any;
+  shortlistedCandidateIds?: number[];
+  onToggleShortlist?: (candidateId: number) => void;
+  viewedCandidateIds?: number[];
   onAddToQueue: (candidate: any) => void;
   onRemoveFromQueue: (id: number) => void;
   onShowPayment: (target: any) => void;
@@ -84,6 +88,9 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
   filteredCandidates,
   unlockedCandidateIds,
   employerQueue,
+  shortlistedCandidateIds = [],
+  onToggleShortlist,
+  viewedCandidateIds = [],
   onAddToQueue,
   onRemoveFromQueue,
   onShowPayment,
@@ -103,6 +110,10 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
     : [];
   const isUnlocked = (id: any) => unlockedIds.some((uid: any) => Number(uid) === Number(id));
   const queue: any[] = Array.isArray(employerQueue) ? employerQueue : [];
+  const isShortlisted = (id: any) =>
+    shortlistedCandidateIds.some((sid) => Number(sid) === Number(id));
+  const isViewed = (id: any) =>
+    viewedCandidateIds.some((vid) => Number(vid) === Number(id));
 
   // Mobile swipe state
   const [index, setIndex] = React.useState(0);
@@ -530,6 +541,14 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 <h3 className="text-3xl font-black tracking-tight leading-none break-words">
                   {currentCandidate.display_title || currentCandidate.name || "Verified Talent"}
                 </h3>
+                {isShortlisted(currentCandidate.id) && (
+                  <div className="flex">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A63F8E] text-white text-[10px] font-black uppercase tracking-widest">
+                      <Star size={12} className="fill-white" aria-hidden />
+                      Shortlisted
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex flex-wrap gap-3 text-xs font-black uppercase tracking-widest text-gray-400">
                   <span className="flex items-center gap-2 shrink-0">
@@ -544,6 +563,11 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                   <span className="flex items-center gap-2 shrink-0">
                     <Lock size={14} /> {isUnlocked(currentCandidate.id) ? "Unlocked" : "Locked"}
                   </span>
+                  {isViewed(currentCandidate.id) && (
+                    <span className="flex items-center gap-2 shrink-0 text-[#148F8B]">
+                      <span className="truncate">Viewed</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Skills chips */}
@@ -563,6 +587,25 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
 
               {/* Action buttons */}
               <div className="pt-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+                {onToggleShortlist && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleShortlist(Number(currentCandidate.id))}
+                    className={`w-full h-12 rounded-xl font-black uppercase tracking-wide text-[12px] flex items-center justify-center gap-2 border transition-all hover:scale-105 active:scale-95 duration-200 ${
+                      isShortlisted(currentCandidate.id)
+                        ? "bg-[#A63F8E] text-white border-[#A63F8E]"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-[#A63F8E]/30 hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
+                    }`}
+                    aria-pressed={isShortlisted(currentCandidate.id)}
+                  >
+                    <Star
+                      size={16}
+                      className={isShortlisted(currentCandidate.id) ? "fill-white" : ""}
+                      aria-hidden
+                    />
+                    {isShortlisted(currentCandidate.id) ? "Unshortlist" : "Shortlist"}
+                  </button>
+                )}
                 {isUnlocked(currentCandidate.id) && onOpenMessageWithCandidate && (
                   <button
                     type="button"
@@ -717,12 +760,21 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                           </span>
                         </div>
                       )}
+                      {isShortlisted(c.id) && (
+                        <div className="flex justify-center lg:justify-start">
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A63F8E]/10 text-[#A63F8E] text-[9px] font-black uppercase tracking-[0.2em] border border-[#A63F8E]/20">
+                            <Star size={12} className="fill-[#A63F8E]" aria-hidden />
+                            Shortlisted
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-wrap justify-center lg:justify-start gap-3 lg:gap-5 text-xs lg:text-sm font-black uppercase tracking-widest text-gray-400">
                       <span className="flex items-center gap-2"><MapPin size={16} /> {c.location}</span>
                       <span className="flex items-center gap-2"><Briefcase size={16} /> {c.years_experience} yrs exp</span>
                       <span className="text-[#A63F8E]">{c.availability || 'Immediate'}</span>
                       {c.preferred_pay_range && <span className="text-[#A63F8E]">{c.preferred_pay_range}</span>}
+                      {isViewed(c.id) && <span className="text-[#148F8B]">Viewed</span>}
                     </div>
                   </div>
 
@@ -747,6 +799,22 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     >
                       <MessageSquare size={20} />
                       <span>Message</span>
+                    </button>
+                  )}
+                  {onToggleShortlist && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleShortlist(Number(c.id))}
+                      className={`flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-2xl transition-all font-black text-xs uppercase tracking-wide border ${
+                        isShortlisted(c.id)
+                          ? "bg-[#A63F8E] text-white border-[#A63F8E]"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-[#A63F8E]/30 hover:bg-[#A63F8E]/5 hover:text-[#A63F8E]"
+                      }`}
+                      aria-pressed={isShortlisted(c.id)}
+                      aria-label={isShortlisted(c.id) ? "Remove from shortlist" : "Add to shortlist"}
+                    >
+                      <Star size={20} className={isShortlisted(c.id) ? "fill-white" : ""} />
+                      <span>{isShortlisted(c.id) ? "Unshortlist" : "Shortlist"}</span>
                     </button>
                   )}
                   <button

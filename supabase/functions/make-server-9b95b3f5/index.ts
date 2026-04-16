@@ -212,6 +212,84 @@ base.post('/jobs', async (c) => {
   }
 });
 
+/** POST /jobs/:jobId/listing-view — increment listing_view_count (seeker/guest opened job details). Service role; no client RPC grants needed. */
+base.post('/jobs/:jobId/listing-view', async (c) => {
+  const jobId = Number(c.req.param('jobId'));
+  if (!Number.isFinite(jobId) || jobId <= 0) {
+    return c.json({ error: 'Invalid job id' }, 400);
+  }
+
+  const { error: rpcError } = await supabase.rpc('increment_job_listing_views', {
+    p_job_id: jobId,
+  });
+
+  if (!rpcError) {
+    const { data: row, error: selErr } = await supabase
+      .from('jobs')
+      .select('listing_view_count')
+      .eq('id', jobId)
+      .maybeSingle();
+    if (selErr) return c.json({ error: selErr.message }, 500);
+    return c.json({ listing_view_count: Number((row as { listing_view_count?: number } | null)?.listing_view_count ?? 0) });
+  }
+
+  const { data: job, error: fetchErr } = await supabase
+    .from('jobs')
+    .select('id, listing_view_count')
+    .eq('id', jobId)
+    .maybeSingle();
+  if (fetchErr) return c.json({ error: fetchErr.message }, 500);
+  if (!job) return c.json({ error: 'Job not found' }, 404);
+
+  const next = Number((job as { listing_view_count?: number }).listing_view_count ?? 0) + 1;
+  const { error: updErr } = await supabase
+    .from('jobs')
+    .update({ listing_view_count: next })
+    .eq('id', jobId);
+  if (updErr) {
+    return c.json(
+      {
+        error: updErr.message,
+        hint: 'Ensure migration 20260415150000_jobs_listing_view_count.sql is applied (listing_view_count column + optional RPC).',
+      },
+      500,
+    );
+  }
+  return c.json({ listing_view_count: next });
+});
+
+/** POST /employers/:employerId/business-profile-view — increment business_profile_view_count (directory / profile modal). */
+base.post('/employers/:employerId/business-profile-view', async (c) => {
+  const employerId = Number(c.req.param('employerId'));
+  if (!Number.isFinite(employerId) || employerId <= 0) {
+    return c.json({ error: 'Invalid employer id' }, 400);
+  }
+
+  const { data: emp, error: fetchErr } = await supabase
+    .from('employers')
+    .select('id, business_profile_view_count')
+    .eq('id', employerId)
+    .maybeSingle();
+  if (fetchErr) return c.json({ error: fetchErr.message }, 500);
+  if (!emp) return c.json({ error: 'Employer not found' }, 404);
+
+  const next = Number((emp as { business_profile_view_count?: number }).business_profile_view_count ?? 0) + 1;
+  const { error: updErr } = await supabase
+    .from('employers')
+    .update({ business_profile_view_count: next })
+    .eq('id', employerId);
+  if (updErr) {
+    return c.json(
+      {
+        error: updErr.message,
+        hint: 'Apply migration 20260415160000_employers_business_profile_view_count.sql (business_profile_view_count on employers).',
+      },
+      500,
+    );
+  }
+  return c.json({ business_profile_view_count: next });
+});
+
 // POST /seed - Placeholder to prevent errors, seeding is disabled
 base.post('/seed', (c) => {
   return c.json({
@@ -756,7 +834,8 @@ base.post('/job-ai-generate', async (c) => {
     '- requirements: 3-8 short bullet strings',
     '- benefits: 0-8 short bullet strings',
     '- application_questions: 0-5 short strings',
-    '- description: 2-4 sentences, no markdown bullets',
+    '- start_date: optional. If provided, MUST be in YYYY-MM-DD for a date input. If the employer says \"today\"/\"tomorrow\", convert it to the actual date.',
+    '- description: 2 paragraphs separated by a blank line. Each paragraph 2-4 sentences (roughly 4-8 sentences total). No markdown bullets.',
     '- company_description: 2-4 recruiting-focused sentences about culture/mission',
     '',
     'Return JSON with EXACT keys:',
@@ -810,7 +889,7 @@ base.post('/job-ai-generate', async (c) => {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 1400,
+          max_tokens: 2200,
           temperature: 0.2,
           system,
           messages: [{ role: 'user', content: user }],
