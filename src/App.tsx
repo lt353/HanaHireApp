@@ -3944,13 +3944,6 @@ export default function App() {
 		setCurrentView("landing");
 	};
 
-	/** Fixed bottom nav overlaps tall primary CTAs (e.g. Publish Listing). Hide it on full-page flows. */
-	const showMobileBottomNav =
-		currentView !== "landing" &&
-		currentView !== "job-posting" &&
-		!showPaymentModal &&
-		!showVideoUpdateModal;
-
 	return (
 		<VideoUploadProgressProvider>
 			<div className="min-h-screen bg-[#FAF9F7] font-sans text-gray-900 selection:bg-[#148F8B]/10">
@@ -3975,13 +3968,7 @@ export default function App() {
 					totalUnreadMessages={totalUnreadMessages}
 				/>
 
-				<main
-					className={
-						showMobileBottomNav
-							? "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0"
-							: "pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-0"
-					}
-				>
+				<main className="pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0">
 					<AnimatePresence mode="wait">{renderScreen()}</AnimatePresence>
 				</main>
 
@@ -6650,8 +6637,10 @@ export default function App() {
 				/>
 
 				{/* Mobile Nav */}
-				{showMobileBottomNav && (
-						<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 md:hidden flex flex-row items-center justify-between gap-3 z-50 shadow-2xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+				{currentView !== "landing" &&
+					!showPaymentModal &&
+					!showVideoUpdateModal && (
+						<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 md:hidden flex flex-row items-center justify-between gap-3 z-50 shadow-2xl">
 							<div className="flex flex-1 flex-row items-center justify-center gap-10">
 								<button
 									onClick={() =>
@@ -6780,7 +6769,7 @@ export default function App() {
 						const ts = new Date().toISOString();
 						const employerId = userProfile?.employerId ?? userProfile?.id;
 						if (employerId) {
-							const { error } = await supabase
+							await supabase
 								.from("employers")
 								.update({
 									eeoc_consent_accepted: true,
@@ -6788,13 +6777,6 @@ export default function App() {
 									employee_count_range: employeeCountRange,
 								})
 								.eq("id", employerId);
-							if (error) {
-								console.error("EEOC consent save failed:", error);
-								toast.error(
-									"Could not save your agreement. Please try again or contact support.",
-								);
-								return;
-							}
 						}
 						setUserProfile((prev: any) => ({
 							...prev,
